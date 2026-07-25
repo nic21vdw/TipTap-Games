@@ -7,6 +7,8 @@ import {
   SendIcon,
   SlidersIcon,
   DropletIcon,
+  SoundOffIcon,
+  SoundOnIcon,
   TrophyIcon,
 } from "@/components/ui/icons";
 import { getMeta } from "@/games/registry";
@@ -14,6 +16,7 @@ import { haptic } from "@/lib/haptics";
 import { getBest, getHandle, likedSlugs, toggleLike } from "@/lib/storage";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useMusicStore } from "@/store/useMusicStore";
 import { useFeedStore, type FeedCard as FeedCardData } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
 
@@ -44,6 +47,12 @@ export function GameCard({ card, index }: Props) {
   const savePrompt = useAuthStore((s) => s.prompt);
   const signedIn = useAuthStore((s) => s.status === "signedIn");
   const playerHandle = useAuthStore((s) => s.player?.handle);
+
+  const musicOn = useMusicStore((s) => s.enabled);
+  const musicUnlocked = useMusicStore((s) => s.unlocked);
+  const toggleMusic = useMusicStore((s) => s.toggle);
+  const track = useMusicStore((s) => s.track);
+  const soundLive = musicOn && musicUnlocked && track?.slug === card.slug;
 
   const playingUid = useUiStore((s) => s.playingUid);
   const enterPlay = useUiStore((s) => s.enterPlay);
@@ -281,6 +290,32 @@ export function GameCard({ card, index }: Props) {
         className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(var(--safe-bottom)+16px)]"
         style={{ touchAction: "pan-y" }}
       >
+        {/* now playing: the track is generated, so it gets a name too */}
+        {active && (
+          <button
+            onClick={toggleMusic}
+            className="pressable mb-2 flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold"
+            style={{
+              background: "rgba(12,18,28,.6)",
+              color: "#fff",
+              borderRadius: "999px",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            {soundLive ? <SoundOnIcon size={13} /> : <SoundOffIcon size={13} />}
+            {soundLive && track ? (
+              <>
+                <EqBars />
+                <span className="max-w-[58vw] truncate">
+                  {track.name} · {track.styleLabel} · {track.bpm} BPM
+                </span>
+              </>
+            ) : (
+              <span>{musicOn ? "Tap for sound" : "Sound off"}</span>
+            )}
+          </button>
+        )}
+
         <button
           onClick={() => setExpanded((e) => !e)}
           className="block text-left"
@@ -347,6 +382,13 @@ export function GameCard({ card, index }: Props) {
         </RailButton>
         <RailButton label="Theme" onClick={() => openSheet("theme")}>
           <DropletIcon size={26} />
+        </RailButton>
+        <RailButton
+          label={musicOn ? "Sound" : "Muted"}
+          onClick={toggleMusic}
+          tint={musicOn ? undefined : "rgba(255,255,255,.55)"}
+        >
+          {musicOn ? <SoundOnIcon size={26} /> : <SoundOffIcon size={26} />}
         </RailButton>
         <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
           <SendIcon size={26} />
@@ -436,6 +478,25 @@ function detectSwipe(
   if (ay >= DRAG_PX || (ay >= FLICK_PX && dt <= FLICK_MS))
     return dy < 0 ? "up" : "down";
   return "none";
+}
+
+/** Three bars bouncing out of phase. Purely decorative. */
+function EqBars() {
+  return (
+    <span className="flex h-3 items-end gap-[2px]" aria-hidden>
+      {[0, 190, 95].map((delay, i) => (
+        <span
+          key={i}
+          className="anim-eq block w-[2px] rounded-sm"
+          style={{
+            height: "100%",
+            background: "currentColor",
+            animationDelay: `${delay}ms`,
+          }}
+        />
+      ))}
+    </span>
+  );
 }
 
 function RailButton({

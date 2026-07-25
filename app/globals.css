@@ -88,6 +88,26 @@ body {
 .anim-toast {
   animation: toast-in 280ms cubic-bezier(0.32, 0.72, 0, 1);
 }
+/* the little equaliser on the now-playing chip */
+@keyframes eq-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.anim-eq {
+  transform-origin: bottom;
+  animation: eq-bounce 620ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-eq {
+    animation: none;
+    transform: scaleY(0.7);
+  }
+}
 /* colour tokens cross-fade on theme switch */
 body,
 .theme-smooth {
