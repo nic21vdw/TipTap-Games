@@ -83,6 +83,17 @@ export function SearchIcon(p: IconProps) {
   );
 }
 
+export function GridIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+    </Svg>
+  );
+}
+
 export function SparkleIcon(p: IconProps) {
   return (
     <Svg {...p}>
