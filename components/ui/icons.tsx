@@ -158,3 +158,21 @@ export function PhoneIcon(p: IconProps) {
     </Svg>
   );
 }
+
+export function SoundOnIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4v-5Z" />
+      <path d="M15.6 9.2a4 4 0 0 1 0 5.6M18.3 6.5a7.8 7.8 0 0 1 0 11" />
+    </Svg>
+  );
+}
+
+export function SoundOffIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4v-5Z" />
+      <path d="m16 10 4 4M20 10l-4 4" />
+    </Svg>
+  );
+}
