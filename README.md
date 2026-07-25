@@ -112,10 +112,14 @@ against.
 
 ## What's inside
 
-- **9 games**, all plain `<canvas>` + rAF, each an original take on a classic
+- **18 games**, all plain `<canvas>` + rAF, each an original take on a classic
   mechanic: Reflex Gate, Tap Rush, Word Trap, Hold the Line, Flash Recall,
-  Drop Dodge, One Lane, Pop Chain, and Cash Out (arcade-casino: virtual
-  chips only, nothing to buy, free reset).
+  Drop Dodge, One Lane, Pop Chain, Nokia Mode, One Gap, Black Keys, Split,
+  Drop Tower, Cross Traffic, Drift Field, Nic's Basement (a 3D lane defense
+  in Nic's basement — build junk on a receding grid before the horde of
+  Nic-faced zombies reaches the stairs), Hardwater (3D ice fishing — walk
+  the ice, set the hook, crank the fight), and Cash Out (arcade-casino:
+  virtual chips only, nothing to buy, free reset).
 - **The algorithm tuner** (`⚙` pill or the Tune button): 4 sliders
   (calm↔frantic, skill↔chance, modern↔2008, more-of-this↔surprise-me),
   tag demand/block chips, 4 presets, and a live **Next up** strip that
