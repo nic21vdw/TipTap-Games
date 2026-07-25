@@ -5,7 +5,7 @@
 // the provisional title the moment the card lands.
 import type { GameModule, GameContext, GameInstance } from "@/games/types";
 import { makeLoop, roundRect } from "@/games/engine";
-import { MODULES, registerModule, hideFromSampling } from "@/games/registry";
+import { MODULES, registerHiddenModule } from "@/games/registry";
 
 // Shared 0..1 build progress, keyed by pending slug. The card's animation and
 // caption both read it; lib/generator drives it.
@@ -65,9 +65,8 @@ export function registerPending({ slug, title, accent }: PendingMeta): void {
     },
     mount: (ctx) => mountBuilder(ctx, slug, accent),
   };
-  registerModule(mod);
-  // Never let a half-built placeholder leak into the endless sample pool.
-  hideFromSampling(slug);
+  // MODULES-only: a half-built placeholder must never leak into the sampler.
+  registerHiddenModule(mod);
 }
 
 // A calm, on-brand assembly animation: a ring of blocks snapping into place as

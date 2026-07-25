@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
-import { allSignals } from "@/lib/storage";
+import { allSignals, likedSlugs, seenSlugs } from "@/lib/storage";
+import { CATALOG } from "@/games/registry";
 import { SearchIcon, SparkleIcon } from "@/components/ui/icons";
 import { getMeta } from "@/games/registry";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
@@ -33,6 +34,7 @@ export function AlgorithmSheet() {
   const reset = useAlgorithmStore((s) => s.reset);
   const cards = useFeedStore((s) => s.cards);
   const activeIndex = useFeedStore((s) => s.activeIndex);
+  const reshuffle = useFeedStore((s) => s.reshuffle);
 
   const [query, setQuery] = useState("");
   const [understood, setUnderstood] = useState<string[]>([]);
@@ -57,6 +59,17 @@ export function AlgorithmSheet() {
       .sort((a, b) => b.ms - a.ms)
       .slice(0, 6);
   }, [open]);
+
+  // the no-repeat ledger, made legible: what's been shown, what's still new
+  const seenStats = useMemo(() => {
+    if (!open) return { seen: 0, left: 0, liked: 0 };
+    const seen = seenSlugs();
+    return {
+      seen: seen.size,
+      left: CATALOG.filter((m) => !seen.has(m.slug)).length,
+      liked: likedSlugs().size,
+    };
+  }, [open, cards]);
 
   const run = (text: string) => {
     const q = text.trim();
@@ -283,6 +296,47 @@ export function AlgorithmSheet() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* the no-repeat ledger */}
+      <div className="mt-6">
+        <div className="mb-2 flex items-center justify-between">
+          <span
+            className="text-xs font-semibold uppercase tracking-wider"
+            style={{ color: "var(--ink-dim)" }}
+          >
+            Already shown
+          </span>
+          {seenStats.seen > 0 && (
+            <button
+              onClick={reshuffle}
+              className="pressable text-[11px] font-bold"
+              style={{ color: "var(--accent)" }}
+            >
+              Show everything again
+            </button>
+          )}
+        </div>
+        <p
+          className="px-3 py-3 text-xs leading-relaxed"
+          style={{
+            color: "var(--ink-dim)",
+            background: "var(--bg)",
+            borderRadius: "var(--radius)",
+          }}
+        >
+          <span style={{ color: "var(--ink)", fontWeight: 700 }}>
+            {seenStats.seen} shown
+          </span>{" "}
+          · {seenStats.left} in the catalog you haven&apos;t seen yet. Scrolling
+          never repeats a game — once it&apos;s behind you it&apos;s gone, and
+          when the catalog runs out the feed builds new ones.{" "}
+          {seenStats.liked > 0
+            ? `Your ${seenStats.liked} liked ${
+                seenStats.liked === 1 ? "game" : "games"
+              } can come back around.`
+            : "Like a game and it's the only one allowed to come back around."}
+        </p>
       </div>
     </Sheet>
   );

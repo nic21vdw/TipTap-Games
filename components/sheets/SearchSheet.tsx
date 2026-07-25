@@ -41,7 +41,7 @@ export function SearchSheet() {
     <Sheet open={open} onClose={closeSheet} title="Make a game">
       <p className="mb-3 text-sm" style={{ color: "var(--ink-dim)" }}>
         Yap about a game you wish existed. The feed designs it and drops it in
-        as your next card.
+        as your next card — watch it build itself right there.
       </p>
       <textarea
         value={prompt}
