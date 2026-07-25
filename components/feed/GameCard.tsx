@@ -132,7 +132,7 @@ export function GameCard({ card, index }: Props) {
   return (
     <section
       data-index={index}
-      className="relative h-dvh w-full snap-start snap-always overflow-hidden"
+      className="relative h-[var(--app-h)] w-full snap-start snap-always overflow-hidden"
       style={{ background: "var(--bg)" }}
     >
       {mounted ? (
@@ -219,7 +219,7 @@ export function GameCard({ card, index }: Props) {
       />
 
       {/* score HUD */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(env(safe-area-inset-top)+14px)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(var(--safe-top)+14px)]">
         <div
           className="text-4xl font-extrabold tabular-nums"
           style={{
@@ -242,7 +242,7 @@ export function GameCard({ card, index }: Props) {
 
       {/* caption — Reels/TikTok style: title, era, expandable history */}
       <div
-        className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]"
+        className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(var(--safe-bottom)+16px)]"
         style={{ touchAction: "pan-y" }}
       >
         <button
