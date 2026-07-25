@@ -13,6 +13,7 @@ import { getMeta } from "@/games/registry";
 import { haptic } from "@/lib/haptics";
 import { getBest, getHandle, likedSlugs, toggleLike } from "@/lib/storage";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useFeedStore, type FeedCard as FeedCardData } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
 
@@ -31,10 +32,18 @@ export function GameCard({ card, index }: Props) {
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [liked, setLiked] = useState(false);
+  // "guest" until mount: localStorage doesn't exist during the server render.
+  const [localHandle, setLocalHandle] = useState("guest");
   const [expanded, setExpanded] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
   const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const askToSave = useAuthStore((s) => s.askToSave);
+  const dismissPrompt = useAuthStore((s) => s.dismissPrompt);
+  const savePrompt = useAuthStore((s) => s.prompt);
+  const signedIn = useAuthStore((s) => s.status === "signedIn");
+  const playerHandle = useAuthStore((s) => s.player?.handle);
 
   const playingUid = useUiStore((s) => s.playingUid);
   const enterPlay = useUiStore((s) => s.enterPlay);
@@ -110,6 +119,7 @@ export function GameCard({ card, index }: Props) {
     if (mounted) {
       setBest(getBest(card.slug));
       setLiked(likedSlugs().has(card.slug));
+      setLocalHandle(getHandle());
     }
   }, [mounted, card.slug]);
 
@@ -122,8 +132,13 @@ export function GameCard({ card, index }: Props) {
   const handleRunEnd = (r: RunResult) => {
     setResult(r);
     if (r.isBest) setBest(r.score);
+    // Guest play comes first: the only moment we ever mention an account is
+    // one where the player has just earned something worth keeping.
+    if (r.score > 0 && (r.isBest || r.topTen)) askToSave();
+    // A toast carrying a call to action has to outlast a glance.
+    const asking = useAuthStore.getState().prompt;
     if (resultTimer.current) clearTimeout(resultTimer.current);
-    resultTimer.current = setTimeout(() => setResult(null), 2800);
+    resultTimer.current = setTimeout(() => setResult(null), asking ? 6500 : 2800);
   };
 
   // A like is a visible, editable reason in the algorithm's memory list.
@@ -336,9 +351,19 @@ export function GameCard({ card, index }: Props) {
         <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
           <SendIcon size={26} />
         </RailButton>
-        <div className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.8)" }}>
-          @{typeof window === "undefined" ? "guest" : getHandle()}
-        </div>
+        <button
+          onClick={() => openSheet("account")}
+          aria-label={signedIn ? "Your account" : "Save your progress"}
+          className="pressable text-[10px] font-semibold"
+          style={{ color: "rgba(255,255,255,.8)" }}
+        >
+          @{playerHandle ?? localHandle}
+          {!signedIn && (
+            <span className="ml-1 font-bold" style={{ color: "var(--accent)" }}>
+              save
+            </span>
+          )}
+        </button>
       </div>
 
       {/* run result toast */}
@@ -360,6 +385,22 @@ export function GameCard({ card, index }: Props) {
             <div className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
               new personal best · {result.score} {meta.scoreUnit}
             </div>
+          )}
+          {savePrompt && (
+            <button
+              onClick={() => {
+                dismissPrompt();
+                openSheet("account");
+              }}
+              className="pressable mt-2 w-full px-3 py-1.5 text-xs font-extrabold"
+              style={{
+                background: "var(--accent)",
+                color: "var(--bg)",
+                borderRadius: "var(--radius)",
+              }}
+            >
+              Keep this score — sign in
+            </button>
           )}
         </div>
       )}

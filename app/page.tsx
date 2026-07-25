@@ -1,15 +1,22 @@
 "use client";
 
+import { useEffect } from "react";
 import { Feed } from "@/components/feed/Feed";
+import { AccountSheet } from "@/components/sheets/AccountSheet";
 import { AlgorithmSheet } from "@/components/sheets/AlgorithmSheet";
 import { LeaderboardSheet } from "@/components/sheets/LeaderboardSheet";
 import { SearchSheet } from "@/components/sheets/SearchSheet";
 import { ThemeSheet } from "@/components/sheets/ThemeSheet";
 import { SearchIcon, SlidersIcon } from "@/components/ui/icons";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useUiStore } from "@/store/useUiStore";
 
 export default function Home() {
+  // Restores a session if one exists. A guest never sees this happen.
+  const init = useAuthStore((s) => s.init);
+  useEffect(() => init(), [init]);
+
   return (
     <main className="relative">
       <Feed />
@@ -19,6 +26,7 @@ export default function Home() {
       <LeaderboardSheet />
       <ThemeSheet />
       <SearchSheet />
+      <AccountSheet />
     </main>
   );
 }

@@ -92,6 +92,47 @@ export function SparkleIcon(p: IconProps) {
   );
 }
 
+export function UserIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+    </Svg>
+  );
+}
+
+export function CloudIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.4A3.8 3.8 0 0 1 17.5 18H7Z" />
+    </Svg>
+  );
+}
+
+/** Google's mark, drawn in its own colours — the one place we don't tint. */
+export function GoogleMark({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M45.1 24.5c0-1.6-.1-2.8-.4-4H24v7.3h12.1c-.2 2-1.6 5-4.5 7l6.9 5.3c4.1-3.8 6.6-9.4 6.6-15.6Z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.3c-1.9 1.3-4.4 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9.1l-7.1 5.5C8.1 41.1 15.4 46 24 46Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M11.5 28.5A13.5 13.5 0 0 1 10.8 24c0-1.6.3-3.1.7-4.5l-7.1-5.5A22 22 0 0 0 2 24c0 3.5.8 6.9 2.4 10l7.1-5.5Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M24 10.2c4.1 0 6.9 1.8 8.5 3.3l6.1-6C34.9 4 29.9 2 24 2 15.4 2 8.1 6.9 4.4 14l7.1 5.5c1.8-5.3 6.7-9.3 12.5-9.3Z"
+      />
+    </svg>
+  );
+}
+
 export function ChevronUpIcon(p: IconProps) {
   return (
     <Svg {...p}>
