@@ -15,6 +15,7 @@ import split from "@/games/split";
 import dropTower from "@/games/drop-tower";
 import crossTraffic from "@/games/cross-traffic";
 import driftField from "@/games/drift-field";
+import basementDefense from "@/games/basement-defense";
 
 const ALL: GameModule[] = [
   reflexGate,
@@ -33,6 +34,7 @@ const ALL: GameModule[] = [
   dropTower,
   crossTraffic,
   driftField,
+  basementDefense,
 ];
 
 /**
