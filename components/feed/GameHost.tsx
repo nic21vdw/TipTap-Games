@@ -108,7 +108,19 @@ export function GameHost({
       activeSince = Date.now();
     if (!activeRef.current || document.hidden) inst.pause();
 
-    const unsubTheme = useThemeStore.subscribe(() => sizeBacking());
+    const unsubTheme = useThemeStore.subscribe(() => {
+      sizeBacking();
+      // Resizing the backing store wipes the canvas's pixels. If the loop is
+      // paused (card not active/visible) nothing will repaint it on its own,
+      // so force one frame through and re-pause right after.
+      const paused = !activeRef.current || document.hidden;
+      if (paused) {
+        inst.resume();
+        requestAnimationFrame(() => {
+          if (!activeRef.current || document.hidden) inst.pause();
+        });
+      }
+    });
     const onVis = () => {
       if (document.hidden) inst.pause();
       else if (activeRef.current) inst.resume();
