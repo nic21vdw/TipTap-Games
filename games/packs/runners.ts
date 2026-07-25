@@ -146,16 +146,18 @@ const ruinRun = defineGame<{
       g.strokeStyle = alpha(pal.prize, 0.28);
       g.lineWidth = 2;
       for (let i = 0; i < 12; i++) {
-        const z = ((i / 12 + (1 - ((s.dist * 0.12) % 1))) % 1);
-        const y = hz + (H - hz) * (z * z);
-        const w = (W * 0.06 + (W * 1.5) * (z * z)) / 2;
+        // d runs 0 at the horizon to 1 at the camera, and grows with distance
+        const d = (i / 12 + ((s.dist * 0.12) % 1)) % 1;
+        const y = hz + (H - hz) * (d * d);
+        const w = (W * 0.06 + W * 1.5 * (d * d)) / 2;
         g.beginPath();
         g.moveTo(W / 2 - w, y);
         g.lineTo(W / 2 + w, y);
         g.stroke();
       }
+      // z is 1 at the spawn line and 0 underfoot, so depth is its inverse
       const project = (lane: number, z: number) => {
-        const p = z * z;
+        const p = (1 - z) ** 2;
         const spread = W * 0.06 + W * 1.1 * p;
         return {
           x: W / 2 + (lane - 1) * spread * 0.33,
@@ -1188,12 +1190,13 @@ const beatLane = defineGame<{
       const t = api.theme();
       sky(g, W, H, pal.deep, "#000308");
       const hz = H * 0.3;
+      // tiles spawn at z=1 (the horizon) and arrive at z=0 (the camera)
       const proj = (lx: number, z: number) => {
-        const p = Math.max(0, z) ** 1.7;
+        const p = Math.max(0, 1 - z) ** 1.7;
         const spread = W * 0.1 + W * 1.05 * p;
         return { x: W / 2 + (lx - 0.5) * spread, y: hz + (H - hz) * p, s: 0.1 + p * 1.4 };
       };
-      // road
+      // road: near edge first, then far
       const a = proj(0.08, 0);
       const b = proj(0.92, 0);
       const c = proj(0.92, 1);

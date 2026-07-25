@@ -222,7 +222,8 @@ const lineFall = defineGame<{
           const x = b.ox + c * b.cell;
           const y = b.oy + r * b.cell;
           if (!v) {
-            g.fillStyle = alpha(pal.glow, 0.35);
+            // the empty well has to read against a near-black background
+            g.fillStyle = mix(pal.deep, pal.glow, 0.85);
             g.fillRect(x + 1, y + 1, b.cell - 2, b.cell - 2);
             continue;
           }

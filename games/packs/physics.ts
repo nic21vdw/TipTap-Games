@@ -1170,6 +1170,7 @@ function terrainY(x: number, H: number, seed: number): number {
 
 const hammerClimb = defineGame<{
   x: number;
+  /** world y — smaller is higher up the mountain */
   y: number;
   vx: number;
   vy: number;
@@ -1177,6 +1178,8 @@ const hammerClimb = defineGame<{
   hy: number;
   anchored: boolean;
   best: number;
+  /** world y of the top of the viewport */
+  cam: number;
   seed: number;
 }>(
   {
@@ -1218,15 +1221,16 @@ const hammerClimb = defineGame<{
       hy: api.H * 0.7,
       anchored: false,
       best: 0,
+      cam: 0,
       seed: Math.random() * 10,
     }),
     down: (s, x, y) => {
       s.hx = x;
-      s.hy = y;
+      s.hy = y + s.cam;
     },
     move: (s, x, y) => {
       s.hx = x;
-      s.hy = y;
+      s.hy = y + s.cam;
     },
     update: (s, dt, api) => {
       const { W, H } = api;
@@ -1239,7 +1243,7 @@ const hammerClimb = defineGame<{
         s.hx = s.x + (dx / d) * maxLen;
         s.hy = s.y + (dy / d) * maxLen;
       }
-      const rock = rockAt(s.hx, s.hy, W, H, s.seed);
+      const rock = slabAt(s.hx, s.hy, W, H, s.seed);
       s.anchored = rock;
       if (rock) {
         // pull the body toward the planted head
@@ -1255,27 +1259,31 @@ const hammerClimb = defineGame<{
       s.y += s.vy * dt;
       // the body cannot pass through rock either
       let guard = 0;
-      while (rockAt(s.x, s.y + 16, W, H, s.seed) && guard++ < 40) {
+      while (slabAt(s.x, s.y + 16, W, H, s.seed) && guard++ < 40) {
         s.y -= 2;
         s.vy = Math.min(s.vy, 0);
       }
-      if (s.y > H - 20) {
-        s.y = H - 20;
+      const floor = H * 0.95;
+      if (s.y > floor) {
+        s.y = floor;
         s.vy = 0;
       }
+      // the camera trails the climber so the mountain scrolls under them
+      s.cam += (s.y - H * 0.62 - s.cam) * Math.min(1, dt * 4);
       const climbed = Math.max(0, (H * 0.7 - s.y) / 6);
       s.best = Math.max(s.best, climbed);
       api.set(Math.floor(s.best));
-      if (s.y > H * 0.94 && s.best > 30) api.end();
+      // sliding all the way back to the bottom ends it — that is the joke
+      if (s.best > 25 && climbed <= 0) api.end();
     },
     bot: (s, dt, api) => {
       void dt;
       // hunt for rock above and haul upward
       const { W, H } = api;
-      for (let a = -1.9; a < -1.1; a += 0.12) {
+      for (let a = -2.2; a < -0.9; a += 0.1) {
         const tx = s.x + Math.cos(a) * 70;
         const ty = s.y + Math.sin(a) * 70;
-        if (rockAt(tx, ty, W, H, s.seed)) {
+        if (slabAt(tx, ty, W, H, s.seed)) {
           s.hx = tx;
           s.hy = ty;
           return;
@@ -1288,42 +1296,52 @@ const hammerClimb = defineGame<{
       const { W, H, pal } = api;
       const t = api.theme();
       sky(g, W, H, pal.deep, pal.glow);
-      // the mountain, as stacked slabs
-      for (let i = 0; i < 16; i++) {
-        const y = H * 0.95 - i * (H * 0.085);
-        const w = W * (0.8 - i * 0.02);
+      // the mountain, as an endless stack of slabs in world space.
+      // screen y = slabTop(i) - cam, so the visible band of i falls out of that
+      const first = Math.floor((-0.05 * H - s.cam) / SLAB_STEP(H)) - 1;
+      const span = Math.ceil(H / SLAB_STEP(H)) + 3;
+      for (let i = first; i < first + span; i++) {
+        const y = slabTop(i, H) - s.cam;
+        if (y < -60 || y > H + 60) continue;
         const off = Math.sin(i * 1.7 + s.seed) * W * 0.16;
         g.fillStyle = i % 2 ? shade(pal.foe, -0.15) : pal.foe;
-        roundRect(g, W / 2 - w / 2 + off, y, w, H * 0.07, 8);
+        roundRect(g, W / 2 - SLAB_W(W) / 2 + off, y, SLAB_W(W), H * 0.07, 8);
         g.fill();
       }
+      const sy = s.y - s.cam;
+      const hy = s.hy - s.cam;
       g.strokeStyle = shade(pal.prize, -0.4);
       g.lineWidth = 6;
       g.beginPath();
-      g.moveTo(s.x, s.y);
-      g.lineTo(s.hx, s.hy);
+      g.moveTo(s.x, sy);
+      g.lineTo(s.hx, hy);
       g.stroke();
       g.fillStyle = s.anchored ? pal.prize : pal.hero;
-      roundRect(g, s.hx - 13, s.hy - 7, 26, 14, 4);
+      roundRect(g, s.hx - 13, hy - 7, 26, 14, 4);
       g.fill();
       g.fillStyle = pal.hero;
-      circle(g, s.x, s.y, 15);
+      circle(g, s.x, sy, 15);
       g.fill();
       g.fillStyle = shade(pal.hero, -0.4);
-      roundRect(g, s.x - 16, s.y + 8, 32, 22, 9);
+      roundRect(g, s.x - 16, sy + 8, 32, 22, 9);
       g.fill();
       centred(g, `${api.score}m`, W / 2, 42, 26, t.ink, t.fontDisplay);
     },
   }
 );
 
-function rockAt(x: number, y: number, W: number, H: number, seed: number): boolean {
-  for (let i = 0; i < 16; i++) {
-    const sy = H * 0.95 - i * (H * 0.085);
-    const w = W * (0.8 - i * 0.02);
-    const off = Math.sin(i * 1.7 + seed) * W * 0.16;
-    const left = W / 2 - w / 2 + off;
-    if (x > left && x < left + w && y > sy && y < sy + H * 0.07) return true;
+const SLAB_STEP = (H: number) => H * 0.085;
+const SLAB_W = (W: number) => W * 0.62;
+/** World y of slab i's top face. i grows upward from the base. */
+const slabTop = (i: number, H: number) => H * 0.95 - i * SLAB_STEP(H);
+
+function slabAt(x: number, y: number, W: number, H: number, seed: number): boolean {
+  const i = Math.round((H * 0.95 - y) / SLAB_STEP(H));
+  for (const k of [i - 1, i, i + 1]) {
+    const top = slabTop(k, H);
+    const off = Math.sin(k * 1.7 + seed) * W * 0.16;
+    const left = W / 2 - SLAB_W(W) / 2 + off;
+    if (x > left && x < left + SLAB_W(W) && y > top && y < top + H * 0.07) return true;
   }
   return false;
 }

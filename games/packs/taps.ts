@@ -844,26 +844,27 @@ const helixDrop = defineGame<{
       const seg = (Math.PI * 2) / 8;
       for (const f of s.floors) {
         if (f.y < -50 || f.y > H + 50) continue;
-        for (let i = 0; i < 8; i++) {
-          if (i === f.gap) continue;
+        // a floor is a solid disc with one wedge punched out for the gap,
+        // then the lethal segments painted back on top
+        const wedge = (i: number, fill: string, dy: number) => {
           const a0 = s.rot + i * seg;
-          // only draw the front-facing half, projected to an ellipse
-          const mid = Math.cos(a0 + seg / 2);
-          if (mid < -0.15) continue;
-          const bad = f.bad.includes(i);
-          g.fillStyle = bad ? pal.foe : mix(pal.glow, "#ffffff", 0.1);
+          g.fillStyle = fill;
           g.beginPath();
-          g.ellipse(cx, f.y, R, R * 0.3, 0, a0, a0 + seg);
-          g.lineTo(cx, f.y);
+          g.moveTo(cx, f.y + dy);
+          g.ellipse(cx, f.y + dy, R, R * 0.3, 0, a0, a0 + seg);
           g.closePath();
           g.fill();
-          g.fillStyle = alpha("#000000", 0.18);
-          g.beginPath();
-          g.ellipse(cx, f.y + 9, R, R * 0.3, 0, a0, a0 + seg);
-          g.lineTo(cx, f.y + 9);
-          g.closePath();
-          g.fill();
-        }
+        };
+        g.fillStyle = alpha("#000000", 0.22);
+        g.beginPath();
+        g.ellipse(cx, f.y + 9, R, R * 0.3, 0, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = mix(pal.glow, "#ffffff", 0.12);
+        g.beginPath();
+        g.ellipse(cx, f.y, R, R * 0.3, 0, 0, Math.PI * 2);
+        g.fill();
+        wedge(f.gap, shade(pal.deep, -0.5), 0);
+        for (const i of f.bad) if (i !== f.gap) wedge(i, pal.foe, 0);
       }
       g.fillStyle = s.streak > 3 ? pal.prize : pal.hero;
       circle(g, cx, s.y, 17);
@@ -1301,7 +1302,8 @@ const badIdeas = defineGame<{
         g.arc(x, y + 6, 8, 0.15 * Math.PI, 0.85 * Math.PI);
         g.stroke();
       }
-      centred(g, s.order.text, W / 2, H * 0.34, 40, t.ink, t.fontDisplay);
+      // the longest order is "DO NOTHING", so size off the card, not a constant
+      centred(g, s.order.text, W / 2, H * 0.34, Math.min(40, W * 0.115), t.ink, t.fontDisplay);
       const frac = clamp(s.left / s.limit, 0, 1);
       g.fillStyle = alpha(t.ink, 0.15);
       roundRect(g, W * 0.15, H * 0.42, W * 0.7, 12, 6);

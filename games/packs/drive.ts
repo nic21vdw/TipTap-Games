@@ -261,8 +261,9 @@ const cubeField = defineGame<{
       const t = api.theme();
       sky(g, W, H, pal.deep, "#02000a");
       const hz = H * 0.36;
+      // cubes spawn at z=1 (horizon) and reach the car at z=0
       const proj = (x: number, z: number) => {
-        const p = Math.max(0.001, z) ** 1.8;
+        const p = Math.max(0.001, 1 - z) ** 1.8;
         return {
           sx: W / 2 + (x - 0.5) * (W * 0.16 + W * 2.1 * p),
           sy: hz + (H - hz) * p,
@@ -271,17 +272,17 @@ const cubeField = defineGame<{
       };
       g.fillStyle = shade(pal.glow, -0.6);
       g.beginPath();
-      g.moveTo(proj(0, 0).sx, hz);
-      g.lineTo(proj(1, 0).sx, hz);
-      g.lineTo(proj(1, 1).sx, H);
-      g.lineTo(proj(0, 1).sx, H);
+      g.moveTo(proj(0, 1).sx, hz);
+      g.lineTo(proj(1, 1).sx, hz);
+      g.lineTo(proj(1, 0).sx, H);
+      g.lineTo(proj(0, 0).sx, H);
       g.closePath();
       g.fill();
       g.strokeStyle = alpha(pal.foe, 0.3);
       g.lineWidth = 2;
       for (let i = 0; i < 14; i++) {
-        const z = ((i / 14 + (1 - ((s.dist * 0.02) % 1))) % 1) ** 1.8;
-        const y = hz + (H - hz) * z;
+        const d = ((i / 14 + ((s.dist * 0.02) % 1)) % 1) ** 1.8;
+        const y = hz + (H - hz) * d;
         g.beginPath();
         g.moveTo(0, y);
         g.lineTo(W, y);

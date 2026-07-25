@@ -511,8 +511,8 @@ const claim = defineGame<{
     init: () => {
       const owned = new Uint8Array(CLW * CLH);
       const mark = (cx: number, cy: number, id: number) => {
-        for (let r = cy - 1; r <= cy + 1; r++)
-          for (let c = cx - 1; c <= cx + 1; c++)
+        for (let r = cy - 2; r <= cy + 2; r++)
+          for (let c = cx - 2; c <= cx + 2; c++)
             if (r >= 0 && r < CLH && c >= 0 && c < CLW) owned[r * CLW + c] = id;
       };
       mark(4, 5, 1);
@@ -549,7 +549,7 @@ const claim = defineGame<{
           : [0, Math.sign(dy) || 1];
     },
     update: (s, dt, api) => {
-      s.pct += dt * 7.5;
+      s.pct += dt * 11;
       if (s.pct < 1) return;
       s.pct = 0;
       // no instant reversals
