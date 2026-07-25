@@ -30,6 +30,10 @@ algorithm** via a tuner sheet with a live "Next up" strip.
   and trade dress are never borrowed.
 - Casino = arcade-casino: virtual chips, free reset, no purchase
   affordance anywhere.
+- The feed never repeats. A game you've scrolled past is struck off the
+  ledger (`ttg:seen`) for good; when the catalog runs out the feed mints
+  new games (`games/variants.ts`) instead of recycling. Liking a game is
+  the one thing that buys it a comeback, and never within 14 cards.
 - The web build is a shop window for an App Store app. Anything
   viewport-shaped reads `--app-h` / `--safe-top` / `--safe-bottom`, never
   `dvh` or `env(safe-area-*)` directly — that seam is what lets the iPhone
@@ -41,7 +45,8 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 ## Key files
 
 - `games/types.ts` — the game contract; `games/registry.ts` — catalog
-- `lib/algorithm.ts` — scoring + weighted-random sampling
+- `lib/algorithm.ts` — scoring + weighted sampling without replacement
+- `games/variants.ts` — mints fresh games once the catalog is exhausted
 - `lib/storage.ts` — persistence seam (localStorage now, Supabase later)
 - `components/feed/GameHost.tsx` — lifecycle owner
 - `components/sheets/AlgorithmSheet.tsx` — the demo centrepiece
