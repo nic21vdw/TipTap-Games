@@ -12,9 +12,9 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | 1 | Vertical snap feed, 1 swipe = 1 card (touch/wheel/trackpad) | ✅ |
 | 2 | 6+ genuinely different games | ✅ 9 shipped |
 | 3 | Auto start >60% visible, hard stop on leave, zero zombie rAF | ✅ verified: `__rafActive === 1` after 12 swipes |
-| 4 | Guest play first, login only at a win moment | ✅ guest / ⬜ OAuth (needs Supabase creds) |
-| 5 | Persisted scores | ✅ localStorage / ⬜ Postgres (schema ready) |
-| 6 | Per-game leaderboard + own rank | ✅ seeded + local best merged |
+| 4 | Guest play first, login only at a win moment | ✅ guest + Google OAuth, prompted only on a best/top-ten |
+| 5 | Persisted scores | ✅ localStorage always; Postgres when Supabase env vars exist |
+| 6 | Per-game leaderboard + own rank | ✅ live board when signed in, seeded fallback otherwise |
 | 7 | Endless feed, no bottom | ✅ |
 | 8 | Algorithm tuner changes the queue within 1 swipe | ✅ verified live |
 | 9 | 3+ live-swappable themes | ✅ 4, no remount mid-run |
@@ -38,10 +38,16 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 
 - `games/types.ts` — the game contract; `games/registry.ts` — catalog
 - `lib/algorithm.ts` — scoring + weighted-random sampling
-- `lib/storage.ts` — persistence seam (localStorage now, Supabase later)
+- `lib/storage.ts` — the synchronous local layer everything reads from
+- `lib/cloud.ts` — background replica: mirrors local writes to Postgres,
+  merges the account's copy back on sign-in, redeems run tickets
+- `lib/supabase/config.ts` — the one check for "does this build have a
+  backend?"; every cloud call site degrades to a no-op when it's false
 - `components/feed/GameHost.tsx` — lifecycle owner
 - `components/sheets/AlgorithmSheet.tsx` — the demo centrepiece
-- `supabase/schema.sql` — ready-to-apply Postgres schema
+- `supabase/schema.sql` — tables, RLS policies, leaderboard functions
+- `app/api/runs/*` — the only writers to `scores`, service-role and
+  ticket-validated
 
 ## Demo script (2 min)
 
@@ -55,5 +61,6 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 
 Expiring "story" games · like/comment-modifies-the-game/share ·
 profile XP per run · vibe-coded games via a `+` button ·
-RPS / defuse-bomb / minesweeper / racing mechanics · OAuth + guest merge
-once Supabase env vars exist.
+RPS / defuse-bomb / minesweeper / racing mechanics ·
+friends-only leaderboards on top of the `profiles` table ·
+Cloudflare Pages deploy (needs `@opennextjs/cloudflare` + wrangler).

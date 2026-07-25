@@ -29,6 +29,66 @@ soon as the import finishes either way.
 **Settings → Environment Variables**. Without it, `/api/generate` falls
 back to a local designer, so the feature works in the demo regardless.
 
+## Accounts and cloud saves (Supabase)
+
+Entirely optional. With no Supabase project the app is what it has always
+been: guest play, localStorage saves, seeded leaderboards. Add the env vars
+and the same build gains Google sign-in, cross-device saves and real
+leaderboards, with no code change — see `.env.example` for every variable.
+
+1. **Create the project** at [supabase.com](https://supabase.com), then run
+   `supabase/schema.sql` in the SQL editor. It creates the tables, the
+   row-level security policies, and the `leaderboard` / `my_standing`
+   functions the app reads.
+2. **Turn on Google.** Authentication → Providers → Google. Follow the
+   Supabase instructions to create the OAuth client, then add
+   `https://<your-domain>/auth/callback` — and `http://localhost:3000/auth/callback`
+   for local work — to Authentication → URL Configuration → Redirect URLs.
+3. **Set the env vars** (`.env.local` locally, Settings → Environment
+   Variables on Vercel):
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+   SUPABASE_SERVICE_ROLE_KEY=<service role key>   # server-only, never NEXT_PUBLIC_
+   ADMIN_SYNC_SECRET=<any long random string>
+   ```
+
+4. **Publish the catalog** once per deploy, so the server knows each game's
+   score ceiling:
+
+   ```bash
+   curl -X POST https://<your-domain>/api/admin/sync-catalog \
+        -H "x-admin-secret: $ADMIN_SYNC_SECRET"
+   ```
+
+### How it behaves
+
+- **Guest first, always.** Nothing asks you to sign in until you set a
+  personal best or land in a top ten — then the result toast offers to keep
+  it. Decline once and it never asks again.
+- **Local stays the read path.** `lib/storage.ts` is still synchronous, so a
+  card that lands never waits on the network to know your best.
+  `lib/cloud.ts` mirrors those writes to Postgres in the background and
+  merges the account's copy back in on sign-in. Offline, the game is
+  unchanged.
+- **Guest saves are kept.** Signing in imports the bests you already had.
+  They're stored `verified = false`: they hold your personal best on every
+  device, but they never rank publicly, because the server never watched
+  those runs.
+- **Scores are server-validated.** Taking control of a card opens a run
+  ticket; the score is redeemed against it exactly once, and rejected if it
+  exceeds what the game's `maxScorePerSecond` allows in the elapsed time the
+  *server* measured. No browser can write to `scores` at all — RLS grants no
+  insert policy, and `/api/runs/submit` is the only writer.
+
+### Hosting note
+
+The deploy path is Vercel, above. Nothing here is Vercel-specific — the API
+routes are standard Next.js route handlers — but Cloudflare Pages would need
+`@opennextjs/cloudflare` and a `wrangler` config, which this repo doesn't
+carry yet.
+
 ## What's inside
 
 - **9 games**, all plain `<canvas>` + rAF, each an original take on a classic
@@ -44,9 +104,9 @@ back to a local designer, so the feature works in the demo regardless.
 - **4 live-switchable themes** — Arcade Dark, 8-Bit (pixelated canvas +
   scanlines), Skeuomorph '08, Neon Felt. Games read theme tokens every
   frame, so switching mid-run recolours without a remount.
-- **Guest identity, personal bests, per-game leaderboards** — persisted in
-  localStorage today. `supabase/schema.sql` + `lib/storage.ts` are the
-  single swap point to move it server-side (OAuth + cross-device sync).
+- **Guest identity, personal bests, per-game leaderboards** — localStorage
+  by default, Postgres the moment Supabase env vars exist. See
+  [Accounts and cloud saves](#accounts-and-cloud-saves-supabase).
 
 ## Architecture in one breath
 
