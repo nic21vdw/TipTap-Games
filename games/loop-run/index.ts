@@ -33,7 +33,7 @@ interface Spike {
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
 
-  const groundY = H * 0.72;
+  const groundY = H * 0.88;
   const ballR = W * 0.045;
   const ballX = W * 0.28;
 

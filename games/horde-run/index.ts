@@ -38,8 +38,8 @@ function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
 
   const playerX = W * 0.26;
-  const laneGap = H * 0.62 / LANES;
-  const laneTop = H * 0.2;
+  const laneGap = H * 0.9 / LANES;
+  const laneTop = H * 0.05;
   const laneY = (lane: number) => laneTop + laneGap * (lane + 0.5);
   const playerR = Math.min(W, H) * 0.03;
   const thingW = playerR * 1.8;

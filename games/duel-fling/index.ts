@@ -27,7 +27,7 @@ const meta = {
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
-  const groundY = H * 0.78;
+  const groundY = H * 0.92;
   let playerX = W * 0.2;
   let enemyX = W * 0.8;
   let playerHp = 3;
@@ -146,6 +146,18 @@ function mount(ctx: GameContext): GameInstance {
     g.fillRect(0, 0, W, H);
     g.fillStyle = shade(pal.deep, -0.55);
     g.fillRect(0, groundY, W, H - groundY);
+
+    // castle silhouettes: the lobbed shots use this airspace, but only for a
+    // moment, so give the sky above the duel something permanent to be
+    g.fillStyle = shade(pal.deep, -0.15);
+    for (let i = 0; i < 6; i++) {
+      const tw = W * 0.14;
+      const tx = i * (W / 6) + (W / 6 - tw) / 2;
+      const th = H * (0.32 + 0.5 * Math.abs(Math.sin(i * 1.7 + 0.6)));
+      g.fillRect(tx, groundY - th, tw, th);
+      for (let k = 0; k < 3; k++)
+        g.fillRect(tx + k * (tw / 3), groundY - th - tw * 0.14, tw / 4.5, tw * 0.14);
+    }
 
     if (dragging) {
       g.strokeStyle = pal.glow;

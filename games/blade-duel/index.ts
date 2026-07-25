@@ -33,7 +33,9 @@ function mount(ctx: GameContext): GameInstance {
 
   const playerX = W * 0.27;
   const foeX = W * 0.73;
-  const baseY = H * 0.62;
+  const baseY = H * 0.86;
+  // silhouettes are drawn at a nominal ~90px tall; scale the scene to the phone
+  const scene = Math.max(1, Math.min(H / 380, W / 260));
 
   let phase: Phase = "telegraph";
   let dir: Dir = "left";
@@ -161,9 +163,22 @@ function mount(ctx: GameContext): GameInstance {
     const sx = shake ? rand(-4, 4) * shake : 0;
     const sy = shake ? rand(-4, 4) * shake : 0;
 
-    // arena background
-    g.fillStyle = shade(pal.deep, -0.4);
+    // arena background: a lit dome and pillars, so the air above the duel is
+    // part of the set rather than a flat void filling most of the phone
+    g.fillStyle = shade(pal.deep, -0.55);
     g.fillRect(0, 0, W, H);
+    const dome = g.createRadialGradient(W / 2, baseY, W * 0.05, W / 2, baseY, H * 0.8);
+    dome.addColorStop(0, shade(pal.deep, -0.05));
+    dome.addColorStop(1, shade(pal.deep, -0.62));
+    g.fillStyle = dome;
+    g.fillRect(0, 0, W, H);
+    g.fillStyle = shade(pal.deep, -0.3);
+    for (let i = 0; i < 5; i++) {
+      const pw = W * 0.075;
+      g.fillRect(i * (W / 5) + (W / 5 - pw) / 2, 0, pw, baseY);
+    }
+    g.fillStyle = shade(pal.deep, -0.2);
+    g.fillRect(0, baseY - H * 0.035, W, H * 0.012);
     const floor = g.createLinearGradient(0, baseY, 0, H);
     floor.addColorStop(0, shade(pal.deep, -0.1));
     floor.addColorStop(1, shade(pal.deep, -0.5));
@@ -172,6 +187,9 @@ function mount(ctx: GameContext): GameInstance {
 
     g.save();
     g.translate(sx, sy);
+    g.translate(W / 2, baseY);
+    g.scale(scene, scene);
+    g.translate(-W / 2, -baseY);
 
     // fighters: simple silhouettes
     const drawFighter = (x: number, color: string, facingLeft: boolean) => {

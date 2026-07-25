@@ -54,7 +54,7 @@ function mount(ctx: GameContext): GameInstance {
   const spawnAfter = (prev: Plat): Plat => {
     const gap = rand(70, 130);
     const w = rand(50, 90);
-    const y = clamp(prev.y + rand(-90, 90), H * 0.28, H * 0.86);
+    const y = clamp(prev.y + rand(-120, 120), H * 0.12, H * 0.92);
     const spring = Math.random() < 0.16;
     return { x: prev.x + prev.w / 2 + gap + w / 2, y, w, spring };
   };
@@ -64,7 +64,7 @@ function mount(ctx: GameContext): GameInstance {
     while (plats.length === 0 || plats[plats.length - 1].x < rightEdge) {
       plats.push(
         plats.length === 0
-          ? { x: 0, y: H * 0.62, w: 90, spring: false }
+          ? { x: 0, y: H * 0.7, w: 90, spring: false }
           : spawnAfter(plats[plats.length - 1])
       );
     }
@@ -170,7 +170,7 @@ function mount(ctx: GameContext): GameInstance {
     // distant glow band
     g.fillStyle = shade(pal.glow, -0.2);
     g.globalAlpha = 0.08;
-    g.fillRect(0, H * 0.6, W, H * 0.4);
+    g.fillRect(0, H * 0.72, W, H * 0.28);
     g.globalAlpha = 1;
 
     // platforms

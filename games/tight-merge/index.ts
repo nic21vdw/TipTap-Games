@@ -205,7 +205,7 @@ function mount(ctx: GameContext): GameInstance {
     g.font = `700 14px ${t.fontBody}`;
     g.fillText(`SCORE ${score}`, 16, 28);
 
-    const boardSize = Math.min(W * 0.86, H * 0.6);
+    const boardSize = Math.min(W, H * 0.92);
     const cell = boardSize / SIZE;
     const bx = W / 2 - boardSize / 2;
     const by = H * 0.32;

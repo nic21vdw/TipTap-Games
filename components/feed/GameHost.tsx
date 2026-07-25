@@ -72,6 +72,7 @@ export function GameHost({
     let runEnds = 0;
     let activeSince: number | null = null;
     let dwellMs = 0;
+    let demoRestart: ReturnType<typeof setTimeout> | null = null;
 
     const inst = getModule(slug).mount({
       canvas,
@@ -91,7 +92,18 @@ export function GameHost({
       },
       onRunEnd: (finalScore) => {
         // Attract-mode runs are a shop window, not a score: never persist them.
-        if (!interactiveRef.current) return;
+        // They also have to keep going — a demo that loses and sits on its end
+        // card reads as a broken game, so hold the card long enough to see and
+        // then deal a fresh round. autoplay(false) is every module's reset.
+        if (!interactiveRef.current) {
+          if (demoRestart) clearTimeout(demoRestart);
+          demoRestart = setTimeout(() => {
+            if (interactiveRef.current) return;
+            instRef.current?.autoplay?.(false);
+            instRef.current?.autoplay?.(true);
+          }, 1400);
+          return;
+        }
         runEnds += 1;
         bumpSignals(slug, { runs: 1, replays: runEnds > 1 ? 1 : 0 });
         // Local first, so the toast is instant and correct with no backend.
@@ -150,6 +162,7 @@ export function GameHost({
 
     return () => {
       document.removeEventListener("visibilitychange", onVis);
+      if (demoRestart) clearTimeout(demoRestart);
       unsubTheme();
       inst.destroy();
       instRef.current = null;

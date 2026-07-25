@@ -51,7 +51,7 @@ function mount(ctx: GameContext): GameInstance {
     shade(pal.glow, 0.3),
   ];
 
-  const fieldSize = Math.min(W, H) * 0.86;
+  const fieldSize = Math.min(W, H * 0.92);
   const x0 = (W - fieldSize) / 2;
   const y0 = (H - fieldSize) / 2;
 
