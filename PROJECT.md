@@ -33,6 +33,11 @@ algorithm** via a tuner sheet with a live "Next up" strip.
   and trade dress are never borrowed.
 - Casino = arcade-casino: virtual chips, free reset, no purchase
   affordance anywhere.
+- Scrolling goes both ways. A card is never dropped from the list once
+  it's been shown, so scrolling back lands on the game you just left, not a
+  fresh draw — and that has to hold while a game owns the surface too. On a
+  desktop the wheel, arrow keys, Enter and Esc drive the same navigation the
+  swipe gestures do (`components/feed/nav.ts`).
 - The feed never repeats. A game you've scrolled past is struck off the
   ledger (`ttg:seen`) for good; when the catalog runs out the feed mints
   new games (`games/variants.ts`) instead of recycling. Liking a game is
