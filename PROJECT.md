@@ -38,10 +38,38 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 - iOS-feel motion everywhere: sheet transitions use
   `cubic-bezier(0.32, 0.72, 0, 1)`, buttons have springy press-scale,
   scores pop, toasts slide in. Smoothness is a feature, not polish.
+- Every input gets a reaction. A hit throws particles, a ring and a score
+  pop; a fail shakes the camera and washes the screen. Silence is a bug.
+- No run may end on the first mistake. Games carry lives, a shield or a
+  save, so a card that lands on you is still worth ten seconds.
+- Nothing a player must see or hit may sit under the feed's chrome. Use
+  `safeBox(W, H)` from `games/fx.ts` — the caption, the score and the
+  action rail all overlay the canvas.
+- A generated card may invent a name, a look and a story, never the
+  controls: its rule line is copied from the engine that actually runs.
+
+## Game feel (`games/fx.ts`)
+
+The shared juice layer, so feel is a resource instead of something each
+game re-invents or skips.
+
+- `createFx()` — particles, shockwave rings, motion trails, floating score
+  pops, camera shake and full-screen flashes, all time-based and pooled.
+- `drawBackdrop()` — living grounds (drifting blobs, parallax starfields,
+  perspective grids, rotating light shafts, rolling hills) instead of the
+  two-stop gradient every game used to paste in.
+- `createCombo()` / `drawCombo()` — streaks that pay a multiplier.
+- `resultCard()` — one game-over card everywhere, showing the score you
+  earned, your best, and a stat worth chasing back ("6 perfect", "94%
+  accuracy", "biggest chain 9").
+- `groundInk()` — games paint their own dark ground out of their palette,
+  so HUD text picks whichever end of the theme actually reads on it. The
+  theme still chooses the colour; the player can still see the HUD.
 
 ## Key files
 
 - `games/types.ts` — the game contract; `games/registry.ts` — catalog
+- `games/fx.ts` — the shared juice layer (see above)
 - `lib/algorithm.ts` — scoring + weighted-random sampling
 - `lib/storage.ts` — persistence seam (localStorage now, Supabase later)
 - `components/feed/GameHost.tsx` — lifecycle owner

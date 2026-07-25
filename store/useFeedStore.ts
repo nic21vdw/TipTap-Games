@@ -79,3 +79,18 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     });
   },
 }));
+
+declare global {
+  interface Window {
+    /** Audit hook, alongside `__rafActive` and `__ttgMusic` — queues a named
+     *  game as the very next card, so a driver can reach one without
+     *  swiping until it happens to turn up. Scrolling still does the rest. */
+    __ttgFeed?: { queueNext: (slug: string) => void };
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.__ttgFeed = {
+    queueNext: (slug: string) => useFeedStore.getState().insertNext(slug),
+  };
+}

@@ -31,10 +31,18 @@ back to a local designer, so the feature works in the demo regardless.
 
 ## What's inside
 
-- **9 games**, all plain `<canvas>` + rAF, each an original take on a classic
+- **16 games**, all plain `<canvas>` + rAF, each an original take on a classic
   mechanic: Reflex Gate, Tap Rush, Word Trap, Hold the Line, Flash Recall,
-  Drop Dodge, One Lane, Pop Chain, and Cash Out (arcade-casino: virtual
+  Drop Dodge, One Lane, One Gap, Pop Chain, Split, Drop Tower, Cross Traffic,
+  Black Keys, Nokia Mode, Drift Field, and Cash Out (arcade-casino: virtual
   chips only, nothing to buy, free reset).
+- **A shared game-feel layer** (`games/fx.ts`) every game draws through:
+  particles, shockwave rings, camera shake, floating score pops, combo
+  multipliers, living animated backdrops, and one result card that shows
+  the score you earned, your personal best and a stat worth chasing.
+  Runs never end on the first mistake — every game carries lives, a shield
+  or a one-time save, and pays bonuses for cutting it fine (thread a pipe,
+  graze a wall, hit the strike line, core the gate).
 - **The algorithm tuner** (`⚙` pill or the Tune button): 4 sliders
   (calm↔frantic, skill↔chance, modern↔2008, more-of-this↔surprise-me),
   tag demand/block chips, 4 presets, and a live **Next up** strip that

@@ -1,18 +1,26 @@
 import { NextResponse } from "next/server";
+import { getMeta } from "@/games/registry";
 
-// Bases the generator may target — engines that read the accent token
-// heavily enough that a recolour + rename reads as a new game.
+// Bases the generator may target. `feel` is how the mechanic plays; the
+// controls come from the engine itself via getMeta(), never from the model,
+// so a generated card can never promise an input the player will not get.
 const BASES = [
-  { slug: "tap-rush", feel: "frantic target tapping" },
-  { slug: "reflex-gate", feel: "timing a moving bar" },
+  { slug: "tap-rush", feel: "frantic target tapping, with bombs to avoid" },
+  { slug: "reflex-gate", feel: "timing a marker into a shrinking gate" },
   { slug: "drop-dodge", feel: "dragging through falling hazards" },
-  { slug: "flash-recall", feel: "memory sequences" },
+  { slug: "flash-recall", feel: "watch-and-repeat memory sequences" },
   { slug: "cash-out", feel: "banking a rising multiplier before it busts" },
-  { slug: "one-lane", feel: "lane-flip endless runner" },
-  { slug: "hold-line", feel: "press-and-release precision" },
-  { slug: "word-trap", feel: "read-fast reaction traps" },
-  { slug: "pop-chain", feel: "clearing tile groups" },
+  { slug: "one-lane", feel: "two-lane endless runner, one tap to switch" },
+  { slug: "hold-line", feel: "press to fill, release exactly on a line" },
+  { slug: "word-trap", feel: "does the ink match the word? yes/no under a clock" },
+  { slug: "pop-chain", feel: "tapping groups of matching tiles to collapse them" },
+  { slug: "split", feel: "chop left or right, dodging branches, against a timer" },
+  { slug: "black-keys", feel: "tapping falling tiles as they cross a strike line" },
+  { slug: "cross-traffic", feel: "hop forward across traffic and rivers" },
 ];
+
+/** The engine's real one-liner — the instruction the card will actually show. */
+const ruleFor = (slug: string) => getMeta(slug).rule;
 
 interface Spec {
   slug: string;
@@ -89,7 +97,7 @@ function localSpec(prompt: string): Spec {
     slug: `custom-${h.toString(36)}`,
     base,
     title,
-    rule: "Your rules. Tap to find out.",
+    rule: ruleFor(base),
     description: `A player-made drop, spun from: "${prompt.slice(0, 60)}"`,
     history:
       "Generated on demand from a player prompt — the feed designed this one for you, tuned to your algorithm, born in 2026.",
@@ -102,7 +110,9 @@ function localSpec(prompt: string): Spec {
 }
 
 async function deepseekSpec(prompt: string, key: string): Promise<Spec | null> {
-  const baseList = BASES.map((b) => `"${b.slug}" (${b.feel})`).join(", ");
+  const baseList = BASES.map(
+    (b) => `"${b.slug}" — plays like ${b.feel}; controls: ${ruleFor(b.slug)}`
+  ).join("; ");
   const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
     headers: {
@@ -115,7 +125,7 @@ async function deepseekSpec(prompt: string, key: string): Promise<Spec | null> {
       messages: [
         {
           role: "system",
-          content: `You design mini games for a swipe feed. Given a player's rambling wish, return ONLY JSON: {"base": one of [${baseList}], "title": string (max 20 chars, punchy, original — never an existing game's name), "rule": string (max 48 chars, imperative), "description": string (max 120 chars, Instagram-caption tone), "history": string (max 240 chars, a fun origin blurb crediting the player's idea), "accent": hex colour string fitting the vibe, "tags": array from [reflex,precision,memory,endurance,luck,chaos,calm,retro,casino,oneTap,drag,hold], "intensity": 0..1, "luck": 0..1, "nostalgia": 0..1}. Pick the base whose feel best matches the wish.`,
+          content: `You design mini games for a swipe feed. You do NOT write mechanics — you pick one of our existing engines and dress it up. Engines: ${baseList}. Pick the engine whose feel is closest to the player's wish, then write flavour that is TRUE of that engine: never describe a control, object or goal the engine does not have. Return ONLY JSON: {"base": one of the engine slugs above, "title": string (max 20 chars, punchy, original — never an existing game's name), "description": string (max 120 chars, Instagram-caption tone, must match the chosen engine's actual mechanic), "history": string (max 240 chars, a fun origin blurb crediting the player's idea), "accent": hex colour string fitting the vibe, "tags": array from [reflex,precision,memory,endurance,luck,chaos,calm,retro,casino,oneTap,drag,hold], "intensity": 0..1, "luck": 0..1, "nostalgia": 0..1}.`,
         },
         { role: "user", content: prompt.slice(0, 500) },
       ],
@@ -128,9 +138,13 @@ async function deepseekSpec(prompt: string, key: string): Promise<Spec | null> {
   const data = await res.json();
   const raw = JSON.parse(data.choices?.[0]?.message?.content ?? "{}");
   if (!raw.base || !raw.title) return null;
+  const base = BASES.some((b) => b.slug === raw.base) ? raw.base : localSpec(prompt).base;
   return {
     ...localSpec(prompt), // slug + safe defaults
     ...raw,
+    base,
+    // the controls are the engine's, not the model's
+    rule: ruleFor(base),
     slug: `custom-${hash(prompt + raw.title).toString(36)}`,
   };
 }

@@ -102,38 +102,5 @@ export function roundRect(
   g.closePath();
 }
 
-interface EndTheme {
-  ink: string;
-  inkDim: string;
-  surface: string;
-  fontDisplay: string;
-  fontBody: string;
-}
-
-/** The shared game-over card. One look across every game. */
-export function endCard(
-  g: CanvasRenderingContext2D,
-  t: EndTheme,
-  W: number,
-  H: number,
-  msg: string
-) {
-  g.textAlign = "center";
-  const bw = Math.min(W * 0.78, 320);
-  const bh = 104;
-  const x = W / 2 - bw / 2;
-  const y = H * 0.33;
-  g.fillStyle = "rgba(0,0,0,.26)";
-  roundRect(g, x + 3, y + 5, bw, bh, 20);
-  g.fill();
-  g.fillStyle = t.surface;
-  roundRect(g, x, y, bw, bh, 20);
-  g.fill();
-  g.fillStyle = t.ink;
-  g.font = `800 27px ${t.fontDisplay}`;
-  g.fillText(msg, W / 2, y + 46);
-  g.fillStyle = t.inkDim;
-  g.font = `600 15px ${t.fontBody}`;
-  g.fillText("tap to go again", W / 2, y + 74);
-  g.textAlign = "left";
-}
+// The game-over card now lives in games/fx.ts as resultCard(), which shows
+// the score, the personal best and a run stat instead of just a headline.
