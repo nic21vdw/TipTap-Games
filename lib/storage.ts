@@ -24,6 +24,7 @@ const KEY = {
   theme: "ttg:theme",
   likes: "ttg:likes",
   custom: "ttg:customGames",
+  music: "ttg:music",
 };
 
 const safe = {
@@ -168,7 +169,7 @@ export function saveCustomSpec(spec: CustomGameSpec) {
   safe.set(KEY.custom, JSON.stringify(all));
 }
 
-export function loadJson<T>(key: "algo" | "theme", fallback: T): T {
+export function loadJson<T>(key: "algo" | "theme" | "music", fallback: T): T {
   try {
     const raw = safe.get(KEY[key]);
     return raw ? { ...fallback, ...JSON.parse(raw) } : fallback;
@@ -177,7 +178,7 @@ export function loadJson<T>(key: "algo" | "theme", fallback: T): T {
   }
 }
 
-export function saveJson(key: "algo" | "theme", value: unknown) {
+export function saveJson(key: "algo" | "theme" | "music", value: unknown) {
   safe.set(KEY[key], JSON.stringify(value));
 }
 
