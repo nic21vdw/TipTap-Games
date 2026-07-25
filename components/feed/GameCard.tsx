@@ -161,7 +161,8 @@ export function GameCard({ card, index }: Props) {
           card anyway — swipes you back out to the feed. */}
       {playing && (
         <div
-          className="absolute inset-x-0 bottom-0 z-20 h-24"
+          // above the caption and rail, or they swallow the swipe
+          className="absolute inset-x-0 bottom-0 z-40 h-24"
           onPointerDown={onEdgeDown}
           onPointerMove={onEdgeMove}
           onPointerUp={onEdgeUp}

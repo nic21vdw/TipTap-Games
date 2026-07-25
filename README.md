@@ -12,10 +12,22 @@ pnpm install
 pnpm dev        # http://localhost:3000 — open devtools mobile view, 390x844
 ```
 
-## Deploy (2 minutes)
+## Deploy to Vercel (2 minutes)
 
-Import the repo at [vercel.com/new](https://vercel.com/new), accept the
-defaults (Next.js is auto-detected), deploy. That's the public demo URL.
+1. Go to [vercel.com/new](https://vercel.com/new) and import `TipTap-Games`.
+2. Accept every default — Next.js is auto-detected, no build settings needed.
+3. Deploy.
+
+**Set the production branch.** `main` is an empty bootstrap commit, so a
+production deploy from it renders nothing. Either merge the open pull
+request first, or in **Settings → Git → Production Branch** point it at
+`claude/hackathon-project-selection-6q3llv`. Vercel also builds a preview
+URL for every branch and PR automatically, so a working link appears as
+soon as the import finishes either way.
+
+**Optional — real AI game generation.** Add `DEEPSEEK_API_KEY` under
+**Settings → Environment Variables**. Without it, `/api/generate` falls
+back to a local designer, so the feature works in the demo regardless.
 
 ## What's inside
 
