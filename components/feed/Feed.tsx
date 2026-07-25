@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { GameCard } from "@/components/feed/GameCard";
 import { getMeta } from "@/games/registry";
 import { resumeMusic, suspendMusic, unlockAudio } from "@/lib/music";
+import { useAccountStore } from "@/store/useAccountStore";
 import { useFeedStore } from "@/store/useFeedStore";
+import { useMessagesStore } from "@/store/useMessagesStore";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 import { useMusicStore } from "@/store/useMusicStore";
 import { useThemeStore } from "@/store/useThemeStore";
@@ -20,13 +22,17 @@ export function Feed() {
 
   // hydrate stores + build the first queue, client-side only
   useEffect(() => {
+    // identity first: scores, memories and the algorithm vector are all keyed
+    // by the signed-in account, so nothing else can hydrate before it
+    useAccountStore.getState().hydrate();
+    useMessagesStore.getState().hydrate();
     useThemeStore.getState().hydrate();
     useAlgorithmStore.getState().hydrate();
     useMusicStore.getState().hydrate();
-    // re-register any games the player generated in earlier sessions
+    // re-register every published player game so the feed can serve them
     import("@/games/custom").then(({ registerSpec }) => {
-      import("@/lib/storage").then(({ loadCustomSpecs }) => {
-        loadCustomSpecs().forEach(registerSpec);
+      import("@/lib/library").then(({ allGames }) => {
+        allGames().forEach(registerSpec);
         useFeedStore.getState().init();
         setReady(true);
       });
@@ -50,7 +56,9 @@ export function Feed() {
     );
     root.querySelectorAll("[data-index]").forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [cards.length]);
+    // the first uid changes when the queue is rebuilt (account switch), which
+    // swaps every DOM node out from under the old observer
+  }, [cards.length, cards[0]?.uid]);
 
   // Autoplay policy: the very first gesture anywhere on the page is what
   // lets the soundtrack start. After that this never runs again.
@@ -90,6 +98,7 @@ export function Feed() {
   return (
     <div
       ref={containerRef}
+      data-feed-scroller
       className={`no-scrollbar h-dvh overscroll-none ${
         playing
           ? "overflow-hidden" // the game owns every gesture while you play

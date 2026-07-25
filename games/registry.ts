@@ -83,3 +83,12 @@ export function registerModule(mod: GameModule) {
   MODULES[mod.meta.slug] = mod;
   CATALOG.push(enrich(mod));
 }
+
+/** Removes a player-made module. Built-ins are never removable. */
+export function unregisterModule(slug: string) {
+  if (!BUILT_IN.has(slug)) delete MODULES[slug];
+  const i = CATALOG.findIndex((m) => m.slug === slug);
+  if (i >= 0 && !BUILT_IN.has(slug)) CATALOG.splice(i, 1);
+}
+
+const BUILT_IN = new Set(ALL.map((m) => m.meta.slug));

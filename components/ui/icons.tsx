@@ -117,3 +117,81 @@ export function SoundOffIcon(p: IconProps) {
     </Svg>
   );
 }
+
+export function PlusIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 5v14M5 12h14" />
+    </Svg>
+  );
+}
+
+export function MessageIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M20.5 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.7A8 8 0 1 1 20.5 12Z" />
+    </Svg>
+  );
+}
+
+export function UserIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="8.5" r="4" />
+      <path d="M4.5 20.2a7.6 7.6 0 0 1 15 0" />
+    </Svg>
+  );
+}
+
+export function UploadIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 16V4M8 7.5 12 3.5l4 4" />
+      <path d="M4.5 15v3.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V15" />
+    </Svg>
+  );
+}
+
+export function DownloadIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 3.5v12M8 12l4 4 4-4" />
+      <path d="M4.5 16v2.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V16" />
+    </Svg>
+  );
+}
+
+export function ChevronLeftIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="m14.5 5-7 7 7 7" />
+    </Svg>
+  );
+}
+
+export function LogOutIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M15 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2" />
+      <path d="M10.5 12h9.5M17 9l3 3-3 3" />
+    </Svg>
+  );
+}
+
+export function TrashIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5" />
+      <path d="M6.5 6.5 7.4 19a2 2 0 0 0 2 1.9h5.2a2 2 0 0 0 2-1.9l.9-12.5" />
+    </Svg>
+  );
+}
+
+export function GamepadIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M7.5 7h9a5 5 0 0 1 4.9 5.9l-.6 3.3A2.6 2.6 0 0 1 16.5 17l-1.6-2h-5.8L7.5 17a2.6 2.6 0 0 1-4.3-.8l-.6-3.3A5 5 0 0 1 7.5 7Z" />
+      <path d="M7.5 11v2.2M6.4 12.1h2.2M15.5 11.2h.01M17.6 13.2h.01" />
+    </Svg>
+  );
+}

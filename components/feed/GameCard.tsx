@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { GameHost, type RunResult } from "@/components/feed/GameHost";
 import {
   HeartIcon,
+  MessageIcon,
   SendIcon,
   SlidersIcon,
   DropletIcon,
@@ -11,9 +12,12 @@ import {
   SoundOnIcon,
   TrophyIcon,
 } from "@/components/ui/icons";
+import { Avatar } from "@/components/ui/Avatar";
 import { getMeta } from "@/games/registry";
+import { getAccount } from "@/lib/accounts";
+import { getSpec } from "@/lib/library";
 import { haptic } from "@/lib/haptics";
-import { getBest, getHandle, likedSlugs, toggleLike } from "@/lib/storage";
+import { getBest, likedSlugs, toggleLike } from "@/lib/storage";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 import { useMusicStore } from "@/store/useMusicStore";
 import { useFeedStore, type FeedCard as FeedCardData } from "@/store/useFeedStore";
@@ -30,6 +34,11 @@ export function GameCard({ card, index }: Props) {
   const mounted = Math.abs(index - activeIndex) <= 1;
   const meta = getMeta(card.slug);
   const openSheet = useUiStore((s) => s.openSheet);
+  const viewProfile = useUiStore((s) => s.viewProfile);
+  const shareToDm = useUiStore((s) => s.shareToDm);
+  const [author, setAuthor] = useState<ReturnType<typeof getAccount>>(null);
+  // a game published before accounts existed has a handle but no live profile
+  const [authorHandle, setAuthorHandle] = useState<string | null>(null);
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
@@ -93,6 +102,9 @@ export function GameCard({ card, index }: Props) {
     if (mounted) {
       setBest(getBest(card.slug));
       setLiked(likedSlugs().has(card.slug));
+      const spec = getSpec(card.slug);
+      setAuthor(getAccount(spec?.authorId));
+      setAuthorHandle(spec ? (spec.authorHandle ?? "player") : null);
     }
   }, [mounted, card.slug]);
 
@@ -354,12 +366,44 @@ export function GameCard({ card, index }: Props) {
         >
           {musicOn ? <SoundOnIcon size={26} /> : <SoundOffIcon size={26} />}
         </RailButton>
+        <RailButton
+          label="Send"
+          onClick={() =>
+            shareToDm({
+              slug: card.slug,
+              title: meta.title,
+              accent: meta.palette.hero,
+              rule: meta.rule,
+            })
+          }
+        >
+          <MessageIcon size={26} />
+        </RailButton>
         <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
           <SendIcon size={26} />
         </RailButton>
-        <div className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.8)" }}>
-          @{typeof window === "undefined" ? "guest" : getHandle()}
-        </div>
+        {/* who made this card — a player's game credits its author, ours
+            credits the house, and an author with a profile opens it */}
+        <button
+          onClick={() => author && viewProfile(author.id)}
+          disabled={!author}
+          className="pressable flex flex-col items-center gap-1"
+          aria-label={author ? `Open @${author.handle}'s profile` : "Made by Tip Tap"}
+        >
+          {author ? (
+            <Avatar account={author} size={30} />
+          ) : (
+            <span
+              className="flex h-[30px] w-[30px] items-center justify-center text-[10px] font-extrabold"
+              style={{ background: "rgba(255,255,255,.2)", borderRadius: "50%", color: "#fff" }}
+            >
+              {authorHandle ? authorHandle.slice(0, 2).toUpperCase() : "TT"}
+            </span>
+          )}
+          <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.85)" }}>
+            @{author?.handle ?? authorHandle ?? "tiptap"}
+          </span>
+        </button>
       </div>
 
       {/* run result toast */}

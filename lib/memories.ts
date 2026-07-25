@@ -7,6 +7,7 @@ import {
   type AlgorithmVector,
 } from "@/lib/algorithm";
 import type { GameTag } from "@/games/types";
+import { scopedKey } from "@/lib/accounts";
 
 export type MemorySource = "query" | "like" | "behavior";
 export type MemoryAxis =
@@ -34,11 +35,15 @@ export interface Memory {
   boost?: number; // signed score bump for that slug
 }
 
-const KEY = "ttg:memories";
+// Memories are per account: your reasons are yours, and switching accounts
+// switches the whole explanation of why the feed looks like it does.
+function key(): string {
+  return scopedKey("memories");
+}
 
 function safeGet(): Memory[] {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(key());
     return raw ? (JSON.parse(raw) as Memory[]) : [];
   } catch {
     return [];
@@ -47,13 +52,18 @@ function safeGet(): Memory[] {
 
 function safeSet(list: Memory[]) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(list));
+    localStorage.setItem(key(), JSON.stringify(list));
   } catch {
     // private mode — memories are in-session only
   }
 }
 
 let cache: Memory[] | null = null;
+
+/** Called on sign-in/out: the next read pulls the new account's memories. */
+export function resetMemoryCache() {
+  cache = null;
+}
 
 export function allMemories(): Memory[] {
   if (cache === null) cache = typeof window === "undefined" ? [] : safeGet();

@@ -2,6 +2,7 @@
 
 import { getModule } from "@/games/registry";
 import { Sheet } from "@/components/ui/Sheet";
+import { byHandle } from "@/lib/accounts";
 import { getBest, getHandle, leaderboard, seededScores } from "@/lib/storage";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
@@ -9,6 +10,7 @@ import { useUiStore } from "@/store/useUiStore";
 export function LeaderboardSheet() {
   const open = useUiStore((s) => s.sheet === "leaderboard");
   const closeSheet = useUiStore((s) => s.closeSheet);
+  const viewProfile = useUiStore((s) => s.viewProfile);
   const cards = useFeedStore((s) => s.cards);
   const activeIndex = useFeedStore((s) => s.activeIndex);
 
@@ -33,13 +35,20 @@ export function LeaderboardSheet() {
               fontWeight: r.you ? 800 : 500,
             }}
           >
-            <span>
+            {/* a name on the board is an account: tap it to open the profile */}
+            <button
+              onClick={() => {
+                const account = byHandle(r.handle);
+                if (account) viewProfile(account.id);
+              }}
+              className="pressable text-left"
+            >
               <span className="mr-2 inline-block w-6 tabular-nums" style={{ opacity: 0.6 }}>
                 {i + 1}
               </span>
               @{r.handle}
               {r.you ? " (you)" : ""}
-            </span>
+            </button>
             <span className="font-bold tabular-nums">
               {r.score} {meta.scoreUnit}
             </span>

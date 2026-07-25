@@ -44,9 +44,26 @@ back to a local designer, so the feature works in the demo regardless.
 - **4 live-switchable themes** — Arcade Dark, 8-Bit (pixelated canvas +
   scanlines), Skeuomorph '08, Neon Felt. Games read theme tokens every
   frame, so switching mid-run recolours without a remount.
-- **Guest identity, personal bests, per-game leaderboards** — persisted in
-  localStorage today. `supabase/schema.sql` + `lib/storage.ts` are the
-  single swap point to move it server-side (OAuth + cross-device sync).
+- **Accounts** — play as a guest from the first frame, claim it with a handle
+  and a password whenever you want, and your scores, likes and games come with
+  you. A device can hold several accounts, each with its own bests, algorithm
+  memories, feed and inbox; they meet on the leaderboard. Every run pays XP
+  into a profile level.
+- **Publish your own game** — three doors in the `+` sheet: *describe it* and
+  the generator designs one, *build it* in the studio (engine, title, colour,
+  tags, algorithm axes), or *upload* a `.json` game file someone exported.
+  Published games carry the author's handle into the feed, can be sent in a
+  DM, exported back out, or unpublished. A spec picks one of our engines and
+  restyles it — it never carries code, so nothing you import can run.
+- **Direct messages** — real threads between accounts on the device (send,
+  switch account, it's there unread), with any card attachable as a playable
+  card the receiver can queue. The seeded leaderboard handles are bot accounts
+  that reply on their own, badged "bot" everywhere they appear.
+- **Personal bests + per-game leaderboards** — persisted in localStorage
+  today. `supabase/schema.sql` models the whole thing — accounts, follows,
+  player games, messages — and `lib/accounts.ts`, `lib/storage.ts`,
+  `lib/library.ts`, `lib/social.ts` are the swap points for moving it
+  server-side (OAuth + cross-device sync).
 
 ## Architecture in one breath
 
@@ -60,8 +77,7 @@ everything past the current card before your next swipe.
 ## Roadmap (from the team whiteboard)
 
 - Story-mode games that expire after 10 seconds of play
-- Like / comment (comment = modify the game) / share per card
-- Profile XP: every run feeds an account level
-- Vibe-code games: a `+` button that generates a brand-new game into the feed
+- Comments that modify the game they're posted on
 - More mechanics: rock-paper-scissors vs the feed, defuse-the-bomb,
   minesweeper-like, racing, sports
+- OAuth + cross-device sync, so an account outlives the phone it was made on
