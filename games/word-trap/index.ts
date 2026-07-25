@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, pick } from "@/games/engine";
+import { endCard, makeLoop, pick, shade } from "@/games/engine";
 
 const meta = {
   slug: "word-trap",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "John Ridley Stroop published the colour-word interference effect in 1935. Ninety years later it still short-circuits brains — now with a countdown.",
   tags: ["precision", "calm"],
+  palette: {
+    hero: "#7209b7",
+    foe: "#f72585",
+    prize: "#4cc9f0",
+    deep: "#3a0ca3",
+    glow: "#b5179e",
+  },
   intensity: 0.35,
   luck: 0.1,
   nostalgia: 0.5,
@@ -23,7 +30,7 @@ const ROLES = ["GOLD", "BLUE", "GREEN", "RED"] as const;
 type Role = (typeof ROLES)[number];
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   let score = 0;
   let lives = 3;
   let over = false;
@@ -36,13 +43,13 @@ function mount(ctx: GameContext): GameInstance {
     const t = ctx.getTheme();
     switch (role) {
       case "GOLD":
-        return t.accent;
+        return pal.hero;
       case "BLUE":
-        return t.accentAlt;
+        return pal.glow;
       case "GREEN":
-        return t.success;
+        return pal.prize;
       case "RED":
-        return t.danger;
+        return pal.foe;
     }
   };
 
@@ -112,7 +119,10 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
     g.textAlign = "center";
 
@@ -125,24 +135,19 @@ function mount(ctx: GameContext): GameInstance {
     const bw = W * 0.6;
     g.fillStyle = t.surface;
     g.fillRect(W / 2 - bw / 2, H * 0.55, bw, 10);
-    g.fillStyle = timer / window_ < 0.3 ? t.danger : t.ink;
+    g.fillStyle = timer / window_ < 0.3 ? pal.foe : t.ink;
     g.fillRect(W / 2 - bw / 2, H * 0.55, bw * Math.max(0, timer / window_), 10);
 
     // lives
     for (let i = 0; i < 3; i++) {
       g.beginPath();
       g.arc(W / 2 - 28 + i * 28, H * 0.09, 7, 0, Math.PI * 2);
-      g.fillStyle = i < lives ? t.success : t.surface;
+      g.fillStyle = i < lives ? pal.prize : t.surface;
       g.fill();
     }
 
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("TRAPPED", W / 2, H * 0.68);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.68 + 34);
+      endCard(g, t, W, H, "TRAPPED");
     }
     g.textAlign = "left";
   });

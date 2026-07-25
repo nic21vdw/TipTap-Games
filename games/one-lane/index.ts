@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop } from "@/games/engine";
+import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "one-lane",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to 2012's lane-runner boom — swipe-to-dodge commutes on a billion phones. Ours strips it to a single input and no mercy.",
   tags: ["endurance", "oneTap", "retro"],
+  palette: {
+    hero: "#f4a261",
+    foe: "#e76f51",
+    prize: "#e9c46a",
+    deep: "#264653",
+    glow: "#2a9d8f",
+  },
   intensity: 0.65,
   luck: 0.1,
   nostalgia: 0.6,
@@ -25,7 +32,7 @@ interface Ob {
 }
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const laneX = [W * 0.32, W * 0.68];
   const py = H * 0.78;
   const size = 34;
@@ -99,7 +106,10 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     // dashed centre line, scrolling
@@ -112,11 +122,11 @@ function mount(ctx: GameContext): GameInstance {
     g.fillRect(W * 0.86 - 4, 0, 4, H);
 
     for (const o of obs) {
-      g.fillStyle = t.danger;
+      g.fillStyle = pal.foe;
       g.fillRect(laneX[o.lane] - size / 2, o.y - size / 2, size, size);
     }
 
-    g.fillStyle = over ? t.danger : t.accent;
+    g.fillStyle = over ? pal.foe : pal.hero;
     g.beginPath();
     const x = laneX[lane];
     g.moveTo(x, py - size * 0.7);
@@ -126,14 +136,7 @@ function mount(ctx: GameContext): GameInstance {
     g.fill();
 
     if (over) {
-      g.textAlign = "center";
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("CRASHED", W / 2, H * 0.34);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.34 + 34);
-      g.textAlign = "left";
+      endCard(g, t, W, H, "CRASHED");
     }
   });
   loop.start();

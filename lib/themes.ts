@@ -1,3 +1,21 @@
+const FALLBACK = "system-ui, sans-serif";
+
+let cachedFamily: string | null = null;
+
+/**
+ * Canvas needs a concrete family name — it can't parse `var(--font-nunito)`.
+ * Read what next/font actually resolved to, once, and reuse it every frame.
+ */
+export function resolvedFamily(): string {
+  if (cachedFamily) return cachedFamily;
+  if (typeof document === "undefined") return FALLBACK;
+  const v = getComputedStyle(document.documentElement)
+    .getPropertyValue("--font-nunito")
+    .trim();
+  cachedFamily = v ? `${v}, ${FALLBACK}` : FALLBACK;
+  return cachedFamily;
+}
+
 export type ThemeId = "coast" | "arcade" | "eightbit" | "skeuo" | "felt";
 
 export interface ThemeTokens {
@@ -36,9 +54,8 @@ export const THEMES: Record<ThemeId, ThemeDef> = {
     accentAlt: "#5b8def",
     success: "#1fa855",
     danger: "#ed4956",
-    fontDisplay:
-      '-apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif',
-    fontBody: '-apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif',
+    fontDisplay: FALLBACK,
+    fontBody: FALLBACK,
     radius: 16,
     pixelate: false,
     grain: 0,
@@ -56,9 +73,8 @@ export const THEMES: Record<ThemeId, ThemeDef> = {
     accentAlt: "#2ee6ff",
     success: "#4ade80",
     danger: "#ff3b5c",
-    fontDisplay:
-      '"Arial Black", "Helvetica Neue", system-ui, sans-serif',
-    fontBody: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+    fontDisplay: FALLBACK,
+    fontBody: FALLBACK,
     radius: 16,
     pixelate: false,
     grain: 0.04,
@@ -76,9 +92,8 @@ export const THEMES: Record<ThemeId, ThemeDef> = {
     accentAlt: "#41a6f6",
     success: "#38b764",
     danger: "#b13e53",
-    fontDisplay:
-      '"Courier New", ui-monospace, monospace',
-    fontBody: '"Courier New", ui-monospace, monospace',
+    fontDisplay: FALLBACK,
+    fontBody: FALLBACK,
     radius: 0,
     pixelate: true,
     grain: 0,
@@ -96,8 +111,8 @@ export const THEMES: Record<ThemeId, ThemeDef> = {
     accentAlt: "#8e54c9",
     success: "#34c759",
     danger: "#ff3b30",
-    fontDisplay: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-    fontBody: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+    fontDisplay: FALLBACK,
+    fontBody: FALLBACK,
     radius: 12,
     pixelate: false,
     grain: 0.08,
@@ -115,8 +130,8 @@ export const THEMES: Record<ThemeId, ThemeDef> = {
     accentAlt: "#ff4f9a",
     success: "#7fe38b",
     danger: "#ff5252",
-    fontDisplay: '"Arial Narrow", Impact, system-ui, sans-serif',
-    fontBody: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+    fontDisplay: FALLBACK,
+    fontBody: FALLBACK,
     radius: 10,
     pixelate: false,
     grain: 0.12,
@@ -142,8 +157,8 @@ export function applyThemeToDom(t: ThemeTokens) {
   r.setProperty("--accent-alt", t.accentAlt);
   r.setProperty("--success", t.success);
   r.setProperty("--danger", t.danger);
-  r.setProperty("--font-display", t.fontDisplay);
-  r.setProperty("--font-body", t.fontBody);
+  // --font-display / --font-body come from next/font in globals.css; the
+  // canvas resolves that same family through resolvedFamily() below.
   r.setProperty("--radius", `${t.radius}px`);
   r.setProperty("--grain", `${t.grain}`);
   document.documentElement.dataset.scanlines = t.scanlines ? "1" : "0";

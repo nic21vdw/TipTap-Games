@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop } from "@/games/engine";
+import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "drop-tower",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to 2016's hypnotic block-stacker — towers of near-misses, shaved thinner with every sloppy drop.",
   tags: ["precision", "oneTap", "calm"],
+  palette: {
+    hero: "#4361ee",
+    foe: "#f72585",
+    prize: "#4cc9f0",
+    deep: "#1b263b",
+    glow: "#4cc9f0",
+  },
   intensity: 0.35,
   luck: 0.05,
   nostalgia: 0.4,
@@ -19,7 +26,7 @@ const meta = {
 } satisfies GameModule["meta"];
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const blockH = 26;
   let towerX = W * 0.25;
   let towerW = W * 0.5;
@@ -84,14 +91,17 @@ function mount(ctx: GameContext): GameInstance {
       flash = Math.max(0, flash - dt);
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     const baseY = H * 0.78;
     // stacked layers (draw the visible recent ones)
     const visible = Math.min(layers, Math.floor((baseY - H * 0.3) / blockH));
     for (let i = 0; i < visible; i++) {
-      g.fillStyle = i === visible - 1 && flash > 0 ? t.accent : t.surface;
+      g.fillStyle = i === visible - 1 && flash > 0 ? pal.hero : t.surface;
       g.fillRect(towerX, baseY - (i + 1) * blockH, towerW, blockH - 2);
     }
     // ground
@@ -99,22 +109,17 @@ function mount(ctx: GameContext): GameInstance {
     g.fillRect(0, baseY, W, 3);
     // moving block
     const movY = baseY - (visible + 1) * blockH;
-    g.fillStyle = over ? t.danger : t.accent;
+    g.fillStyle = over ? pal.foe : pal.hero;
     g.fillRect(curX, movY, towerW, blockH - 2);
 
     g.textAlign = "center";
     if (flash > 0) {
-      g.fillStyle = t.success;
+      g.fillStyle = pal.prize;
       g.font = `800 20px ${t.fontDisplay}`;
       g.fillText("CLEAN", W / 2, movY - 18);
     }
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("OFF THE EDGE", W / 2, H * 0.16);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.16 + 34);
+      endCard(g, t, W, H, "OFF THE EDGE");
     }
     g.textAlign = "left";
   });

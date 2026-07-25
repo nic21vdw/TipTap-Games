@@ -1,7 +1,13 @@
 "use client";
 
 import { create } from "zustand";
-import { THEMES, applyThemeToDom, type ThemeId, type ThemeTokens } from "@/lib/themes";
+import {
+  THEMES,
+  applyThemeToDom,
+  resolvedFamily,
+  type ThemeId,
+  type ThemeTokens,
+} from "@/lib/themes";
 import { loadJson, saveJson } from "@/lib/storage";
 
 interface ThemeState {
@@ -29,5 +35,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
 /** Non-reactive accessor for canvas games: always the current tokens. */
 export function currentTheme(): ThemeTokens {
-  return THEMES[useThemeStore.getState().themeId];
+  const t = THEMES[useThemeStore.getState().themeId];
+  const family = resolvedFamily();
+  return { ...t, fontDisplay: family, fontBody: family };
 }

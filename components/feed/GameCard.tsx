@@ -55,16 +55,17 @@ export function GameCard({ card, index }: Props) {
     }
   };
 
-  // swipe right along the edge strip to hand control back to the feed
+  // a drag on the bottom strip — in any direction — hands control back
   const onEdgeDown = (e: React.PointerEvent) => {
     edgeRef.current = { x: e.clientX, y: e.clientY };
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
   };
   const onEdgeMove = (e: React.PointerEvent) => {
     const start = edgeRef.current;
     if (!start) return;
     const dx = e.clientX - start.x;
-    if (dx > 44 && Math.abs(dx) > Math.abs(e.clientY - start.y)) {
+    const dy = e.clientY - start.y;
+    if (Math.hypot(dx, dy) > 34) {
       edgeRef.current = null;
       exitPlay();
       haptic("light");
@@ -156,15 +157,30 @@ export function GameCard({ card, index }: Props) {
         />
       )}
 
-      {/* Playing: a right-edge strip swipes you back out to the feed. */}
+      {/* Playing: the strip along the bottom — where you'd swipe for the next
+          card anyway — swipes you back out to the feed. */}
       {playing && (
         <div
-          className="absolute inset-y-0 right-0 z-20 w-8"
+          className="absolute inset-x-0 bottom-0 z-20 h-24"
           onPointerDown={onEdgeDown}
           onPointerMove={onEdgeMove}
           onPointerUp={onEdgeUp}
+          onPointerCancel={onEdgeUp}
           style={{ touchAction: "none" }}
-        />
+        >
+          <div className="pointer-events-none flex h-full flex-col items-center justify-end gap-1 pb-3">
+            <div
+              className="h-1 w-10 rounded-full"
+              style={{ background: "rgba(255,255,255,.7)" }}
+            />
+            <span
+              className="text-[10px] font-bold uppercase tracking-wider"
+              style={{ color: "rgba(255,255,255,.8)" }}
+            >
+              swipe here to leave
+            </span>
+          </div>
+        </div>
       )}
 
       {/* browsing: "this is a demo, tap in to actually play" */}
@@ -173,8 +189,8 @@ export function GameCard({ card, index }: Props) {
           <div
             className="anim-breathe px-4 py-2 text-sm font-extrabold"
             style={{
-              background: "color-mix(in srgb, var(--surface) 88%, transparent)",
-              color: "var(--ink)",
+              background: "rgba(12,18,28,.72)",
+              color: "#fff",
               borderRadius: "999px",
               fontFamily: "var(--font-display)",
             }}
@@ -183,42 +199,42 @@ export function GameCard({ card, index }: Props) {
           </div>
           <span
             className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-            style={{ color: "var(--ink-dim)" }}
+            style={{ color: "rgba(255,255,255,.8)" }}
           >
             demo running
           </span>
         </div>
       )}
 
-      {/* playing: how to get back out */}
-      {playing && (
-        <button
-          onClick={exitPlay}
-          className="pressable absolute right-2.5 top-[calc(env(safe-area-inset-top)+56px)] z-30 flex items-center gap-1 px-3 py-1.5 text-xs font-bold"
-          style={{
-            background: "color-mix(in srgb, var(--surface) 90%, transparent)",
-            color: "var(--ink)",
-            borderRadius: "999px",
-          }}
-        >
-          Exit ›
-        </button>
-      )}
+      {/* Reels-style scrims: the chrome is white on gradient, never themed,
+          so it stays legible over any game's own artwork. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-20 h-40"
+        style={{ background: "linear-gradient(rgba(0,0,0,.5), transparent)" }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-64"
+        style={{ background: "linear-gradient(transparent, rgba(0,0,0,.62))" }}
+      />
 
       {/* score HUD */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(env(safe-area-inset-top)+14px)]">
         <div
           className="text-4xl font-extrabold tabular-nums"
-          style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
+          style={{
+            fontFamily: "var(--font-display)",
+            color: "#fff",
+            textShadow: "0 2px 10px rgba(0,0,0,.5)",
+          }}
         >
           <span key={score} className="anim-pop tabular-nums">
             {score}
           </span>
-          <span className="ml-1 text-base font-semibold" style={{ color: "var(--ink-dim)" }}>
+          <span className="ml-1 text-base font-semibold" style={{ color: "rgba(255,255,255,.8)" }}>
             {meta.scoreUnit}
           </span>
         </div>
-        <div className="text-xs font-semibold" style={{ color: "var(--ink-dim)" }}>
+        <div className="text-xs font-semibold" style={{ color: "rgba(255,255,255,.78)" }}>
           {playing ? `best ${Math.max(best, score)}` : "demo score"}
         </div>
       </div>
@@ -235,37 +251,36 @@ export function GameCard({ card, index }: Props) {
           <div className="flex items-baseline gap-2">
             <span
               className="text-xl font-extrabold leading-tight"
-              style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
+              style={{ fontFamily: "var(--font-display)", color: "#fff", textShadow: "0 2px 12px rgba(0,0,0,.5)" }}
             >
               {meta.title}
             </span>
             <span
               className="px-1.5 py-0.5 text-[10px] font-bold"
               style={{
-                background: "var(--surface)",
-                color: "var(--ink-dim)",
+                background: "rgba(255,255,255,.22)",
+                color: "#fff",
                 borderRadius: "6px",
               }}
             >
               est. {meta.year}
             </span>
           </div>
-          <div className="mt-1 text-sm leading-snug" style={{ color: "var(--ink)" }}>
+          <div className="mt-1 text-sm leading-snug" style={{ color: "#fff" }}>
             {meta.rule}
-            {playing ? " · swipe right edge to leave" : ""}
           </div>
           {expanded ? (
-            <div className="mt-1.5 text-[13px] leading-snug" style={{ color: "var(--ink-dim)" }}>
+            <div className="mt-1.5 text-[13px] leading-snug" style={{ color: "rgba(255,255,255,.82)" }}>
               {meta.description}
               <span className="mt-1 block">{meta.history}</span>
-              <span className="mt-0.5 block font-semibold" style={{ color: "var(--ink)" }}>
+              <span className="mt-0.5 block font-semibold" style={{ color: "#fff" }}>
                 less
               </span>
             </div>
           ) : (
-            <div className="mt-0.5 text-[13px]" style={{ color: "var(--ink-dim)" }}>
+            <div className="mt-0.5 text-[13px]" style={{ color: "rgba(255,255,255,.82)" }}>
               {meta.description.slice(0, 46)}
-              <span className="font-semibold" style={{ color: "var(--ink)" }}>
+              <span className="font-semibold" style={{ color: "#fff" }}>
                 {" "}
                 ... more
               </span>
@@ -273,27 +288,20 @@ export function GameCard({ card, index }: Props) {
           )}
         </button>
 
-        {/* like, right under the caption — the feed's clearest signal */}
-        <button
-          onClick={like}
-          aria-label={liked ? "Unlike this game" : "Like this game"}
-          className="pressable mt-2.5 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold"
-          style={{
-            background: liked ? "var(--danger)" : "var(--surface)",
-            color: liked ? "#fff" : "var(--ink)",
-            borderRadius: "999px",
-          }}
-        >
-          <HeartIcon size={16} filled={liked} />
-          {liked ? "More like this" : "Like this game"}
-        </button>
       </div>
 
       {/* right rail — symbolic line icons, Instagram spacing */}
       <div
         className="absolute bottom-28 right-2.5 z-30 flex flex-col items-center gap-5"
-        style={{ touchAction: "pan-y", color: "var(--ink)" }}
+        style={{ touchAction: "pan-y", color: "#fff", filter: "drop-shadow(0 2px 8px rgba(0,0,0,.5))" }}
       >
+        <RailButton
+          label={liked ? "Liked" : "Like"}
+          onClick={like}
+          tint={liked ? "var(--danger)" : undefined}
+        >
+          <HeartIcon size={29} filled={liked} />
+        </RailButton>
         <RailButton label="Ranks" onClick={() => openSheet("leaderboard")}>
           <TrophyIcon size={26} />
         </RailButton>
@@ -306,7 +314,7 @@ export function GameCard({ card, index }: Props) {
         <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
           <SendIcon size={26} />
         </RailButton>
-        <div className="text-[10px] font-semibold" style={{ color: "var(--ink-dim)" }}>
+        <div className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.8)" }}>
           @{typeof window === "undefined" ? "guest" : getHandle()}
         </div>
       </div>
@@ -316,12 +324,12 @@ export function GameCard({ card, index }: Props) {
         <div
           className="anim-toast absolute inset-x-0 top-[18%] z-30 mx-auto w-fit px-5 py-3 text-center"
           style={{
-            background: "var(--surface)",
+            background: "rgba(12,18,28,.85)",
             borderRadius: "var(--radius)",
             fontFamily: "var(--font-body)",
           }}
         >
-          <div className="text-sm font-bold" style={{ color: "var(--ink)" }}>
+          <div className="text-sm font-bold" style={{ color: "#fff" }}>
             {result.topTen
               ? `#${result.rank} on ${meta.title}!`
               : `You beat ${result.percentile}% of players`}
@@ -358,7 +366,7 @@ function RailButton({
       {children}
       <span
         className="text-[10px] font-semibold"
-        style={{ color: "var(--ink)" }}
+        style={{ color: "#fff" }}
       >
         {label}
       </span>

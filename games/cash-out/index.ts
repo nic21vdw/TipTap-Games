@@ -1,7 +1,7 @@
 // Arcade-casino, deliberately: virtual chips only, no purchases, no top-ups,
 // nothing to buy anywhere. Chips exist for the leaderboard and for nerve.
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop } from "@/games/engine";
+import { makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "cash-out",
@@ -12,6 +12,13 @@ const meta = {
   history:
     "Homage to the crash-curve games of the mid-2010s. Virtual chips only, free reset, and the house here charges absolutely nothing.",
   tags: ["casino", "luck", "oneTap"],
+  palette: {
+    hero: "#ffd60a",
+    foe: "#d00000",
+    prize: "#70e000",
+    deep: "#03071e",
+    glow: "#ffba08",
+  },
   intensity: 0.7,
   luck: 0.85,
   nostalgia: 0.1,
@@ -26,7 +33,7 @@ const BET = 10;
 type Phase = "arming" | "rising" | "banked" | "busted" | "out";
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   let chips = START_CHIPS;
   let phase: Phase = "arming";
   let phaseT = 0.9;
@@ -112,7 +119,10 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
     g.textAlign = "center";
 
@@ -129,11 +139,11 @@ function mount(ctx: GameContext): GameInstance {
     g.beginPath();
     g.arc(cx, cy, rad, -Math.PI * 0.75, -Math.PI * 0.75 + Math.PI * 1.5 * sweep);
     g.strokeStyle =
-      phase === "busted" ? t.danger : phase === "banked" ? t.success : t.accent;
+      phase === "busted" ? pal.foe : phase === "banked" ? pal.prize : pal.hero;
     g.stroke();
 
     g.fillStyle =
-      phase === "busted" ? t.danger : phase === "banked" ? t.success : t.ink;
+      phase === "busted" ? pal.foe : phase === "banked" ? pal.prize : t.ink;
     g.font = `800 56px ${t.fontDisplay}`;
     g.fillText(`${mult.toFixed(2)}x`, cx, cy + 18);
 
@@ -141,15 +151,15 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = t.inkDim;
     if (phase === "rising") g.fillText("TAP TO BANK", cx, cy + rad + 52);
     else if (phase === "banked") {
-      g.fillStyle = t.success;
+      g.fillStyle = pal.prize;
       g.fillText(`+${lastWin} chips`, cx, cy + rad + 52);
     } else if (phase === "busted") {
-      g.fillStyle = t.danger;
+      g.fillStyle = pal.foe;
       g.fillText(`BUST  -${BET} chips`, cx, cy + rad + 52);
     } else if (phase === "arming") g.fillText("next round...", cx, cy + rad + 52);
 
     // chip count + stake, always visible
-    g.fillStyle = t.accent;
+    g.fillStyle = pal.hero;
     g.font = `800 26px ${t.fontDisplay}`;
     g.fillText(`${chips} chips`, cx, H * 0.82);
     g.fillStyle = t.inkDim;
@@ -159,7 +169,7 @@ function mount(ctx: GameContext): GameInstance {
     // last rounds strip
     g.font = `600 13px ${t.fontBody}`;
     history.forEach((h, i) => {
-      g.fillStyle = h.banked ? t.success : t.danger;
+      g.fillStyle = h.banked ? pal.prize : pal.foe;
       g.fillText(`${h.m.toFixed(2)}x`, W * 0.14 + i * (W * 0.145), H * 0.1);
     });
 

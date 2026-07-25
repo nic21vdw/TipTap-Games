@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop } from "@/games/engine";
+import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "black-keys",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to 2014's tile-tapper that turned pianos into reflex tests and bus rides into speedruns.",
   tags: ["reflex", "oneTap", "precision"],
+  palette: {
+    hero: "#560bad",
+    foe: "#f72585",
+    prize: "#4cc9f0",
+    deep: "#10002b",
+    glow: "#b5179e",
+  },
   intensity: 0.8,
   luck: 0.05,
   nostalgia: 0.4,
@@ -27,7 +34,7 @@ interface Row {
 }
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const laneW = W / LANES;
   const rowH = H / 4.5;
   let rows: Row[] = [];
@@ -111,7 +118,10 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
     for (const row of rows) {
       for (let l = 0; l < LANES; l++) {
@@ -119,7 +129,7 @@ function mount(ctx: GameContext): GameInstance {
           g.fillStyle = t.ink;
           g.fillRect(l * laneW + 1, row.y + 1, laneW - 2, rowH - 2);
         } else if (l === row.dark && row.hit) {
-          g.fillStyle = t.accent;
+          g.fillStyle = pal.hero;
           g.fillRect(l * laneW + 1, row.y + 1, laneW - 2, rowH - 2);
         }
       }
@@ -133,16 +143,7 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     if (over) {
-      g.fillStyle = t.bg + "cc";
-      g.fillRect(0, H * 0.3, W, H * 0.2);
-      g.textAlign = "center";
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText(overReason, W / 2, H * 0.4);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.4 + 34);
-      g.textAlign = "left";
+      endCard(g, t, W, H, overReason);
     }
   });
   loop.start();

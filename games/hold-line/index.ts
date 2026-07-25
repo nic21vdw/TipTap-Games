@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand } from "@/games/engine";
+import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "hold-line",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "An original — the power gauge from golf and fighting games, isolated into its purest, meanest form. The tolerance band only shrinks.",
   tags: ["precision", "hold", "calm"],
+  palette: {
+    hero: "#06d6a0",
+    foe: "#ef476f",
+    prize: "#ffd166",
+    deep: "#073b4c",
+    glow: "#118ab2",
+  },
   intensity: 0.3,
   luck: 0.05,
   nostalgia: 0.15,
@@ -19,7 +26,7 @@ const meta = {
 } satisfies GameModule["meta"];
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   let score = 0;
   let over = false;
   let holding = false;
@@ -102,7 +109,10 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     const bx = W / 2 - 44;
@@ -114,28 +124,20 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = t.surface;
     g.fillRect(bx, by - bh, bw, bh);
     // tolerance band
-    g.fillStyle = t.success + "55";
+    g.fillStyle = pal.prize + "55";
     g.fillRect(bx - 14, by - (target + tol) * bh, bw + 28, tol * 2 * bh);
     // target line
-    g.fillStyle = t.success;
+    g.fillStyle = pal.prize;
     g.fillRect(bx - 14, by - target * bh - 2, bw + 28, 4);
     // fill
     g.fillStyle =
-      result === "miss" ? t.danger : result === "hit" ? t.success : t.accent;
+      result === "miss" ? pal.foe : result === "hit" ? pal.prize : pal.hero;
     g.fillRect(bx, by - fill * bh, bw, fill * bh);
 
     g.textAlign = "center";
-    g.fillStyle = t.inkDim;
-    g.font = `500 15px ${t.fontBody}`;
-    g.fillText("hold to fill · release on the line", W / 2, by + 40);
 
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText(fill >= 1 ? "OVERFLOWED" : "MISSED IT", W / 2, H * 0.14);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.14 + 34);
+      endCard(g, t, W, H, fill >= 1 ? "OVERFLOWED" : "MISSED IT");
     }
     g.textAlign = "left";
   });

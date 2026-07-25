@@ -28,6 +28,11 @@ export interface GameMeta {
   sessionLength: number; // 0..1  30 seconds -> minutes
   scoreUnit: string; // 'pts' | 'sec' | 'chips'
   maxScorePerSecond: number; // anti-cheat ceiling
+  /**
+   * The game's own colours. Themes control the ground (bg/ink); this controls
+   * the game's character, so Nokia Mode is never the same green as Cash Out.
+   */
+  palette?: GamePalette;
   // Optional axes — registry.ts derives sane defaults when a game omits them.
   speed?: number; // 0..1  patient -> twitchy
   difficulty?: number; // 0..1  forgiving -> brutal
@@ -38,6 +43,14 @@ export interface GameMeta {
 /** GameMeta after registry.ts fills in every optional axis. */
 export type FullGameMeta = Required<GameMeta>;
 
+export interface GamePalette {
+  hero: string; // the thing you control
+  foe: string; // the thing that ends your run
+  prize: string; // the thing you want
+  deep: string; // scenery / far layer
+  glow: string; // highlights, trails, sky washes
+}
+
 export interface GameContext {
   canvas: HTMLCanvasElement;
   /** 2d context, pre-scaled so games draw in logical (CSS px) coordinates */
@@ -47,6 +60,8 @@ export interface GameContext {
   dpr: number;
   /** live theme tokens — call every frame, never cache across frames */
   getTheme: () => ThemeTokens;
+  /** this game's own colours, already resolved */
+  pal: GamePalette;
   onScore: (score: number) => void;
   onRunEnd: (finalScore: number) => void;
   haptic: (kind: "light" | "hit" | "fail") => void;

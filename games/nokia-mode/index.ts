@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop } from "@/games/engine";
+import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "nokia-mode",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to the 1997 phone classic that shipped on 350 million handsets — the game that made mobile gaming exist in the first place.",
   tags: ["retro", "endurance", "precision"],
+  palette: {
+    hero: "#43aa8b",
+    foe: "#f94144",
+    prize: "#f9c74f",
+    deep: "#277da1",
+    glow: "#90be6d",
+  },
   intensity: 0.45,
   luck: 0.05,
   nostalgia: 1.0,
@@ -18,14 +25,14 @@ const meta = {
   maxScorePerSecond: 2,
 } satisfies GameModule["meta"];
 
-const COLS = 15;
+const COLS = 11;
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
-  const cell = Math.floor((W * 0.92) / COLS);
-  const ROWS = Math.floor((H * 0.6) / cell);
+  const { g, width: W, height: H, pal } = ctx;
+  const cell = Math.ceil(W / COLS);
+  const ROWS = Math.ceil(H / cell);
   const gx = Math.floor((W - cell * COLS) / 2);
-  const gy = Math.floor(H * 0.18);
+  const gy = 0;
 
   let snake: { x: number; y: number }[] = [];
   let dir = { x: 1, y: 0 };
@@ -35,6 +42,7 @@ function mount(ctx: GameContext): GameInstance {
   let stepEvery = 0.16;
   let score = 0;
   let over = false;
+  let pulse = 0;
 
   const placeFood = () => {
     do {
@@ -100,6 +108,7 @@ function mount(ctx: GameContext): GameInstance {
 
   const loop = makeLoop((dt) => {
     const t = ctx.getTheme();
+    pulse += dt;
     if (!over) {
       stepT += dt;
       if (stepT >= stepEvery) {
@@ -136,33 +145,66 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    // full-bleed field, no frame — a subtle checker gives it depth
+    g.fillStyle = shade(pal.deep, -0.62);
     g.fillRect(0, 0, W, H);
-    // board frame
-    g.strokeStyle = t.inkDim;
-    g.lineWidth = 2;
-    g.strokeRect(gx - 3, gy - 3, cell * COLS + 6, cell * ROWS + 6);
-    // food
-    g.fillStyle = t.accent;
-    g.fillRect(gx + food.x * cell + 2, gy + food.y * cell + 2, cell - 4, cell - 4);
-    // snake
-    g.fillStyle = over ? t.danger : t.ink;
-    for (const s of snake)
-      g.fillRect(gx + s.x * cell + 1, gy + s.y * cell + 1, cell - 2, cell - 2);
+    g.fillStyle = "rgba(255,255,255,.035)";
+    for (let c = 0; c < COLS; c++)
+      for (let r = 0; r < ROWS; r++)
+        if ((c + r) % 2 === 0) g.fillRect(gx + c * cell, gy + r * cell, cell, cell);
 
-    g.textAlign = "center";
-    g.fillStyle = t.inkDim;
-    g.font = `500 14px ${t.fontBody}`;
-    g.fillText("tap left / right of screen to turn", W / 2, gy + ROWS * cell + 34);
-    if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 32px ${t.fontDisplay}`;
-      g.fillText("GAME OVER", W / 2, gy - 40);
-      g.font = `500 16px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, gy - 14);
+    // food: a berry with a leaf and a highlight
+    const fx = gx + food.x * cell + cell / 2;
+    const fy = gy + food.y * cell + cell / 2;
+    const fr = cell * 0.36 + Math.sin(pulse * 5) * cell * 0.04;
+    g.beginPath();
+    g.arc(fx, fy, fr, 0, Math.PI * 2);
+    g.fillStyle = pal.prize;
+    g.fill();
+    g.beginPath();
+    g.arc(fx - fr * 0.3, fy - fr * 0.32, fr * 0.28, 0, Math.PI * 2);
+    g.fillStyle = "rgba(255,255,255,.7)";
+    g.fill();
+    g.fillStyle = pal.glow;
+    g.fillRect(fx - 1.5, fy - fr - 4, 3, 5);
+
+    // snake: rounded segments, brightest at the head, with eyes
+    for (let i = snake.length - 1; i >= 0; i--) {
+      const s = snake[i];
+      const k = 1 - i / Math.max(1, snake.length);
+      const pad = cell * (i === 0 ? 0.06 : 0.13);
+      g.fillStyle = over
+        ? shade(pal.foe, -0.15 + k * 0.2)
+        : shade(pal.hero, -0.3 + k * 0.42);
+      roundRect(
+        g,
+        gx + s.x * cell + pad,
+        gy + s.y * cell + pad,
+        cell - pad * 2,
+        cell - pad * 2,
+        cell * 0.34
+      );
+      g.fill();
     }
-    g.textAlign = "left";
+    const head = snake[0];
+    const hx = gx + head.x * cell + cell / 2;
+    const hy = gy + head.y * cell + cell / 2;
+    const ex = dir.x * cell * 0.16;
+    const ey = dir.y * cell * 0.16;
+    const px = -dir.y * cell * 0.18;
+    const py = dir.x * cell * 0.18;
+    for (const sgn of [1, -1]) {
+      g.beginPath();
+      g.arc(hx + ex + px * sgn, hy + ey + py * sgn, cell * 0.11, 0, Math.PI * 2);
+      g.fillStyle = "#fff";
+      g.fill();
+      g.beginPath();
+      g.arc(hx + ex * 1.6 + px * sgn, hy + ey * 1.6 + py * sgn, cell * 0.055, 0, Math.PI * 2);
+      g.fillStyle = "#101418";
+      g.fill();
+    }
+
+    if (over) endCard(g, t, W, H, "GAME OVER");
   });
   loop.start();
 

@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop } from "@/games/engine";
+import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "flash-recall",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to the 1978 electronic memory toys that started the pattern-repeat genre — four glowing buttons on every family's shelf, now nine on your feed.",
   tags: ["memory", "calm"],
+  palette: {
+    hero: "#4cc9f0",
+    foe: "#ef476f",
+    prize: "#f9c74f",
+    deep: "#1d3557",
+    glow: "#a8dadc",
+  },
   intensity: 0.2,
   luck: 0.05,
   nostalgia: 0.8,
@@ -19,7 +26,7 @@ const meta = {
 } satisfies GameModule["meta"];
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const N = 3; // 3x3 grid
   let score = 0;
   let over = false;
@@ -131,7 +138,10 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     for (let i = 0; i < N * N; i++) {
@@ -140,7 +150,7 @@ function mount(ctx: GameContext): GameInstance {
       const lit =
         (phase === "show" && litTile === i) ||
         (tapFlashT > 0 && tapFlash === i);
-      g.fillStyle = lit ? t.accent : t.surface;
+      g.fillStyle = lit ? pal.hero : t.surface;
       const pad = 6;
       g.fillRect(gx + c * cell + pad, gy + r * cell + pad, cell - pad * 2, cell - pad * 2);
     }
@@ -155,12 +165,7 @@ function mount(ctx: GameContext): GameInstance {
     );
 
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("WRONG TILE", W / 2, gy - 60);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, gy - 28);
+      endCard(g, t, W, H, "WRONG TILE");
     }
     g.textAlign = "left";
   });

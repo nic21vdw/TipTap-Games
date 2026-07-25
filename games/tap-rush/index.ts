@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand } from "@/games/engine";
+import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "tap-rush",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "An original descended from every light-gun cabinet and whack-a-mole machine ever built, rebuilt for one thumb.",
   tags: ["reflex", "chaos", "oneTap"],
+  palette: {
+    hero: "#ff8fa3",
+    foe: "#c1121f",
+    prize: "#ffd60a",
+    deep: "#3a0ca3",
+    glow: "#f72585",
+  },
   intensity: 0.9,
   luck: 0.15,
   nostalgia: 0.25,
@@ -26,7 +33,7 @@ interface Target {
 }
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const R = 42;
   let score = 0;
   let misses = 0;
@@ -110,14 +117,17 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     for (const tg of targets) {
       const p = tg.life / tg.maxLife;
       g.beginPath();
       g.arc(tg.x, tg.y, R * (0.45 + 0.55 * p), 0, Math.PI * 2);
-      g.fillStyle = p < 0.35 ? t.danger : t.accent;
+      g.fillStyle = p < 0.35 ? pal.foe : pal.hero;
       g.fill();
       g.beginPath();
       g.arc(tg.x, tg.y, R + 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p);
@@ -130,19 +140,11 @@ function mount(ctx: GameContext): GameInstance {
     for (let i = 0; i < 3; i++) {
       g.beginPath();
       g.arc(W / 2 - 28 + i * 28, H * 0.09, 7, 0, Math.PI * 2);
-      g.fillStyle = i < misses ? t.danger : t.surface;
+      g.fillStyle = i < misses ? pal.foe : t.surface;
       g.fill();
     }
 
-    if (over) {
-      g.fillStyle = t.ink;
-      g.textAlign = "center";
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("OUT OF MISSES", W / 2, H * 0.42);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.42 + 34);
-    }
+    if (over) endCard(g, t, W, H, "OUT OF MISSES");
     g.textAlign = "left";
   });
   loop.start();

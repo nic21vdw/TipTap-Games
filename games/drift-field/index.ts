@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand } from "@/games/engine";
+import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "drift-field",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to the 1979 vector-graphics cabinet that defined space shooters — inertia, wrap-around edges, and rocks that split into more rocks.",
   tags: ["retro", "reflex", "drag", "endurance"],
+  palette: {
+    hero: "#4cc9f0",
+    foe: "#f72585",
+    prize: "#ffd60a",
+    deep: "#03045e",
+    glow: "#7209b7",
+  },
   intensity: 0.7,
   speed: 0.6,
   difficulty: 0.6,
@@ -42,7 +49,7 @@ interface Shot {
 }
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
 
   let shipX = W / 2;
   let shipY = H / 2;
@@ -268,7 +275,10 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     // ---- draw ----
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     // starfield: deterministic dots so it doesn't shimmer
@@ -299,7 +309,7 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     // shots
-    g.fillStyle = t.accent;
+    g.fillStyle = pal.hero;
     for (const s of shots) {
       g.beginPath();
       g.arc(s.x, s.y, 3, 0, Math.PI * 2);
@@ -312,14 +322,14 @@ function mount(ctx: GameContext): GameInstance {
       g.translate(shipX, shipY);
       g.rotate(angle);
       if (thrusting) {
-        g.strokeStyle = t.danger;
+        g.strokeStyle = pal.foe;
         g.beginPath();
         g.moveTo(-10, -5);
         g.lineTo(-16 - Math.sin(flameT * 40) * 5, 0);
         g.lineTo(-10, 5);
         g.stroke();
       }
-      g.strokeStyle = t.accent;
+      g.strokeStyle = pal.hero;
       g.lineWidth = 2.4;
       g.beginPath();
       g.moveTo(17, 0);
@@ -336,7 +346,7 @@ function mount(ctx: GameContext): GameInstance {
       g.save();
       g.translate(20 + i * 20, H * 0.08);
       g.rotate(-Math.PI / 2);
-      g.strokeStyle = t.accent;
+      g.strokeStyle = pal.hero;
       g.lineWidth = 1.6;
       g.beginPath();
       g.moveTo(8, 0);
@@ -355,12 +365,7 @@ function mount(ctx: GameContext): GameInstance {
       g.fillText("hold anywhere to aim + thrust · guns auto-fire", W / 2, H * 0.93);
 
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("LOST IN SPACE", W / 2, H * 0.44);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.44 + 34);
+      endCard(g, t, W, H, "LOST IN SPACE");
     }
     g.textAlign = "left";
   });

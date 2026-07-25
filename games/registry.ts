@@ -40,10 +40,19 @@ const ALL: GameModule[] = [
  * tracks intensity and inverse-luck, realism defaults to playful, and
  * anything tagged casino is the only thing that isn't kid-safe.
  */
+const DEFAULT_PALETTE = {
+  hero: "#0095f6",
+  foe: "#ff4d6d",
+  prize: "#ffb703",
+  deep: "#9db8d2",
+  glow: "#8ecae6",
+};
+
 export function enrich(mod: GameModule): FullGameMeta {
   const m = mod.meta;
   return {
     ...m,
+    palette: m.palette ?? DEFAULT_PALETTE,
     speed: m.speed ?? m.intensity,
     difficulty: m.difficulty ?? Math.min(1, m.intensity * 0.6 + (1 - m.luck) * 0.4),
     realism: m.realism ?? 0.3,

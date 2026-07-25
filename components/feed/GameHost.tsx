@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { GameInstance } from "@/games/types";
-import { getModule } from "@/games/registry";
+import { getMeta, getModule } from "@/games/registry";
 import { currentTheme, useThemeStore } from "@/store/useThemeStore";
 import { haptic } from "@/lib/haptics";
 import { bumpSignals, submitRun } from "@/lib/storage";
@@ -79,6 +79,7 @@ export function GameHost({
       height: H,
       dpr: window.devicePixelRatio || 1,
       getTheme: currentTheme,
+      pal: getMeta(slug).palette,
       // a self-playing demo must never buzz the phone
       haptic: (kind) => {
         if (interactiveRef.current) haptic(kind);

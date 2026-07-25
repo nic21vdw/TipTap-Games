@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop } from "@/games/engine";
+import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "pop-chain",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to SameGame (1985), the tile-collapse puzzle that predates match-3 itself and quietly spawned a whole genre's family tree.",
   tags: ["calm", "retro", "precision"],
+  palette: {
+    hero: "#ff70a6",
+    foe: "#ff9770",
+    prize: "#ffd670",
+    deep: "#70d6ff",
+    glow: "#e9ff70",
+  },
   intensity: 0.15,
   luck: 0.35,
   nostalgia: 0.8,
@@ -23,7 +30,7 @@ const ROWS = 9;
 const NCOL = 4; // colour roles: accent, accentAlt, success, danger
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const cell = Math.min((W * 0.92) / COLS, (H * 0.62) / ROWS);
   const gx = W / 2 - (cell * COLS) / 2;
   const gy = H * 0.16;
@@ -149,9 +156,12 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
     flashT = Math.max(0, flashT - dt);
-    const colours = [t.accent, t.accentAlt, t.success, t.danger];
+    const colours = [pal.hero, pal.glow, pal.prize, pal.foe];
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     for (let c = 0; c < COLS; c++) {
@@ -171,17 +181,9 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     g.textAlign = "center";
-    g.fillStyle = t.inkDim;
-    g.font = `500 15px ${t.fontBody}`;
-    g.fillText("bigger groups, bigger points", W / 2, gy + ROWS * cell + 36);
 
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 32px ${t.fontDisplay}`;
-      g.fillText("NO MOVES LEFT", W / 2, H * 0.09);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.09 + 30);
+      endCard(g, t, W, H, "NO MOVES LEFT");
     }
     g.textAlign = "left";
   });

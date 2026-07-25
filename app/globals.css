@@ -10,8 +10,8 @@
   --accent-alt: #5b8def;
   --success: #1fa855;
   --danger: #ed4956;
-  --font-display: -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
-  --font-body: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-nunito), system-ui, sans-serif;
+  --font-body: var(--font-nunito), system-ui, sans-serif;
   --radius: 16px;
   --grain: 0;
 }

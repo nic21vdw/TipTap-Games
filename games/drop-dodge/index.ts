@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand, clamp } from "@/games/engine";
+import { endCard, makeLoop, rand, clamp, shade, roundRect } from "@/games/engine";
 
 const meta = {
   slug: "drop-dodge",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to the first wave of dodgers on the 2008 App Store, back when steering with your phone felt like the future. Ours trades tilt for a thumb.",
   tags: ["endurance", "drag", "chaos"],
+  palette: {
+    hero: "#ffd166",
+    foe: "#e63946",
+    prize: "#06d6a0",
+    deep: "#1d3557",
+    glow: "#457b9d",
+  },
   intensity: 0.75,
   luck: 0.2,
   nostalgia: 0.3,
@@ -27,7 +34,7 @@ interface Block {
 }
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const R = 14;
   const py = H * 0.82;
   let px = W / 2;
@@ -110,30 +117,56 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
+    // hazard bars: hazard stripes, a lit leading edge, a shadow beneath
     for (const b of blocks) {
-      g.fillStyle = t.surface;
+      g.fillStyle = "rgba(0,0,0,.3)";
+      roundRect(g, b.x + 2, b.y + 4, b.w, b.h, 8);
+      g.fill();
+      g.save();
+      roundRect(g, b.x, b.y, b.w, b.h, 8);
+      g.clip();
+      g.fillStyle = pal.foe;
       g.fillRect(b.x, b.y, b.w, b.h);
-      g.fillStyle = t.accentAlt + "33";
-      g.fillRect(b.x, b.y, b.w, 4);
+      g.fillStyle = "rgba(0,0,0,.22)";
+      for (let s = -b.h; s < b.w; s += 22) {
+        g.beginPath();
+        g.moveTo(b.x + s, b.y + b.h);
+        g.lineTo(b.x + s + b.h, b.y);
+        g.lineTo(b.x + s + b.h + 10, b.y);
+        g.lineTo(b.x + s + 10, b.y + b.h);
+        g.closePath();
+        g.fill();
+      }
+      g.restore();
+      g.fillStyle = pal.prize;
+      g.fillRect(b.x + 6, b.y + b.h - 4, b.w - 12, 3);
     }
 
+    // the ball: a glow, a body, and a highlight so it reads as a marble
+    const halo = g.createRadialGradient(px, py, R * 0.4, px, py, R * 2.4);
+    halo.addColorStop(0, (over ? pal.foe : pal.hero) + "88");
+    halo.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = halo;
+    g.beginPath();
+    g.arc(px, py, R * 2.4, 0, Math.PI * 2);
+    g.fill();
     g.beginPath();
     g.arc(px, py, R, 0, Math.PI * 2);
-    g.fillStyle = over ? t.danger : t.accent;
+    g.fillStyle = over ? pal.foe : pal.hero;
+    g.fill();
+    g.beginPath();
+    g.arc(px - R * 0.32, py - R * 0.34, R * 0.34, 0, Math.PI * 2);
+    g.fillStyle = "rgba(255,255,255,.75)";
     g.fill();
 
     if (over) {
-      g.textAlign = "center";
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("CLIPPED", W / 2, H * 0.4);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.4 + 34);
-      g.textAlign = "left";
+      endCard(g, t, W, H, "CLIPPED");
     }
   });
   loop.start();

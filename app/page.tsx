@@ -31,8 +31,8 @@ function SearchButton() {
       aria-label="Search and generate games"
       className="pressable theme-smooth fixed right-3 top-[calc(env(safe-area-inset-top)+10px)] z-30 flex h-10 w-10 items-center justify-center"
       style={{
-        background: "color-mix(in srgb, var(--surface) 85%, transparent)",
-        color: "var(--ink)",
+        background: "rgba(12,18,28,.55)",
+        color: "#fff",
         borderRadius: "var(--radius)",
       }}
     >
@@ -52,8 +52,8 @@ function AlgorithmPill() {
       onClick={() => openSheet("algo")}
       className="pressable theme-smooth fixed left-3 top-[calc(env(safe-area-inset-top)+10px)] z-30 flex h-10 items-center gap-1.5 px-3 text-xs font-bold"
       style={{
-        background: "color-mix(in srgb, var(--surface) 85%, transparent)",
-        color: "var(--ink)",
+        background: "rgba(12,18,28,.55)",
+        color: "#fff",
         borderRadius: "var(--radius)",
         fontFamily: "var(--font-body)",
       }}

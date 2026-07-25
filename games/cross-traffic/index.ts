@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand } from "@/games/engine";
+import { endCard, makeLoop, rand, shade, roundRect } from "@/games/engine";
 
 const meta = {
   slug: "cross-traffic",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to 2014's hop-across-traffic arcade — the one that made 'why did the chicken cross the road' a genre.",
   tags: ["precision", "oneTap", "endurance"],
+  palette: {
+    hero: "#ffd166",
+    foe: "#ef476f",
+    prize: "#06d6a0",
+    deep: "#073b4c",
+    glow: "#118ab2",
+  },
   intensity: 0.6,
   luck: 0.2,
   nostalgia: 0.4,
@@ -27,7 +34,7 @@ interface Lane {
 }
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const rowH = H * 0.11;
   const px = W / 2;
   const pR = 13;
@@ -139,39 +146,82 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
     const lo = Math.max(0, Math.floor(cam) - 4);
     const hi = Math.min(lanes.length - 1, Math.floor(cam) + 10);
     for (let i = lo; i <= hi; i++) {
       const y = laneY(i);
+      const top = y - rowH / 2;
       if (lanes[i].kind === "road") {
-        g.fillStyle = t.surface;
-        g.fillRect(0, y - rowH / 2, W, rowH - 2);
-        g.fillStyle = t.accentAlt;
-        for (const cx of lanes[i].cars)
-          g.fillRect(cx, y - rowH * 0.28, lanes[i].carW, rowH * 0.56);
+        // asphalt with a dashed centre line
+        g.fillStyle = "#2f3640";
+        g.fillRect(0, top, W, rowH);
+        g.fillStyle = "rgba(255,255,255,.5)";
+        for (let x = 6; x < W; x += 34) g.fillRect(x, y - 1.5, 17, 3);
+        // cars: body, roof, headlights facing the way they travel
+        for (const cx of lanes[i].cars) {
+          const cw = lanes[i].carW;
+          const ch = rowH * 0.56;
+          const cy = y - ch / 2;
+          g.fillStyle = "rgba(0,0,0,.28)";
+          roundRect(g, cx + 3, cy + 4, cw, ch, 7);
+          g.fill();
+          g.fillStyle = pal.glow;
+          roundRect(g, cx, cy, cw, ch, 7);
+          g.fill();
+          g.fillStyle = "rgba(255,255,255,.35)";
+          roundRect(g, cx + cw * 0.26, cy + ch * 0.16, cw * 0.44, ch * 0.42, 4);
+          g.fill();
+          g.fillStyle = pal.prize;
+          const lx = lanes[i].dir === 1 ? cx + cw - 6 : cx + 2;
+          g.fillRect(lx, cy + 3, 4, 5);
+          g.fillRect(lx, cy + ch - 8, 4, 5);
+        }
       } else {
-        g.fillStyle = t.bg;
-        g.fillRect(0, y - rowH / 2, W, rowH - 2);
-        g.strokeStyle = t.surface;
-        g.strokeRect(-2, y - rowH / 2, W + 4, rowH - 2);
+        // grass verge with a mown stripe
+        g.fillStyle = "#3f7d3a";
+        g.fillRect(0, top, W, rowH);
+        g.fillStyle = "rgba(255,255,255,.06)";
+        g.fillRect(0, top, W, rowH * 0.5);
+        g.fillStyle = "rgba(0,0,0,.16)";
+        g.fillRect(0, top, W, 2);
       }
     }
-    // player
+
+    // player: a chick with a beak, squashed slightly as it lands
+    const pyNow = laneY(row);
+    g.fillStyle = "rgba(0,0,0,.3)";
     g.beginPath();
-    g.arc(px, laneY(row), pR, 0, Math.PI * 2);
-    g.fillStyle = over ? t.danger : t.accent;
+    g.ellipse(px, pyNow + pR * 0.9, pR * 0.9, pR * 0.35, 0, 0, Math.PI * 2);
     g.fill();
+    g.beginPath();
+    g.arc(px, pyNow, pR, 0, Math.PI * 2);
+    g.fillStyle = over ? pal.foe : pal.hero;
+    g.fill();
+    g.strokeStyle = "rgba(0,0,0,.3)";
+    g.lineWidth = 2;
+    g.stroke();
+    g.fillStyle = "#f4802f";
+    g.beginPath();
+    g.moveTo(px - 3, pyNow + 2);
+    g.lineTo(px + 3, pyNow + 2);
+    g.lineTo(px, pyNow + 8);
+    g.closePath();
+    g.fill();
+    for (const sgn of [-1, 1]) {
+      g.beginPath();
+      g.arc(px + sgn * pR * 0.35, pyNow - pR * 0.25, 2.6, 0, Math.PI * 2);
+      g.fillStyle = "#12161c";
+      g.fill();
+    }
 
     g.textAlign = "center";
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("SPLAT", W / 2, H * 0.16);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.16 + 34);
+      endCard(g, t, W, H, "SPLAT");
     }
     g.textAlign = "left";
   });

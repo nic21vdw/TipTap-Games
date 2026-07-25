@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop } from "@/games/engine";
+import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "split",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "Homage to the 2014 side-switching lumberjack sprint — the purest speed test the app stores ever produced.",
   tags: ["reflex", "oneTap", "chaos"],
+  palette: {
+    hero: "#a68a64",
+    foe: "#bc4749",
+    prize: "#f2e8cf",
+    deep: "#386641",
+    glow: "#6a994e",
+  },
   intensity: 0.85,
   luck: 0.05,
   nostalgia: 0.4,
@@ -21,7 +28,7 @@ const meta = {
 type Branch = -1 | 0 | 1; // left, none, right
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   const segH = H * 0.11;
   const trunkW = W * 0.2;
   let segs: Branch[] = [];
@@ -102,7 +109,10 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     const baseY = H * 0.82;
@@ -112,7 +122,7 @@ function mount(ctx: GameContext): GameInstance {
       g.fillStyle = t.surface;
       g.fillRect(W / 2 - trunkW / 2, y, trunkW, segH - 3);
       if (segs[i] !== 0) {
-        g.fillStyle = t.accentAlt;
+        g.fillStyle = pal.glow;
         const bw = W * 0.24;
         const bx = segs[i] === -1 ? W / 2 - trunkW / 2 - bw : W / 2 + trunkW / 2;
         g.fillRect(bx, y + segH * 0.22, bw, segH * 0.34);
@@ -120,7 +130,7 @@ function mount(ctx: GameContext): GameInstance {
     }
     // player
     const px = side === -1 ? W / 2 - trunkW / 2 - W * 0.14 : W / 2 + trunkW / 2 + W * 0.14;
-    g.fillStyle = over ? t.danger : t.accent;
+    g.fillStyle = over ? pal.foe : pal.hero;
     g.beginPath();
     g.arc(px, baseY - segH * 0.45, 17, 0, Math.PI * 2);
     g.fill();
@@ -130,20 +140,12 @@ function mount(ctx: GameContext): GameInstance {
     const fw = W * 0.5;
     g.fillStyle = t.surface;
     g.fillRect(W / 2 - fw / 2, H * 0.9, fw, 10);
-    g.fillStyle = fuel < 0.3 ? t.danger : t.success;
+    g.fillStyle = fuel < 0.3 ? pal.foe : pal.prize;
     g.fillRect(W / 2 - fw / 2, H * 0.9, fw * Math.max(0, fuel), 10);
 
     g.textAlign = "center";
-    g.fillStyle = t.inkDim;
-    g.font = `500 13px ${t.fontBody}`;
-    g.fillText("tap a side to chop from it", W / 2, H * 0.9 + 30);
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText(fuel <= 0 ? "TOO SLOW" : "BRANCHED", W / 2, H * 0.12);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, H * 0.12 + 32);
+      endCard(g, t, W, H, fuel <= 0 ? "TOO SLOW" : "BRANCHED");
     }
     g.textAlign = "left";
   });

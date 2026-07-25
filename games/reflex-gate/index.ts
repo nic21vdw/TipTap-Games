@@ -1,5 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand, clamp } from "@/games/engine";
+import { endCard, makeLoop, rand, clamp, shade } from "@/games/engine";
 
 const meta = {
   slug: "reflex-gate",
@@ -10,6 +10,13 @@ const meta = {
   history:
     "An original for the feed — the timing-bar tension of arcade bonus rounds, distilled to one tap and an ever-crueller window.",
   tags: ["reflex", "precision", "oneTap"],
+  palette: {
+    hero: "#00b4d8",
+    foe: "#ef476f",
+    prize: "#06d6a0",
+    deep: "#023e8a",
+    glow: "#90e0ef",
+  },
   intensity: 0.55,
   luck: 0.1,
   nostalgia: 0.2,
@@ -19,7 +26,7 @@ const meta = {
 } satisfies GameModule["meta"];
 
 function mount(ctx: GameContext): GameInstance {
-  const { g, width: W, height: H } = ctx;
+  const { g, width: W, height: H, pal } = ctx;
   let score = 0;
   let over = false;
   let pos = 0; // 0..1 along the track
@@ -84,7 +91,10 @@ function mount(ctx: GameContext): GameInstance {
       flash = Math.max(0, flash - dt);
     }
     const t = ctx.getTheme();
-    g.fillStyle = t.bg;
+    const ground = g.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0, shade(pal.deep, -0.15));
+    ground.addColorStop(1, shade(pal.deep, -0.55));
+    g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
     const trackY = H * 0.5;
@@ -96,7 +106,7 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = t.surface;
     g.fillRect(trackX, trackY - barH / 2, trackW, barH);
     // green zone
-    g.fillStyle = flash > 0 ? t.accent : t.success;
+    g.fillStyle = flash > 0 ? pal.hero : pal.prize;
     g.fillRect(
       trackX + (zoneC - zoneW / 2) * trackW,
       trackY - barH / 2 - 6,
@@ -104,7 +114,7 @@ function mount(ctx: GameContext): GameInstance {
       barH + 12
     );
     // marker
-    g.fillStyle = over ? t.danger : t.ink;
+    g.fillStyle = over ? pal.foe : t.ink;
     g.fillRect(trackX + pos * trackW - 4, trackY - barH / 2 - 18, 8, barH + 36);
 
     // streak dots
@@ -114,12 +124,7 @@ function mount(ctx: GameContext): GameInstance {
     g.fillText(`speed x${(speed / 0.6).toFixed(1)}`, W / 2, trackY + 64);
 
     if (over) {
-      g.fillStyle = t.ink;
-      g.font = `800 34px ${t.fontDisplay}`;
-      g.fillText("MISSED", W / 2, trackY - 90);
-      g.font = `500 17px ${t.fontBody}`;
-      g.fillStyle = t.inkDim;
-      g.fillText("tap to go again", W / 2, trackY - 58);
+      endCard(g, t, W, H, "MISSED");
     }
   });
   loop.start();

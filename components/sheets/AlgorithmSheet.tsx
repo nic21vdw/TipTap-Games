@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { allSignals } from "@/lib/storage";
 import { SearchIcon, SparkleIcon } from "@/components/ui/icons";
-import { PRESETS } from "@/lib/algorithm";
 import { getMeta } from "@/games/registry";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 import { useFeedStore } from "@/store/useFeedStore";
@@ -86,7 +85,7 @@ export function AlgorithmSheet() {
           onKeyDown={(e) => {
             if (e.key === "Enter") run(query);
           }}
-          placeholder="tell it what you want to play..."
+          placeholder="say what you feel like playing"
           className="w-full bg-transparent text-sm outline-none"
           style={{ color: "var(--ink)" }}
         />
@@ -126,28 +125,9 @@ export function AlgorithmSheet() {
       )}
       {missed && (
         <p className="mt-2 text-[11px]" style={{ color: "var(--ink-dim)" }}>
-          nothing recognised in that — try words like faster, harder, retro,
-          scary, kid friendly, casino, surprise me
+          didn&apos;t catch anything in that one — say it another way
         </p>
       )}
-
-      {/* example queries */}
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {PRESETS.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => run(p.query)}
-            className="pressable px-2.5 py-1 text-[11px] font-bold"
-            style={{
-              background: "var(--bg)",
-              color: "var(--ink)",
-              borderRadius: "999px",
-            }}
-          >
-            {p.name}
-          </button>
-        ))}
-      </div>
 
       {/* the memory list — every point the feed is considering */}
       <div className="mt-6">
