@@ -17,6 +17,7 @@ import { getMeta } from "@/games/registry";
 import { haptic } from "@/lib/haptics";
 import { getBest, getHandle, likedSlugs, toggleLike } from "@/lib/storage";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useMusicStore } from "@/store/useMusicStore";
 import { useFeedStore, type FeedCard as FeedCardData } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
@@ -36,10 +37,18 @@ export function GameCard({ card, index }: Props) {
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [liked, setLiked] = useState(false);
+  // "guest" until mount: localStorage doesn't exist during the server render.
+  const [localHandle, setLocalHandle] = useState("guest");
   const [expanded, setExpanded] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
   const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const askToSave = useAuthStore((s) => s.askToSave);
+  const dismissPrompt = useAuthStore((s) => s.dismissPrompt);
+  const savePrompt = useAuthStore((s) => s.prompt);
+  const signedIn = useAuthStore((s) => s.status === "signedIn");
+  const playerHandle = useAuthStore((s) => s.player?.handle);
 
   const musicOn = useMusicStore((s) => s.enabled);
   const musicUnlocked = useMusicStore((s) => s.unlocked);
@@ -52,7 +61,8 @@ export function GameCard({ card, index }: Props) {
   const exitPlay = useUiStore((s) => s.exitPlay);
   const playing = playingUid === card.uid;
   const lastTapRef = useRef(0);
-  const edgeRef = useRef<{ x: number; y: number } | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const swipeRef = useRef<Swipe | null>(null);
 
   // double-tap the preview to take over
   const onPreviewTap = (e: React.PointerEvent) => {
@@ -66,24 +76,49 @@ export function GameCard({ card, index }: Props) {
     }
   };
 
-  // a drag on the bottom strip — in any direction — hands control back
-  const onEdgeDown = (e: React.PointerEvent) => {
-    edgeRef.current = { x: e.clientX, y: e.clientY };
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  // Hand control back and land on the neighbouring card in one motion. The
+  // feed is overflow-hidden while playing, so the scroll waits for the frame
+  // that re-enables it.
+  const leaveTo = (delta: number) => {
+    exitPlay();
+    haptic("light");
+    const root = sectionRef.current?.parentElement;
+    if (!root) return;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const target = root.querySelector<HTMLElement>(
+          `[data-index="${index + delta}"]`
+        );
+        if (target) root.scrollTo({ top: target.offsetTop, behavior: "smooth" });
+      })
+    );
   };
-  const onEdgeMove = (e: React.PointerEvent) => {
-    const start = edgeRef.current;
-    if (!start) return;
-    const dx = e.clientX - start.x;
-    const dy = e.clientY - start.y;
-    if (Math.hypot(dx, dy) > 34) {
-      edgeRef.current = null;
-      exitPlay();
-      haptic("light");
-    }
+
+  // While playing, the game owns the surface — so the card watches the same
+  // pointer stream in the capture phase and claims anything that reads as a
+  // vertical flick. No game control is an upward drag, so the two never
+  // compete: taps, holds and sideways drags all fall through untouched.
+  const onPlayDown = (e: React.PointerEvent) => {
+    swipeRef.current = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      t: e.timeStamp,
+    };
   };
-  const onEdgeUp = () => {
-    edgeRef.current = null;
+  const onPlayMove = (e: React.PointerEvent) => {
+    const s = swipeRef.current;
+    if (!s || s.id !== e.pointerId) return;
+    const dx = e.clientX - s.x;
+    const dy = e.clientY - s.y;
+    const dir = detectSwipe(dx, dy, e.timeStamp - s.t);
+    if (dir === "none") return;
+    swipeRef.current = null;
+    if (dir === "sideways") return; // that gesture belongs to the game
+    leaveTo(dir === "up" ? 1 : -1);
+  };
+  const onPlayUp = () => {
+    swipeRef.current = null;
   };
 
   // leaving the card always drops you back to browsing
@@ -95,6 +130,7 @@ export function GameCard({ card, index }: Props) {
     if (mounted) {
       setBest(getBest(card.slug));
       setLiked(likedSlugs().has(card.slug));
+      setLocalHandle(getHandle());
     }
   }, [mounted, card.slug]);
 
@@ -107,8 +143,13 @@ export function GameCard({ card, index }: Props) {
   const handleRunEnd = (r: RunResult) => {
     setResult(r);
     if (r.isBest) setBest(r.score);
+    // Guest play comes first: the only moment we ever mention an account is
+    // one where the player has just earned something worth keeping.
+    if (r.score > 0 && (r.isBest || r.topTen)) askToSave();
+    // A toast carrying a call to action has to outlast a glance.
+    const asking = useAuthStore.getState().prompt;
     if (resultTimer.current) clearTimeout(resultTimer.current);
-    resultTimer.current = setTimeout(() => setResult(null), 2800);
+    resultTimer.current = setTimeout(() => setResult(null), asking ? 6500 : 2800);
   };
 
   // A like is a visible, editable reason in the algorithm's memory list.
@@ -142,9 +183,14 @@ export function GameCard({ card, index }: Props) {
 
   return (
     <section
+      ref={sectionRef}
       data-index={index}
-      className="relative h-dvh w-full snap-start snap-always overflow-hidden"
+      className="relative h-[var(--app-h)] w-full snap-start snap-always overflow-hidden"
       style={{ background: "var(--bg)" }}
+      onPointerDownCapture={playing ? onPlayDown : undefined}
+      onPointerMoveCapture={playing ? onPlayMove : undefined}
+      onPointerUpCapture={playing ? onPlayUp : undefined}
+      onPointerCancelCapture={playing ? onPlayUp : undefined}
     >
       {mounted ? (
         <GameHost
@@ -168,30 +214,20 @@ export function GameCard({ card, index }: Props) {
         />
       )}
 
-      {/* Playing: the strip along the bottom — where you'd swipe for the next
-          card anyway — swipes you back out to the feed. */}
+      {/* Playing: a hint only. The gesture itself is caught on the whole card,
+          so there is no strip to find and nothing here to swallow a tap. */}
       {playing && (
-        <div
-          // above the caption and rail, or they swallow the swipe
-          className="absolute inset-x-0 bottom-0 z-40 h-24"
-          onPointerDown={onEdgeDown}
-          onPointerMove={onEdgeMove}
-          onPointerUp={onEdgeUp}
-          onPointerCancel={onEdgeUp}
-          style={{ touchAction: "none" }}
-        >
-          <div className="pointer-events-none flex h-full flex-col items-center justify-end gap-1 pb-3">
-            <div
-              className="h-1 w-10 rounded-full"
-              style={{ background: "rgba(255,255,255,.7)" }}
-            />
-            <span
-              className="text-[10px] font-bold uppercase tracking-wider"
-              style={{ color: "rgba(255,255,255,.8)" }}
-            >
-              swipe here to leave
-            </span>
-          </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex flex-col items-center gap-1 pb-3">
+          <div
+            className="h-1 w-10 rounded-full"
+            style={{ background: "rgba(255,255,255,.7)" }}
+          />
+          <span
+            className="text-[10px] font-bold uppercase tracking-wider"
+            style={{ color: "rgba(255,255,255,.8)" }}
+          >
+            swipe up for the next game
+          </span>
         </div>
       )}
 
@@ -230,7 +266,7 @@ export function GameCard({ card, index }: Props) {
       />
 
       {/* score HUD */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(env(safe-area-inset-top)+14px)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(var(--safe-top)+14px)]">
         <div
           className="text-4xl font-extrabold tabular-nums"
           style={{
@@ -253,7 +289,7 @@ export function GameCard({ card, index }: Props) {
 
       {/* caption — Reels/TikTok style: title, era, expandable history */}
       <div
-        className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]"
+        className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(var(--safe-bottom)+16px)]"
         style={{ touchAction: "pan-y" }}
       >
         {/* now playing: the track is generated, so it gets a name too */}
@@ -353,9 +389,19 @@ export function GameCard({ card, index }: Props) {
         <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
           <SendIcon size={26} />
         </RailButton>
-        <div className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.8)" }}>
-          @{typeof window === "undefined" ? "guest" : getHandle()}
-        </div>
+        <button
+          onClick={() => openSheet("account")}
+          aria-label={signedIn ? "Your account" : "Save your progress"}
+          className="pressable text-[10px] font-semibold"
+          style={{ color: "rgba(255,255,255,.8)" }}
+        >
+          @{playerHandle ?? localHandle}
+          {!signedIn && (
+            <span className="ml-1 font-bold" style={{ color: "var(--accent)" }}>
+              save
+            </span>
+          )}
+        </button>
       </div>
 
       {/* run result toast */}
@@ -378,10 +424,56 @@ export function GameCard({ card, index }: Props) {
               new personal best · {result.score} {meta.scoreUnit}
             </div>
           )}
+          {savePrompt && (
+            <button
+              onClick={() => {
+                dismissPrompt();
+                openSheet("account");
+              }}
+              className="pressable mt-2 w-full px-3 py-1.5 text-xs font-extrabold"
+              style={{
+                background: "var(--accent)",
+                color: "var(--bg)",
+                borderRadius: "var(--radius)",
+              }}
+            >
+              Keep this score — sign in
+            </button>
+          )}
         </div>
       )}
     </section>
   );
+}
+
+interface Swipe {
+  id: number;
+  x: number;
+  y: number;
+  t: number;
+}
+
+// Deliberately cheap to satisfy: a flick of ~a finger's width is enough, and a
+// slow drag still counts once it's clearly gone somewhere. The verticality
+// check is what keeps it off the games — a sideways drag bails out for good the
+// moment it commits, so aiming and steering never trip an exit.
+const FLICK_PX = 40; // quick flick
+const FLICK_MS = 550;
+const DRAG_PX = 90; // unhurried drag
+const AXIS_RATIO = 1.2;
+
+function detectSwipe(
+  dx: number,
+  dy: number,
+  dt: number
+): "up" | "down" | "sideways" | "none" {
+  const ax = Math.abs(dx);
+  const ay = Math.abs(dy);
+  if (ax > 24 && ax > ay * AXIS_RATIO) return "sideways";
+  if (ay < ax * AXIS_RATIO) return "none";
+  if (ay >= DRAG_PX || (ay >= FLICK_PX && dt <= FLICK_MS))
+    return dy < 0 ? "up" : "down";
+  return "none";
 }
 
 /** Three bars bouncing out of phase. Purely decorative. */
