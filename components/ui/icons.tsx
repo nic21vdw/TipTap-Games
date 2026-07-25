@@ -99,3 +99,21 @@ export function ChevronUpIcon(p: IconProps) {
     </Svg>
   );
 }
+
+export function DesktopIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="2.5" y="4" width="19" height="12.5" rx="2" />
+      <path d="M9 20.5h6M12 16.5v4" />
+    </Svg>
+  );
+}
+
+export function PhoneIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2.8" />
+      <path d="M10.5 5.5h3" />
+    </Svg>
+  );
+}
