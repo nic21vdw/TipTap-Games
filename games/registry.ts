@@ -79,6 +79,8 @@ import snowCarve from "@/games/snow-carve";
 import sphereChain from "@/games/sphere-chain";
 import spiralFall from "@/games/spiral-fall";
 import split from "@/games/split";
+import basementDefense from "@/games/basement-defense";
+import hardwater from "@/games/hardwater";
 import spreadSim from "@/games/spread-sim";
 import sprintRelay from "@/games/sprint-relay";
 import stackFall from "@/games/stack-fall";
@@ -203,6 +205,8 @@ const ALL: GameModule[] = [
   wingSlingshot,
   wordDuel,
   wordTrap,
+  basementDefense,
+  hardwater,
 ];
 
 /**

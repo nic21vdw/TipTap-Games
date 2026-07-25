@@ -99,44 +99,49 @@ function passesFilters(meta: FullGameMeta, vec: AlgorithmVector): boolean {
 }
 
 /**
- * Weighted-random sample of the next `count` games. Sampling, not a top-N
- * sort, so the feed never repeats itself into a loop — and it always
- * returns exactly `count` slugs, so the feed can never run dry.
+ * Weighted-random sample of up to `count` games, WITHOUT replacement and
+ * skipping everything in `exclude` (games already served). A slug can never
+ * come back on its own — scrolling only ever shows you something new — so
+ * this returns fewer than `count` when the pool runs out. Callers top the
+ * queue back up with freshly minted games rather than recycling old ones.
  */
 export function sampleQueue(
   catalog: FullGameMeta[],
   vec: AlgorithmVector,
   recentSlugs: string[],
   count: number,
-  boosts: Record<string, number> = {}
+  boosts: Record<string, number> = {},
+  exclude: ReadonlySet<string> = new Set()
 ): string[] {
-  let pool = catalog.filter((m) => passesFilters(m, vec));
-  // never dead-end the feed: relax tag filters, then kid-safety last
+  const unseen = catalog.filter((m) => !exclude.has(m.slug));
+  let pool = unseen.filter((m) => passesFilters(m, vec));
+  // don't dead-end on filters alone: relax tags, then kid-safety last.
+  // `exclude` is never relaxed — that's the no-repeat guarantee.
   if (pool.length === 0)
-    pool = catalog.filter((m) => !vec.kidFriendly || m.kidSafe);
-  if (pool.length === 0) pool = [...catalog];
+    pool = unseen.filter((m) => !vec.kidFriendly || m.kidSafe);
+  if (pool.length === 0) pool = [...unseen];
 
   const recent = [...recentSlugs];
   const out: string[] = [];
+  const left = [...pool];
 
-  for (let i = 0; i < count; i++) {
-    const weights = pool.map((m) => {
+  while (out.length < count && left.length > 0) {
+    const weights = left.map((m) => {
       const base = scoreGame(m, vec, recent, boosts);
       const explore = vec.variety * Math.random();
-      let w = Math.max(0.02, base + explore);
-      if (out.length > 0 && out[out.length - 1] === m.slug) w *= 0.05;
-      return w;
+      return Math.max(0.02, base + explore);
     });
     const total = weights.reduce((a, b) => a + b, 0);
     let roll = Math.random() * total;
-    let picked = pool[pool.length - 1];
-    for (let j = 0; j < pool.length; j++) {
+    let idx = left.length - 1;
+    for (let j = 0; j < left.length; j++) {
       roll -= weights[j];
       if (roll <= 0) {
-        picked = pool[j];
+        idx = j;
         break;
       }
     }
+    const [picked] = left.splice(idx, 1);
     out.push(picked.slug);
     recent.unshift(picked.slug);
     if (recent.length > 8) recent.pop();
