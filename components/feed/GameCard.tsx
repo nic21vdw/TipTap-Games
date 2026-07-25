@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GameHost, type RunResult } from "@/components/feed/GameHost";
+import { DeathScreen } from "@/components/feed/DeathScreen";
 import {
   HeartIcon,
   SendIcon,
@@ -36,8 +37,8 @@ export function GameCard({ card, index }: Props) {
   const [liked, setLiked] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
-  const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [copied, setCopied] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
   const musicOn = useMusicStore((s) => s.enabled);
   const musicUnlocked = useMusicStore((s) => s.unlocked);
@@ -96,17 +97,36 @@ export function GameCard({ card, index }: Props) {
     }
   }, [mounted, card.slug]);
 
+  // the death screen owns the screen until the player acts, so leaving play —
+  // by button or by swiping out — always tears it down.
   useEffect(() => {
-    return () => {
-      if (resultTimer.current) clearTimeout(resultTimer.current);
-    };
-  }, []);
+    if (!playing) setResult(null);
+  }, [playing]);
 
   const handleRunEnd = (r: RunResult) => {
     setResult(r);
     if (r.isBest) setBest(r.score);
-    if (resultTimer.current) clearTimeout(resultTimer.current);
-    resultTimer.current = setTimeout(() => setResult(null), 2800);
+    haptic(r.isBest ? "hit" : "fail");
+  };
+
+  // "Play again" restarts in place: every game treats a tap on a dead board as
+  // "go again", so we hand the frozen canvas exactly that.
+  const playAgain = () => {
+    setResult(null);
+    const canvas = sectionRef.current?.querySelector("canvas");
+    if (!canvas) return;
+    haptic("light");
+    try {
+      canvas.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    } catch {
+      canvas.dispatchEvent(new Event("pointerdown"));
+    }
+  };
+
+  const leaveToFeed = () => {
+    setResult(null);
+    exitPlay();
+    haptic("light");
   };
 
   // A like is a visible, editable reason in the algorithm's memory list.
@@ -140,6 +160,7 @@ export function GameCard({ card, index }: Props) {
 
   return (
     <section
+      ref={sectionRef}
       data-index={index}
       className="relative h-dvh w-full snap-start snap-always overflow-hidden"
       style={{ background: "var(--bg)" }}
@@ -362,27 +383,15 @@ export function GameCard({ card, index }: Props) {
         </div>
       </div>
 
-      {/* run result toast */}
-      {result && (
-        <div
-          className="anim-toast absolute inset-x-0 top-[18%] z-30 mx-auto w-fit px-5 py-3 text-center"
-          style={{
-            background: "rgba(12,18,28,.85)",
-            borderRadius: "var(--radius)",
-            fontFamily: "var(--font-body)",
-          }}
-        >
-          <div className="text-sm font-bold" style={{ color: "#fff" }}>
-            {result.topTen
-              ? `#${result.rank} on ${meta.title}!`
-              : `You beat ${result.percentile}% of players`}
-          </div>
-          {result.isBest && result.score > 0 && (
-            <div className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
-              new personal best · {result.score} {meta.scoreUnit}
-            </div>
-          )}
-        </div>
+      {/* the iOS-style game-over sheet — only during real play, never the demo */}
+      {playing && result && (
+        <DeathScreen
+          result={result}
+          meta={meta}
+          best={best}
+          onPlayAgain={playAgain}
+          onLeave={leaveToFeed}
+        />
       )}
     </section>
   );

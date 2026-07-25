@@ -13,6 +13,8 @@ export interface RunResult {
   rank: number;
   percentile: number;
   topTen: boolean;
+  /** the game's own game-over headline, e.g. "CRASHED" */
+  reason?: string;
 }
 
 interface Props {
@@ -88,12 +90,16 @@ export function GameHost({
         lastScore = n;
         onScoreRef.current(n);
       },
-      onRunEnd: (finalScore) => {
+      onRunEnd: (finalScore, reason) => {
         // Attract-mode runs are a shop window, not a score: never persist them.
         if (!interactiveRef.current) return;
         runEnds += 1;
         bumpSignals(slug, { runs: 1, replays: runEnds > 1 ? 1 : 0 });
-        onRunEndRef.current({ score: finalScore, ...submitRun(slug, finalScore) });
+        onRunEndRef.current({
+          score: finalScore,
+          reason,
+          ...submitRun(slug, finalScore),
+        });
       },
     });
     instRef.current = inst;

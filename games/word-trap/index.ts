@@ -65,7 +65,7 @@ function mount(ctx: GameContext): GameInstance {
     ctx.haptic("fail");
     if (lives <= 0) {
       over = true;
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "TRAPPED");
     } else {
       nextPrompt();
     }

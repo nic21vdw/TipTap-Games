@@ -118,7 +118,7 @@ function mount(ctx: GameContext): GameInstance {
     collapse();
     if (!anyMoves()) {
       over = true;
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "NO MOVES LEFT");
     }
   };
   ctx.canvas.addEventListener("pointerdown", onDown);

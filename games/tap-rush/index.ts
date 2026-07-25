@@ -111,7 +111,7 @@ function mount(ctx: GameContext): GameInstance {
           ctx.haptic("fail");
           if (misses >= 3) {
             over = true;
-            ctx.onRunEnd(score);
+            ctx.onRunEnd(score, "OUT OF MISSES");
           }
         }
       }

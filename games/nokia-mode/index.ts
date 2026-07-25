@@ -129,7 +129,7 @@ function mount(ctx: GameContext): GameInstance {
         if (hitWall || hitSelf) {
           over = true;
           ctx.haptic("fail");
-          ctx.onRunEnd(score);
+          ctx.onRunEnd(score, "GAME OVER");
         } else {
           snake.unshift(head);
           if (head.x === food.x && head.y === food.y) {

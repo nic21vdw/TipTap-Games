@@ -69,19 +69,6 @@ body {
 .anim-breathe {
   animation: breathe 2.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.anim-toast {
-  animation: toast-in 280ms cubic-bezier(0.32, 0.72, 0, 1);
-}
 /* the little equaliser on the now-playing chip */
 @keyframes eq-bounce {
   0%,
@@ -102,6 +89,134 @@ body {
     transform: scaleY(0.7);
   }
 }
+/* ── Game-over sheet: the iOS-style death moment ──────────────────────── */
+@keyframes death-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.anim-death-scrim {
+  animation: death-scrim-in 240ms ease-out both;
+}
+@keyframes death-card-in {
+  0% {
+    opacity: 0;
+    transform: translateY(34px) scale(0.92);
+  }
+  62% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.012);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+.anim-death-card {
+  animation: death-card-in 520ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation-delay: 40ms;
+}
+@keyframes death-emblem-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-12deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.16) rotate(3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+.anim-death-emblem {
+  animation: death-emblem-in 560ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 140ms;
+}
+@keyframes death-ring-pulse {
+  0% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+.anim-death-ring {
+  animation: death-ring-pulse 1.9s ease-out infinite;
+  animation-delay: 520ms;
+}
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes badge-sheen {
+  to {
+    transform: translateX(120%);
+  }
+}
+.anim-shimmer {
+  position: relative;
+  overflow: hidden;
+  animation: badge-pop 440ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 300ms;
+}
+.anim-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 68%
+  );
+  transform: translateX(-120%);
+  animation: badge-sheen 1.7s ease-in-out infinite;
+  animation-delay: 900ms;
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10%) rotate(var(--rot, 0deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(112vh) rotate(calc(var(--rot, 0deg) + 480deg));
+    opacity: 0;
+  }
+}
+.anim-confetti {
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.3, 0.25, 0.5, 1);
+  animation-fill-mode: both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-death-card,
+  .anim-death-emblem,
+  .anim-shimmer {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+  .anim-death-ring,
+  .anim-shimmer::after,
+  .anim-confetti {
+    animation: none;
+  }
+}
+
 /* colour tokens cross-fade on theme switch */
 body,
 .theme-smooth {

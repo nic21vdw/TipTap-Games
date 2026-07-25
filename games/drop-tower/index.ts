@@ -62,7 +62,7 @@ function mount(ctx: GameContext): GameInstance {
     if (overlap <= 4) {
       over = true;
       ctx.haptic("fail");
-      ctx.onRunEnd(layers);
+      ctx.onRunEnd(layers, "OFF THE EDGE");
       return;
     }
     if (overlap > towerW * 0.95) flash = 0.3; // clean drop

@@ -112,7 +112,7 @@ function mount(ctx: GameContext): GameInstance {
         if ((px - cx) ** 2 + (py - cy) ** 2 < R * R) {
           over = true;
           ctx.haptic("fail");
-          ctx.onRunEnd(score);
+          ctx.onRunEnd(score, "CLIPPED");
         }
       }
     }

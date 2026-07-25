@@ -75,7 +75,7 @@ function mount(ctx: GameContext): GameInstance {
       over = true;
       overReason = "WRONG TILE";
       ctx.haptic("fail");
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, overReason);
     }
   };
   ctx.canvas.addEventListener("pointerdown", onDown);
@@ -107,7 +107,7 @@ function mount(ctx: GameContext): GameInstance {
             over = true;
             overReason = "MISSED ONE";
             ctx.haptic("fail");
-            ctx.onRunEnd(score);
+            ctx.onRunEnd(score, overReason);
             break;
           }
           row.y = topY - rowH;

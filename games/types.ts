@@ -63,7 +63,8 @@ export interface GameContext {
   /** this game's own colours, already resolved */
   pal: GamePalette;
   onScore: (score: number) => void;
-  onRunEnd: (finalScore: number) => void;
+  /** finalScore ends the run; reason is the game's own headline (e.g. "CRASHED"). */
+  onRunEnd: (finalScore: number, reason?: string) => void;
   haptic: (kind: "light" | "hit" | "fail") => void;
 }
 
