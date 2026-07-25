@@ -2,7 +2,13 @@
 
 import { create } from "zustand";
 
-export type SheetId = "algo" | "leaderboard" | "theme" | "search" | null;
+export type SheetId =
+  | "algo"
+  | "leaderboard"
+  | "theme"
+  | "search"
+  | "settings"
+  | null;
 
 interface UiState {
   sheet: SheetId;
