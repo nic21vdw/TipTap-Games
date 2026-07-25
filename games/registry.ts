@@ -15,8 +15,21 @@ import split from "@/games/split";
 import dropTower from "@/games/drop-tower";
 import crossTraffic from "@/games/cross-traffic";
 import driftField from "@/games/drift-field";
+// The Nostalgia 100 packs. Each is a themed batch built on games/kit.ts —
+// same contract as the hand-rolled modules above, an order of magnitude less
+// boilerplate per card.
+import { runnerPack } from "@/games/packs/runners";
+import { flyerPack } from "@/games/packs/flyers";
+import { tapPack } from "@/games/packs/taps";
+import { puzzlePack } from "@/games/packs/puzzles";
+import { aimPack } from "@/games/packs/aim";
+import { physicsPack } from "@/games/packs/physics";
+import { drivePack } from "@/games/packs/drive";
+import { arenaPack } from "@/games/packs/arena";
+import { simPack } from "@/games/packs/sim";
 
-const ALL: GameModule[] = [
+/** The nine originals plus the seven homages that shipped first. */
+const FOUNDING: GameModule[] = [
   reflexGate,
   tapRush,
   wordTrap,
@@ -34,6 +47,30 @@ const ALL: GameModule[] = [
   crossTraffic,
   driftField,
 ];
+
+const ALL: GameModule[] = [
+  ...FOUNDING,
+  ...runnerPack,
+  ...flyerPack,
+  ...tapPack,
+  ...puzzlePack,
+  ...aimPack,
+  ...physicsPack,
+  ...drivePack,
+  ...arenaPack,
+  ...simPack,
+];
+
+if (process.env.NODE_ENV !== "production") {
+  const seen = new Set<string>();
+  for (const m of ALL) {
+    if (seen.has(m.meta.slug)) throw new Error(`duplicate game slug: ${m.meta.slug}`);
+    seen.add(m.meta.slug);
+  }
+}
+
+/** Catalog size, surfaced in the UI. It is meant to be exactly 100. */
+export const CATALOG_SIZE = ALL.length;
 
 /**
  * Fills the optional algorithm axes. Speed tracks intensity, difficulty
