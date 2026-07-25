@@ -154,6 +154,16 @@ export interface CustomGameSpec {
   intensity: number;
   luck: number;
   nostalgia: number;
+  /** the game's own five colours — absent on specs saved before this existed */
+  palette?: {
+    hero: string;
+    foe: string;
+    prize: string;
+    deep: string;
+    glow: string;
+  };
+  /** speed/density dials handed to the engine through ctx.tune */
+  tune?: { speed: number; density: number };
 }
 
 export function loadCustomSpecs(): CustomGameSpec[] {
