@@ -83,3 +83,26 @@ export function registerModule(mod: GameModule) {
   MODULES[mod.meta.slug] = mod;
   CATALOG.push(enrich(mod));
 }
+
+/**
+ * Slugs that exist as modules (so a card can render them) but must never be
+ * drawn by the algorithm — used for transient "building…" placeholder cards.
+ */
+const HIDDEN = new Set<string>();
+export function hideFromSampling(slug: string) {
+  HIDDEN.add(slug);
+}
+
+/** Catalog the algorithm may sample from: everything except hidden slugs. */
+export function sampleCatalog(): FullGameMeta[] {
+  return HIDDEN.size === 0 ? CATALOG : CATALOG.filter((m) => !HIDDEN.has(m.slug));
+}
+
+/** Removes a runtime module (e.g. a resolved placeholder) from the catalog. */
+export function unregisterModule(slug: string) {
+  if (!MODULES[slug]) return;
+  delete MODULES[slug];
+  HIDDEN.delete(slug);
+  const i = CATALOG.findIndex((m) => m.slug === slug);
+  if (i >= 0) CATALOG.splice(i, 1);
+}
