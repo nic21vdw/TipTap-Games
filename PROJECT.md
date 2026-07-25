@@ -30,6 +30,14 @@ algorithm** via a tuner sheet with a live "Next up" strip.
   and trade dress are never borrowed.
 - Casino = arcade-casino: virtual chips, free reset, no purchase
   affordance anywhere.
+- The feed never repeats. A game you've scrolled past is struck off the
+  ledger (`ttg:seen`) for good; when the catalog runs out the feed mints
+  new games (`games/variants.ts`) instead of recycling. Liking a game is
+  the one thing that buys it a comeback, and never within 14 cards.
+- The web build is a shop window for an App Store app. Anything
+  viewport-shaped reads `--app-h` / `--safe-top` / `--safe-bottom`, never
+  `dvh` or `env(safe-area-*)` directly — that seam is what lets the iPhone
+  preview simulate a screen.
 - iOS-feel motion everywhere: sheet transitions use
   `cubic-bezier(0.32, 0.72, 0, 1)`, buttons have springy press-scale,
   scores pop, toasts slide in. Smoothness is a feature, not polish.
@@ -37,7 +45,8 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 ## Key files
 
 - `games/types.ts` — the game contract; `games/registry.ts` — catalog
-- `lib/algorithm.ts` — scoring + weighted-random sampling
+- `lib/algorithm.ts` — scoring + weighted sampling without replacement
+- `games/variants.ts` — mints fresh games once the catalog is exhausted
 - `lib/storage.ts` — the synchronous local layer everything reads from
 - `lib/cloud.ts` — background replica: mirrors local writes to Postgres,
   merges the account's copy back on sign-in, redeems run tickets
@@ -48,6 +57,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 - `supabase/schema.sql` — tables, RLS policies, leaderboard functions
 - `app/api/runs/*` — the only writers to `scores`, service-role and
   ticket-validated
+- `components/shell/DevicePreview.tsx` — desktop ⇄ iPhone preview shell
 
 ## Demo script (2 min)
 

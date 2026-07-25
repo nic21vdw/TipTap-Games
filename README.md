@@ -89,6 +89,27 @@ routes are standard Next.js route handlers — but Cloudflare Pages would need
 `@opennextjs/cloudflare` and a `wrangler` config, which this repo doesn't
 carry yet.
 
+## Desktop vs iPhone preview
+
+The product is an iPhone app; the web build is its shop window. Open the
+Vercel URL on a laptop and a switch in the corner flips between two views:
+
+- **Desktop** — the app filling the browser window (the old behaviour).
+- **iPhone** — the app running inside a to-scale iPhone, with a device
+  picker (17 Pro / 17 Pro Max / SE), the Dynamic Island, real safe-area
+  insets, and the frame auto-scaling to fit short windows.
+
+The choice is remembered, and `?view=desktop` / `?view=iphone` links
+straight to either one — handy for App Store screenshots and demo links.
+On a phone-sized browser none of this exists: you get the app, full bleed.
+
+Implementation lives in `components/shell/DevicePreview.tsx`. The framed
+mode works without touching a single feature component: the simulated
+screen carries a `transform`, which makes it the containing block for every
+`position: fixed` child, and `--app-h` / `--safe-top` / `--safe-bottom`
+(defined in `app/globals.css`) carry the screen metrics the app lays out
+against.
+
 ## What's inside
 
 - **9 games**, all plain `<canvas>` + rAF, each an original take on a classic

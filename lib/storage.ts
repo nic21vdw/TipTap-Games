@@ -29,6 +29,7 @@ const KEY = {
   theme: "ttg:theme",
   likes: "ttg:likes",
   custom: "ttg:customGames",
+  seen: "ttg:seen",
 };
 
 const safe = {
@@ -215,6 +216,50 @@ export function mergeLikes(incoming: string[]) {
   safe.set(KEY.likes, JSON.stringify([...set]));
 }
 
+// ---- seen games (the no-repeat ledger) ----
+// Every game the feed has actually shown you. The sampler treats this as a
+// hard exclusion, so scrolling never serves the same card twice. Liked games
+// are the one exception — see useFeedStore.
+
+export function seenSlugs(): Set<string> {
+  try {
+    return new Set(JSON.parse(safe.get(KEY.seen) ?? "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+/** Generated games are disposable; hand-built ones are never forgotten, so
+ *  the catalog can't quietly come back around once the ledger fills up. */
+const SEEN_BUDGET = 2000;
+
+export function markSeen(slugs: string[]) {
+  if (slugs.length === 0) return;
+  const set = seenSlugs();
+  const before = set.size;
+  slugs.forEach((s) => set.add(s));
+  if (set.size === before) return;
+  let list = [...set];
+  if (list.length > SEEN_BUDGET) {
+    const generated = (s: string) =>
+      s.startsWith("mix-") || s.startsWith("custom-");
+    const drop = list.length - SEEN_BUDGET;
+    let dropped = 0;
+    list = list.filter((s) => {
+      if (dropped < drop && generated(s)) {
+        dropped++;
+        return false;
+      }
+      return true;
+    });
+  }
+  safe.set(KEY.seen, JSON.stringify(list));
+}
+
+export function clearSeen() {
+  safe.set(KEY.seen, "[]");
+}
+
 // ---- player-generated games (specs only; engines stay ours) ----
 
 export interface CustomGameSpec {
@@ -239,10 +284,21 @@ export function loadCustomSpecs(): CustomGameSpec[] {
   }
 }
 
+/** Generated games accumulate forever otherwise, so keep the newest
+ *  SPEC_BUDGET plus every one the player liked (those must stay playable). */
+const SPEC_BUDGET = 150;
+
+function applySpecBudget(all: CustomGameSpec[]): CustomGameSpec[] {
+  if (all.length <= SPEC_BUDGET) return all;
+  const liked = likedSlugs();
+  const recent = new Set(all.slice(-SPEC_BUDGET).map((s) => s.slug));
+  return all.filter((s) => recent.has(s.slug) || liked.has(s.slug));
+}
+
 export function saveCustomSpec(spec: CustomGameSpec) {
   const all = loadCustomSpecs().filter((s) => s.slug !== spec.slug);
   all.push(spec);
-  safe.set(KEY.custom, JSON.stringify(all));
+  safe.set(KEY.custom, JSON.stringify(applySpecBudget(all)));
   emit("custom");
 }
 
@@ -251,7 +307,7 @@ export function mergeCustomSpecs(incoming: CustomGameSpec[]) {
   const mine = loadCustomSpecs();
   const bySlug = new Map(incoming.map((s) => [s.slug, s]));
   for (const s of mine) bySlug.set(s.slug, s);
-  safe.set(KEY.custom, JSON.stringify([...bySlug.values()]));
+  safe.set(KEY.custom, JSON.stringify(applySpecBudget([...bySlug.values()])));
 }
 
 export function loadJson<T>(key: "algo" | "theme", fallback: T): T {

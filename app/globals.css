@@ -14,6 +14,12 @@
   --font-body: var(--font-nunito), system-ui, sans-serif;
   --radius: 16px;
   --grain: 0;
+  /* Viewport seam. On a real device these are the device's own metrics; the
+     iPhone preview shell overrides them so the app lays itself out against
+     the simulated screen instead of the browser window. */
+  --app-h: 100dvh;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 html,
@@ -120,4 +126,149 @@ html[data-pixelate="1"] canvas {
 }
 html[data-scanlines="1"] .fx-scanlines {
   display: block;
+}
+
+/* ── Device preview shell ────────────────────────────────────────────────
+   Desktop-only chrome that puts the app inside a to-scale iPhone. The
+   screen element is transformed, which makes it the containing block for
+   every fixed-position child of the app — sheets and overlays land inside
+   the phone, not over the browser window. */
+
+.ttg-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 0%, #1b2534 0%, #0b0f16 60%, #06080c 100%);
+}
+
+.ttg-sizer {
+  position: relative;
+  flex: none;
+}
+
+.ttg-phone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  background: linear-gradient(160deg, #3a4150 0%, #12161d 45%, #2c333f 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.09),
+    0 40px 90px -20px rgba(0, 0, 0, 0.85);
+}
+
+.ttg-screen {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  /* the containing-block trick — do not remove */
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+/* Dynamic Island / status furniture, drawn over the app like the real thing */
+.ttg-island {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  width: 124px;
+  height: 35px;
+  border-radius: 20px;
+  background: #000;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 70;
+}
+.ttg-statusbar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.82);
+  pointer-events: none;
+  z-index: 70;
+}
+.ttg-home {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  width: 140px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.55);
+  mix-blend-mode: difference;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 70;
+}
+
+.ttg-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  color: #e8eef8;
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+/* desktop mode: the app owns the window, so the switch floats over it */
+/* bottom-right, clear of the sheet CTAs and the right-hand action rail */
+.ttg-toolbar-float {
+  position: fixed;
+  right: 14px;
+  bottom: calc(var(--safe-bottom) + 14px);
+  z-index: 70;
+}
+
+.ttg-seg {
+  display: flex;
+  padding: 3px;
+  gap: 3px;
+  border-radius: 999px;
+  background: rgba(12, 18, 28, 0.72);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+.ttg-seg-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: rgba(232, 238, 248, 0.62);
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+.ttg-seg-btn:hover {
+  color: #fff;
+}
+.ttg-seg-btn.is-on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.ttg-select {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(12, 18, 28, 0.72);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #e8eef8;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ttg-select option {
+  color: #0f1a2a;
+}
+.ttg-dims {
+  color: rgba(232, 238, 248, 0.45);
+  font-variant-numeric: tabular-nums;
 }

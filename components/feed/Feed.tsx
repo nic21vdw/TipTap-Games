@@ -49,7 +49,7 @@ export function Feed() {
   return (
     <div
       ref={containerRef}
-      className={`no-scrollbar h-dvh overscroll-none ${
+      className={`no-scrollbar h-[var(--app-h)] overscroll-none ${
         playing
           ? "overflow-hidden" // the game owns every gesture while you play
           : "snap-y snap-mandatory overflow-y-scroll"
