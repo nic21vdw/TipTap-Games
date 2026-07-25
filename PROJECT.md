@@ -10,7 +10,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | # | Requirement | Status |
 |---|-------------|--------|
 | 1 | Vertical snap feed, 1 swipe = 1 card (touch/wheel/trackpad) | ✅ |
-| 2 | 6+ genuinely different games | ✅ 9 shipped |
+| 2 | 6+ genuinely different games | ✅ 17 shipped, incl. one in 3D |
 | 3 | Auto start >60% visible, hard stop on leave, zero zombie rAF | ✅ verified: `__rafActive === 1` after 12 swipes |
 | 4 | Guest play first, login only at a win moment | ✅ guest / ⬜ OAuth (needs Supabase creds) |
 | 5 | Persisted scores | ✅ localStorage / ⬜ Postgres (schema ready) |
@@ -23,7 +23,9 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 ## Hard rules
 
 - Games are plain canvas/DOM + rAF. No engines. `mount` returns instantly,
-  `destroy` leaves zero listeners/timers/loops.
+  `destroy` leaves zero listeners/timers/loops. 3D is allowed on the same
+  terms — `games/hardwater` projects its own world and paints back-to-front,
+  so it still ships zero dependencies.
 - Games draw only with theme tokens from `ctx.getTheme()` — no hard-coded
   colours in `/games`.
 - Original titles, art, palettes only. Mechanics are homages; names, art
