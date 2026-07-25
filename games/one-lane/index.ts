@@ -5,10 +5,14 @@ const meta = {
   slug: "one-lane",
   title: "One Lane",
   rule: "Tap to flip lanes",
+  year: 2012,
+  description: "The endless-runner era, compressed into one tap.",
+  history:
+    "Homage to 2012's lane-runner boom — swipe-to-dodge commutes on a billion phones. Ours strips it to a single input and no mercy.",
   tags: ["endurance", "oneTap", "retro"],
   intensity: 0.65,
   luck: 0.1,
-  nostalgia: 0.9,
+  nostalgia: 0.6,
   sessionLength: 0.4,
   scoreUnit: "pts",
   maxScorePerSecond: 4,
@@ -53,9 +57,24 @@ function mount(ctx: GameContext): GameInstance {
   };
   ctx.canvas.addEventListener("pointerdown", onDown);
 
+  let auto = false;
+
   const loop = makeLoop((dt) => {
     const t = ctx.getTheme();
     if (!over) {
+      // attract mode: flip out of the lane an obstacle is closing on
+      if (auto) {
+        for (const o of obs) {
+          const dist = py - o.y;
+          if (o.lane === lane && dist > 0 && dist < size * 5) {
+            const otherBlocked = obs.some(
+              (x) => x.lane !== lane && Math.abs(py - x.y) < size * 3
+            );
+            if (!otherBlocked) lane = lane === 0 ? 1 : 0;
+            break;
+          }
+        }
+      }
       scroll = (scroll + speed * dt) % 48;
       spawnIn -= dt;
       speed = Math.min(560, speed + dt * 11);
@@ -126,6 +145,10 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      if (!on) reset();
+    },
   };
 }
 

@@ -5,10 +5,14 @@ const meta = {
   slug: "word-trap",
   title: "Word Trap",
   rule: "Tap only if the colour matches the word",
+  year: 1935,
+  description: "The Stroop test, weaponized for your feed.",
+  history:
+    "John Ridley Stroop published the colour-word interference effect in 1935. Ninety years later it still short-circuits brains — now with a countdown.",
   tags: ["precision", "calm"],
   intensity: 0.35,
   luck: 0.1,
-  nostalgia: 0.3,
+  nostalgia: 0.5,
   sessionLength: 0.4,
   scoreUnit: "pts",
   maxScorePerSecond: 2,
@@ -86,9 +90,21 @@ function mount(ctx: GameContext): GameInstance {
 
   nextPrompt();
 
+  let auto = false;
+
   const loop = makeLoop((dt) => {
     const t = ctx.getTheme();
     if (!over) {
+      // attract mode: answer with a believable beat of hesitation
+      if (auto && timer < window_ - 0.45) {
+        if (word === colour) {
+          score += 1;
+          ctx.onScore(score);
+          nextPrompt();
+        } else if (timer < window_ - 0.9) {
+          nextPrompt();
+        }
+      }
       timer -= dt;
       if (timer <= 0) {
         if (word === colour) loseLife();
@@ -139,6 +155,10 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      if (!on) reset();
+    },
   };
 }
 

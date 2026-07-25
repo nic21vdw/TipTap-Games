@@ -1,4 +1,4 @@
-export type ThemeId = "arcade" | "eightbit" | "skeuo" | "felt";
+export type ThemeId = "coast" | "arcade" | "eightbit" | "skeuo" | "felt";
 
 export interface ThemeTokens {
   bg: string;
@@ -24,6 +24,26 @@ export interface ThemeDef extends ThemeTokens {
 }
 
 export const THEMES: Record<ThemeId, ThemeDef> = {
+  coast: {
+    id: "coast",
+    name: "Coast",
+    blurb: "Light, blue, clean — the default",
+    bg: "#f4f8fd",
+    surface: "#e2ecf7",
+    ink: "#0f1a2a",
+    inkDim: "#5c6b80",
+    accent: "#0095f6",
+    accentAlt: "#5b8def",
+    success: "#1fa855",
+    danger: "#ed4956",
+    fontDisplay:
+      '-apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif',
+    fontBody: '-apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif',
+    radius: 16,
+    pixelate: false,
+    grain: 0,
+    scanlines: false,
+  },
   arcade: {
     id: "arcade",
     name: "Arcade Dark",
@@ -104,7 +124,13 @@ export const THEMES: Record<ThemeId, ThemeDef> = {
   },
 };
 
-export const THEME_ORDER: ThemeId[] = ["arcade", "eightbit", "skeuo", "felt"];
+export const THEME_ORDER: ThemeId[] = [
+  "coast",
+  "arcade",
+  "eightbit",
+  "skeuo",
+  "felt",
+];
 
 export function applyThemeToDom(t: ThemeTokens) {
   const r = document.documentElement.style;

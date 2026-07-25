@@ -5,6 +5,10 @@ const meta = {
   slug: "drop-dodge",
   title: "Drop Dodge",
   rule: "Drag through the gaps",
+  year: 2008,
+  description: "Falling blocks. Tiny gaps. Go.",
+  history:
+    "Homage to the first wave of dodgers on the 2008 App Store, back when steering with your phone felt like the future. Ours trades tilt for a thumb.",
   tags: ["endurance", "drag", "chaos"],
   intensity: 0.75,
   luck: 0.2,
@@ -59,9 +63,25 @@ function mount(ctx: GameContext): GameInstance {
   ctx.canvas.addEventListener("pointerdown", onDown);
   ctx.canvas.addEventListener("pointermove", onMove);
 
+  let auto = false;
+
   const loop = makeLoop((dt) => {
     const t = ctx.getTheme();
     if (!over) {
+      // attract mode: aim at the widest gap beside the nearest incoming block
+      if (auto) {
+        let threat: Block | null = null;
+        for (const b of blocks)
+          if (b.y < py && (!threat || b.y > threat.y)) threat = b;
+        if (threat) {
+          const leftGap = threat.x;
+          const rightGap = W - (threat.x + threat.w);
+          targetX = leftGap > rightGap ? leftGap / 2 : W - rightGap / 2;
+          targetX = clamp(targetX, R, W - R);
+        } else {
+          targetX = W / 2;
+        }
+      }
       px += (targetX - px) * Math.min(1, dt * 18);
       spawnIn -= dt;
       speed = Math.min(520, speed + dt * 9);
@@ -126,6 +146,10 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      if (!on) reset();
+    },
   };
 }
 

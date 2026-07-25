@@ -11,7 +11,7 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  themeId: "arcade",
+  themeId: "coast",
   setTheme: (id) => {
     set({ themeId: id });
     applyThemeToDom(THEMES[id]);
@@ -19,9 +19,9 @@ export const useThemeStore = create<ThemeState>((set) => ({
   },
   hydrate: () => {
     const { themeId } = loadJson<{ themeId: ThemeId }>("theme", {
-      themeId: "arcade",
+      themeId: "coast",
     });
-    const id = THEMES[themeId] ? themeId : "arcade";
+    const id = THEMES[themeId] ? themeId : "coast";
     set({ themeId: id });
     applyThemeToDom(THEMES[id]);
   },

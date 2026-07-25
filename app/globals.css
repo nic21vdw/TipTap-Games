@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  /* Arcade Dark defaults; useThemeStore.hydrate() overwrites these live */
-  --bg: #0a0a0f;
-  --surface: #16161d;
-  --ink: #f4f4f5;
-  --ink-dim: #8b8b96;
-  --accent: #b6ff2e;
-  --accent-alt: #2ee6ff;
-  --success: #4ade80;
-  --danger: #ff3b5c;
-  --font-display: "Arial Black", "Helvetica Neue", system-ui, sans-serif;
-  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Coast (light + blue) defaults; useThemeStore.hydrate() overwrites live */
+  --bg: #f4f8fd;
+  --surface: #e2ecf7;
+  --ink: #0f1a2a;
+  --ink-dim: #5c6b80;
+  --accent: #0095f6;
+  --accent-alt: #5b8def;
+  --success: #1fa855;
+  --danger: #ed4956;
+  --font-display: -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --font-body: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   --radius: 16px;
-  --grain: 0.04;
+  --grain: 0;
 }
 
 html,
@@ -54,6 +54,20 @@ body {
 .anim-pop {
   display: inline-block;
   animation: score-pop 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.045);
+    opacity: 1;
+  }
+}
+.anim-breathe {
+  animation: breathe 2.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 @keyframes toast-in {
   from {

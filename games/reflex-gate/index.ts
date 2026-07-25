@@ -5,6 +5,10 @@ const meta = {
   slug: "reflex-gate",
   title: "Reflex Gate",
   rule: "Tap when the bar hits green",
+  year: 2026,
+  description: "Pure timing. The green zone shrinks every single hit.",
+  history:
+    "An original for the feed — the timing-bar tension of arcade bonus rounds, distilled to one tap and an ever-crueller window.",
   tags: ["reflex", "precision", "oneTap"],
   intensity: 0.55,
   luck: 0.1,
@@ -40,7 +44,9 @@ function mount(ctx: GameContext): GameInstance {
     ctx.onScore(0);
   };
 
-  const onDown = () => {
+  let auto = false;
+
+  const tap = () => {
     if (over) {
       reset();
       return;
@@ -60,10 +66,13 @@ function mount(ctx: GameContext): GameInstance {
       ctx.onRunEnd(score);
     }
   };
+  const onDown = () => tap();
   ctx.canvas.addEventListener("pointerdown", onDown);
 
   const loop = makeLoop((dt) => {
     if (!over) {
+      // attract mode: land the tap just inside the green zone
+      if (auto && Math.abs(pos - zoneC) < zoneW * 0.35) tap();
       pos += dir * speed * dt;
       if (pos > 1) {
         pos = 1;
@@ -122,6 +131,10 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      if (!on) reset(); // hand the player a fresh run
+    },
   };
 }
 

@@ -5,10 +5,14 @@ const meta = {
   slug: "flash-recall",
   title: "Flash Recall",
   rule: "Repeat the sequence",
+  year: 1978,
+  description: "The glowing memory grid, reborn at 9 tiles.",
+  history:
+    "Homage to the 1978 electronic memory toys that started the pattern-repeat genre — four glowing buttons on every family's shelf, now nine on your feed.",
   tags: ["memory", "calm"],
   intensity: 0.2,
   luck: 0.05,
-  nostalgia: 0.5,
+  nostalgia: 0.8,
   sessionLength: 0.6,
   scoreUnit: "pts",
   maxScorePerSecond: 1.5,
@@ -85,9 +89,28 @@ function mount(ctx: GameContext): GameInstance {
   };
   ctx.canvas.addEventListener("pointerdown", onDown);
 
+  let auto = false;
+  let autoCd = 0;
+
   const loop = makeLoop((dt) => {
     const t = ctx.getTheme();
     if (!over) {
+      // attract mode: play the sequence back, tile by tile
+      if (auto && phase === "input") {
+        autoCd -= dt;
+        if (autoCd <= 0) {
+          tapFlash = seq[inputPos];
+          tapFlashT = 0.2;
+          inputPos += 1;
+          autoCd = 0.3;
+          if (inputPos >= seq.length) {
+            score = seq.length;
+            ctx.onScore(score);
+            phase = "gap";
+            phaseT = 0.7;
+          }
+        }
+      }
       phaseT -= dt;
       tapFlashT = Math.max(0, tapFlashT - dt);
       if (phase === "gap" && phaseT <= 0) extend();
@@ -150,6 +173,10 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      if (!on) reset();
+    },
   };
 }
 

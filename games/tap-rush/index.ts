@@ -5,6 +5,10 @@ const meta = {
   slug: "tap-rush",
   title: "Tap Rush",
   rule: "Hit the targets before they vanish",
+  year: 2026,
+  description: "Whack-a-target at feed speed. Three misses and out.",
+  history:
+    "An original descended from every light-gun cabinet and whack-a-mole machine ever built, rebuilt for one thumb.",
   tags: ["reflex", "chaos", "oneTap"],
   intensity: 0.9,
   luck: 0.15,
@@ -61,9 +65,25 @@ function mount(ctx: GameContext): GameInstance {
   };
   ctx.canvas.addEventListener("pointerdown", onDown);
 
+  let auto = false;
+  let autoCd = 0;
+
   const loop = makeLoop((dt) => {
     const t = ctx.getTheme();
     if (!over) {
+      // attract mode: pop the most urgent target on a human-ish cadence
+      if (auto) {
+        autoCd -= dt;
+        if (autoCd <= 0 && targets.length > 0) {
+          let idx = 0;
+          for (let i = 1; i < targets.length; i++)
+            if (targets[i].life < targets[idx].life) idx = i;
+          targets.splice(idx, 1);
+          score += 1;
+          ctx.onScore(score);
+          autoCd = 0.28;
+        }
+      }
       spawnIn -= dt;
       const pace = Math.max(0.35, 1.0 - score * 0.02);
       if (spawnIn <= 0) {
@@ -134,6 +154,10 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      if (!on) reset();
+    },
   };
 }
 

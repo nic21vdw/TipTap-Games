@@ -18,6 +18,8 @@ export interface RunResult {
 interface Props {
   slug: string;
   active: boolean;
+  /** false = live preview: the game runs but ignores input so the feed scrolls */
+  interactive: boolean;
   onScore: (n: number) => void;
   onRunEnd: (r: RunResult) => void;
 }
@@ -25,11 +27,19 @@ interface Props {
 // Owns the full game lifecycle: mounts the module, sizes the canvas,
 // pauses on inactive/hidden, re-sizes the backing store on theme change
 // (no remount — same canvas, same instance), and reports signals on exit.
-export function GameHost({ slug, active, onScore, onRunEnd }: Props) {
+export function GameHost({
+  slug,
+  active,
+  interactive,
+  onScore,
+  onRunEnd,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const instRef = useRef<GameInstance | null>(null);
   const activeRef = useRef(active);
   activeRef.current = active;
+  const interactiveRef = useRef(interactive);
+  interactiveRef.current = interactive;
   const onScoreRef = useRef(onScore);
   onScoreRef.current = onScore;
   const onRunEndRef = useRef(onRunEnd);
@@ -69,22 +79,29 @@ export function GameHost({ slug, active, onScore, onRunEnd }: Props) {
       height: H,
       dpr: window.devicePixelRatio || 1,
       getTheme: currentTheme,
-      haptic,
+      // a self-playing demo must never buzz the phone
+      haptic: (kind) => {
+        if (interactiveRef.current) haptic(kind);
+      },
       onScore: (n) => {
         lastScore = n;
         onScoreRef.current(n);
       },
       onRunEnd: (finalScore) => {
+        // Attract-mode runs are a shop window, not a score: never persist them.
+        if (!interactiveRef.current) return;
         runEnds += 1;
         bumpSignals(slug, { runs: 1, replays: runEnds > 1 ? 1 : 0 });
         onRunEndRef.current({ score: finalScore, ...submitRun(slug, finalScore) });
       },
     });
     instRef.current = inst;
+    inst.autoplay?.(!interactiveRef.current);
 
     // next/prev cards mount paused so arrival is instant but silent
-    if (activeRef.current && !document.hidden) activeSince = Date.now();
-    else inst.pause();
+    if (activeRef.current && interactiveRef.current && !document.hidden)
+      activeSince = Date.now();
+    if (!activeRef.current || document.hidden) inst.pause();
 
     const unsubTheme = useThemeStore.subscribe(() => sizeBacking());
     const onVis = () => {
@@ -93,13 +110,23 @@ export function GameHost({ slug, active, onScore, onRunEnd }: Props) {
     };
     document.addEventListener("visibilitychange", onVis);
 
-    // expose dwell bookkeeping to the active-toggle effect below
+    // Dwell is written through on every stop, not just on unmount, so the
+    // time tracker in settings is correct the moment you leave a game.
+    const flush = () => {
+      if (activeSince === null) return;
+      const delta = Date.now() - activeSince;
+      activeSince = null;
+      if (delta <= 0) return;
+      dwellMs += delta;
+      bumpSignals(slug, { dwellMs: delta });
+    };
+
     hostState.set(canvas, {
       markActive: (on: boolean) => {
-        if (on && activeSince === null) activeSince = Date.now();
-        if (!on && activeSince !== null) {
-          dwellMs += Date.now() - activeSince;
-          activeSince = null;
+        if (on) {
+          if (activeSince === null) activeSince = Date.now();
+        } else {
+          flush();
         }
       },
     });
@@ -110,12 +137,10 @@ export function GameHost({ slug, active, onScore, onRunEnd }: Props) {
       inst.destroy();
       instRef.current = null;
       hostState.delete(canvas);
-      if (activeSince !== null) dwellMs += Date.now() - activeSince;
-      if (dwellMs > 0 || runEnds > 0) {
-        bumpSignals(slug, {
-          dwellMs,
-          fastSwipes: dwellMs > 0 && dwellMs < 3000 && runEnds === 0 && lastScore === 0 ? 1 : 0,
-        });
+      flush();
+      // a card opened, ignored, and swiped past is a negative signal
+      if (dwellMs > 0 && dwellMs < 3000 && runEnds === 0 && lastScore === 0) {
+        bumpSignals(slug, { fastSwipes: 1 });
       }
     };
   }, [slug]);
@@ -123,22 +148,28 @@ export function GameHost({ slug, active, onScore, onRunEnd }: Props) {
   useEffect(() => {
     const inst = instRef.current;
     const canvas = canvasRef.current;
-    if (canvas) hostState.get(canvas)?.markActive(active);
+    // dwell measures real play, so the demo never inflates it
+    if (canvas) hostState.get(canvas)?.markActive(active && interactive);
     if (!inst) return;
     if (active && !document.hidden) inst.resume();
     else inst.pause();
-  }, [active]);
+  }, [active, interactive]);
 
-  // drag/hold games own the touch surface; tap games let vertical pans scroll
-  const locksGestures = getModule(slug).meta.tags.some(
-    (t) => t === "drag" || t === "hold"
-  );
+  // Attract mode: a card plays itself until the player takes over.
+  useEffect(() => {
+    instRef.current?.autoplay?.(!interactive);
+  }, [interactive]);
 
   return (
     <canvas
       ref={canvasRef}
       className="block h-full w-full select-none"
-      style={{ touchAction: locksGestures ? "none" : "pan-y" }}
+      style={{
+        // In preview mode the canvas is inert, so every gesture belongs to the
+        // feed. In play mode it takes the whole surface and nothing scrolls.
+        pointerEvents: interactive ? "auto" : "none",
+        touchAction: interactive ? "none" : "pan-y",
+      }}
     />
   );
 }

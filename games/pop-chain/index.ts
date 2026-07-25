@@ -5,6 +5,10 @@ const meta = {
   slug: "pop-chain",
   title: "Pop Chain",
   rule: "Tap groups of 3 or more",
+  year: 1985,
+  description: "Tap-to-collapse — the OG match puzzle.",
+  history:
+    "Homage to SameGame (1985), the tile-collapse puzzle that predates match-3 itself and quietly spawned a whole genre's family tree.",
   tags: ["calm", "retro", "precision"],
   intensity: 0.15,
   luck: 0.35,
@@ -114,8 +118,36 @@ function mount(ctx: GameContext): GameInstance {
 
   fillGrid();
 
+  let auto = false;
+  let autoCd = 0;
+
   const loop = makeLoop((dt) => {
     const t = ctx.getTheme();
+    // attract mode: keep popping the biggest group on the board
+    if (auto && !over) {
+      autoCd -= dt;
+      if (autoCd <= 0) {
+        let best: { c: number; r: number }[] = [];
+        for (let c = 0; c < COLS; c++)
+          for (let r = 0; r < ROWS; r++) {
+            if (grid[c][r] === null) continue;
+            const grp = group(c, r);
+            if (grp.length > best.length) best = grp;
+          }
+        if (best.length >= 3) {
+          popFlash = best;
+          flashT = 0.15;
+          for (const { c, r } of best) grid[c][r] = null;
+          score += best.length * (best.length - 2);
+          ctx.onScore(score);
+          collapse();
+          if (!anyMoves()) fillGrid(); // attract mode never stalls out
+        } else {
+          fillGrid();
+        }
+        autoCd = 0.5;
+      }
+    }
     flashT = Math.max(0, flashT - dt);
     const colours = [t.accent, t.accentAlt, t.success, t.danger];
 
@@ -162,6 +194,10 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      if (!on) reset();
+    },
   };
 }
 

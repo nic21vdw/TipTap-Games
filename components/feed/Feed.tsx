@@ -5,9 +5,11 @@ import { GameCard } from "@/components/feed/GameCard";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 import { useThemeStore } from "@/store/useThemeStore";
+import { useUiStore } from "@/store/useUiStore";
 
 export function Feed() {
   const cards = useFeedStore((s) => s.cards);
+  const playing = useUiStore((s) => s.playingUid !== null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -15,8 +17,14 @@ export function Feed() {
   useEffect(() => {
     useThemeStore.getState().hydrate();
     useAlgorithmStore.getState().hydrate();
-    useFeedStore.getState().init();
-    setReady(true);
+    // re-register any games the player generated in earlier sessions
+    import("@/games/custom").then(({ registerSpec }) => {
+      import("@/lib/storage").then(({ loadCustomSpecs }) => {
+        loadCustomSpecs().forEach(registerSpec);
+        useFeedStore.getState().init();
+        setReady(true);
+      });
+    });
   }, []);
 
   // active-card tracking: >60% visible wins, everything else hard-stops
@@ -41,7 +49,11 @@ export function Feed() {
   return (
     <div
       ref={containerRef}
-      className="no-scrollbar h-dvh snap-y snap-mandatory overflow-y-scroll overscroll-none"
+      className={`no-scrollbar h-dvh overscroll-none ${
+        playing
+          ? "overflow-hidden" // the game owns every gesture while you play
+          : "snap-y snap-mandatory overflow-y-scroll"
+      }`}
       style={{ background: "var(--bg)" }}
     >
       {ready &&

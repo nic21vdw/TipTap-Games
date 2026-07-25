@@ -5,6 +5,10 @@ const meta = {
   slug: "hold-line",
   title: "Hold the Line",
   rule: "Fill to the line, don't overshoot",
+  year: 2026,
+  description: "One press, one release. Nerves of glass.",
+  history:
+    "An original — the power gauge from golf and fighting games, isolated into its purest, meanest form. The tolerance band only shrinks.",
   tags: ["precision", "hold", "calm"],
   intensity: 0.3,
   luck: 0.05,
@@ -71,9 +75,16 @@ function mount(ctx: GameContext): GameInstance {
   ctx.canvas.addEventListener("pointerup", onUp);
   ctx.canvas.addEventListener("pointercancel", onUp);
 
+  let auto = false;
+
   const loop = makeLoop((dt) => {
     const t = ctx.getTheme();
     if (!over) {
+      // attract mode: hold, then release just inside the band
+      if (auto && result === null) {
+        if (!holding) holding = true;
+        else if (fill >= target - tol * 0.4) onUp();
+      }
       if (holding && result === null) {
         fill += fillSpeed * dt;
         if (fill >= 1) {
@@ -139,6 +150,11 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      holding = false;
+      if (!on) reset();
+    },
   };
 }
 

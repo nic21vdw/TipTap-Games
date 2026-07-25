@@ -22,6 +22,8 @@ const KEY = {
   signals: "ttg:signals",
   algo: "ttg:algo",
   theme: "ttg:theme",
+  likes: "ttg:likes",
+  custom: "ttg:customGames",
 };
 
 const safe = {
@@ -116,6 +118,55 @@ export function allSignals(): Record<string, GameSignals> {
 }
 
 // ---- generic JSON prefs (algorithm vector, theme) ----
+
+// ---- likes (explicit algorithm signal + rail UI state) ----
+
+export function likedSlugs(): Set<string> {
+  try {
+    return new Set(JSON.parse(safe.get(KEY.likes) ?? "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+export function toggleLike(slug: string): boolean {
+  const set = likedSlugs();
+  const nowLiked = !set.has(slug);
+  if (nowLiked) set.add(slug);
+  else set.delete(slug);
+  safe.set(KEY.likes, JSON.stringify([...set]));
+  return nowLiked;
+}
+
+// ---- player-generated games (specs only; engines stay ours) ----
+
+export interface CustomGameSpec {
+  slug: string;
+  base: string; // slug of the engine it runs on
+  title: string;
+  rule: string;
+  description: string;
+  history: string;
+  accent: string; // hex; recolours the base engine
+  tags: string[];
+  intensity: number;
+  luck: number;
+  nostalgia: number;
+}
+
+export function loadCustomSpecs(): CustomGameSpec[] {
+  try {
+    return JSON.parse(safe.get(KEY.custom) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomSpec(spec: CustomGameSpec) {
+  const all = loadCustomSpecs().filter((s) => s.slug !== spec.slug);
+  all.push(spec);
+  safe.set(KEY.custom, JSON.stringify(all));
+}
 
 export function loadJson<T>(key: "algo" | "theme", fallback: T): T {
   try {

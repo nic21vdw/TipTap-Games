@@ -7,6 +7,10 @@ const meta = {
   slug: "cash-out",
   title: "Cash Out",
   rule: "Bank it before it busts",
+  year: 2014,
+  description: "The multiplier climbs. Your nerve decides.",
+  history:
+    "Homage to the crash-curve games of the mid-2010s. Virtual chips only, free reset, and the house here charges absolutely nothing.",
   tags: ["casino", "luck", "oneTap"],
   intensity: 0.7,
   luck: 0.85,
@@ -37,10 +41,14 @@ function mount(ctx: GameContext): GameInstance {
     bustAt = Math.min(30, Math.max(1.01, 0.97 / (1 - u)));
   };
 
+  let auto = false;
+  let autoTarget = 2;
+
   const startRound = () => {
     phase = "rising";
     mult = 1;
     rollBust();
+    autoTarget = 1.3 + Math.random() * 2.2;
   };
 
   const reset = () => {
@@ -78,6 +86,8 @@ function mount(ctx: GameContext): GameInstance {
       phaseT -= dt;
       if (phaseT <= 0) startRound();
     } else if (phase === "rising") {
+      // attract mode: bank somewhere believable, sometimes too late
+      if (auto && mult >= autoTarget) onDown();
       mult *= Math.exp(0.55 * dt);
       if (mult >= bustAt) {
         chips -= BET;
@@ -172,6 +182,10 @@ function mount(ctx: GameContext): GameInstance {
     },
     pause: loop.pause,
     resume: loop.resume,
+    autoplay: (on) => {
+      auto = on;
+      if (!on) reset();
+    },
   };
 }
 

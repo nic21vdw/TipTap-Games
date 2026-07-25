@@ -1,4 +1,4 @@
-import type { GameMeta, GameModule } from "@/games/types";
+import type { FullGameMeta, GameModule } from "@/games/types";
 import reflexGate from "@/games/reflex-gate";
 import tapRush from "@/games/tap-rush";
 import wordTrap from "@/games/word-trap";
@@ -8,23 +8,69 @@ import dropDodge from "@/games/drop-dodge";
 import oneLane from "@/games/one-lane";
 import popChain from "@/games/pop-chain";
 import cashOut from "@/games/cash-out";
+import nokiaMode from "@/games/nokia-mode";
+import oneGap from "@/games/one-gap";
+import blackKeys from "@/games/black-keys";
+import split from "@/games/split";
+import dropTower from "@/games/drop-tower";
+import crossTraffic from "@/games/cross-traffic";
+import driftField from "@/games/drift-field";
 
-export const MODULES: Record<string, GameModule> = {
-  [reflexGate.meta.slug]: reflexGate,
-  [tapRush.meta.slug]: tapRush,
-  [wordTrap.meta.slug]: wordTrap,
-  [holdLine.meta.slug]: holdLine,
-  [flashRecall.meta.slug]: flashRecall,
-  [dropDodge.meta.slug]: dropDodge,
-  [oneLane.meta.slug]: oneLane,
-  [popChain.meta.slug]: popChain,
-  [cashOut.meta.slug]: cashOut,
-};
+const ALL: GameModule[] = [
+  reflexGate,
+  tapRush,
+  wordTrap,
+  holdLine,
+  flashRecall,
+  dropDodge,
+  oneLane,
+  popChain,
+  cashOut,
+  nokiaMode,
+  oneGap,
+  blackKeys,
+  split,
+  dropTower,
+  crossTraffic,
+  driftField,
+];
 
-export const CATALOG: GameMeta[] = Object.values(MODULES).map((m) => m.meta);
+/**
+ * Fills the optional algorithm axes. Speed tracks intensity, difficulty
+ * tracks intensity and inverse-luck, realism defaults to playful, and
+ * anything tagged casino is the only thing that isn't kid-safe.
+ */
+export function enrich(mod: GameModule): FullGameMeta {
+  const m = mod.meta;
+  return {
+    ...m,
+    speed: m.speed ?? m.intensity,
+    difficulty: m.difficulty ?? Math.min(1, m.intensity * 0.6 + (1 - m.luck) * 0.4),
+    realism: m.realism ?? 0.3,
+    kidSafe: m.kidSafe ?? !m.tags.includes("casino"),
+  };
+}
+
+export const MODULES: Record<string, GameModule> = Object.fromEntries(
+  ALL.map((m) => [m.meta.slug, m])
+);
+
+export const CATALOG: FullGameMeta[] = ALL.map(enrich);
 
 export function getModule(slug: string): GameModule {
   const m = MODULES[slug];
   if (!m) throw new Error(`Unknown game: ${slug}`);
   return m;
+}
+
+/** Full meta (all axes resolved) for a slug. */
+export function getMeta(slug: string): FullGameMeta {
+  return CATALOG.find((m) => m.slug === slug) ?? enrich(getModule(slug));
+}
+
+/** Adds a runtime-generated module to the live catalog. */
+export function registerModule(mod: GameModule) {
+  if (MODULES[mod.meta.slug]) return;
+  MODULES[mod.meta.slug] = mod;
+  CATALOG.push(enrich(mod));
 }

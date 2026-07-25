@@ -2,8 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GameHost, type RunResult } from "@/components/feed/GameHost";
-import { getModule } from "@/games/registry";
-import { getBest, getHandle } from "@/lib/storage";
+import {
+  HeartIcon,
+  SendIcon,
+  SlidersIcon,
+  DropletIcon,
+  TrophyIcon,
+} from "@/components/ui/icons";
+import { getMeta } from "@/games/registry";
+import { haptic } from "@/lib/haptics";
+import { getBest, getHandle, likedSlugs, toggleLike } from "@/lib/storage";
+import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 import { useFeedStore, type FeedCard as FeedCardData } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
 
@@ -16,17 +25,65 @@ export function GameCard({ card, index }: Props) {
   const activeIndex = useFeedStore((s) => s.activeIndex);
   const active = index === activeIndex;
   const mounted = Math.abs(index - activeIndex) <= 1;
-  const meta = getModule(card.slug).meta;
+  const meta = getMeta(card.slug);
   const openSheet = useUiStore((s) => s.openSheet);
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
   const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const playingUid = useUiStore((s) => s.playingUid);
+  const enterPlay = useUiStore((s) => s.enterPlay);
+  const exitPlay = useUiStore((s) => s.exitPlay);
+  const playing = playingUid === card.uid;
+  const lastTapRef = useRef(0);
+  const edgeRef = useRef<{ x: number; y: number } | null>(null);
+
+  // double-tap the preview to take over
+  const onPreviewTap = (e: React.PointerEvent) => {
+    const now = e.timeStamp;
+    if (now - lastTapRef.current < 320) {
+      lastTapRef.current = 0;
+      enterPlay(card.uid);
+      haptic("hit");
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
+  // swipe right along the edge strip to hand control back to the feed
+  const onEdgeDown = (e: React.PointerEvent) => {
+    edgeRef.current = { x: e.clientX, y: e.clientY };
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+  const onEdgeMove = (e: React.PointerEvent) => {
+    const start = edgeRef.current;
+    if (!start) return;
+    const dx = e.clientX - start.x;
+    if (dx > 44 && Math.abs(dx) > Math.abs(e.clientY - start.y)) {
+      edgeRef.current = null;
+      exitPlay();
+      haptic("light");
+    }
+  };
+  const onEdgeUp = () => {
+    edgeRef.current = null;
+  };
+
+  // leaving the card always drops you back to browsing
   useEffect(() => {
-    if (mounted) setBest(getBest(card.slug));
+    if (!active && playing) exitPlay();
+  }, [active, playing, exitPlay]);
+
+  useEffect(() => {
+    if (mounted) {
+      setBest(getBest(card.slug));
+      setLiked(likedSlugs().has(card.slug));
+    }
   }, [mounted, card.slug]);
 
   useEffect(() => {
@@ -40,6 +97,15 @@ export function GameCard({ card, index }: Props) {
     if (r.isBest) setBest(r.score);
     if (resultTimer.current) clearTimeout(resultTimer.current);
     resultTimer.current = setTimeout(() => setResult(null), 2800);
+  };
+
+  // A like is a visible, editable reason in the algorithm's memory list.
+  const like = () => {
+    const nowLiked = toggleLike(card.slug);
+    setLiked(nowLiked);
+    const algo = useAlgorithmStore.getState();
+    if (nowLiked) algo.rememberLike(card.slug, meta.title, meta.tags);
+    else algo.forgetLike(card.slug);
   };
 
   const share = async () => {
@@ -62,8 +128,6 @@ export function GameCard({ card, index }: Props) {
     }
   };
 
-  const locksGestures = meta.tags.some((t) => t === "drag" || t === "hold");
-
   return (
     <section
       data-index={index}
@@ -74,6 +138,7 @@ export function GameCard({ card, index }: Props) {
         <GameHost
           slug={card.slug}
           active={active}
+          interactive={playing}
           onScore={setScore}
           onRunEnd={handleRunEnd}
         />
@@ -81,12 +146,63 @@ export function GameCard({ card, index }: Props) {
         <div className="h-full w-full" />
       )}
 
-      {/* drag/hold games eat touches — leave the top strip scrollable */}
-      {locksGestures && (
+      {/* Browsing: the canvas is inert and this layer catches the double-tap
+          that hands control over. Swipes pass straight through to the feed. */}
+      {!playing && (
         <div
-          className="absolute inset-x-0 top-0 z-20 h-28"
+          className="absolute inset-0 z-10"
+          onPointerDown={onPreviewTap}
           style={{ touchAction: "pan-y" }}
         />
+      )}
+
+      {/* Playing: a right-edge strip swipes you back out to the feed. */}
+      {playing && (
+        <div
+          className="absolute inset-y-0 right-0 z-20 w-8"
+          onPointerDown={onEdgeDown}
+          onPointerMove={onEdgeMove}
+          onPointerUp={onEdgeUp}
+          style={{ touchAction: "none" }}
+        />
+      )}
+
+      {/* browsing: "this is a demo, tap in to actually play" */}
+      {!playing && active && (
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-1">
+          <div
+            className="anim-breathe px-4 py-2 text-sm font-extrabold"
+            style={{
+              background: "color-mix(in srgb, var(--surface) 88%, transparent)",
+              color: "var(--ink)",
+              borderRadius: "999px",
+              fontFamily: "var(--font-display)",
+            }}
+          >
+            Double tap to play
+          </div>
+          <span
+            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+            style={{ color: "var(--ink-dim)" }}
+          >
+            demo running
+          </span>
+        </div>
+      )}
+
+      {/* playing: how to get back out */}
+      {playing && (
+        <button
+          onClick={exitPlay}
+          className="pressable absolute right-2.5 top-[calc(env(safe-area-inset-top)+56px)] z-30 flex items-center gap-1 px-3 py-1.5 text-xs font-bold"
+          style={{
+            background: "color-mix(in srgb, var(--surface) 90%, transparent)",
+            color: "var(--ink)",
+            borderRadius: "999px",
+          }}
+        >
+          Exit ›
+        </button>
       )}
 
       {/* score HUD */}
@@ -103,34 +219,94 @@ export function GameCard({ card, index }: Props) {
           </span>
         </div>
         <div className="text-xs font-semibold" style={{ color: "var(--ink-dim)" }}>
-          best {Math.max(best, score)}
+          {playing ? `best ${Math.max(best, score)}` : "demo score"}
         </div>
       </div>
 
-      {/* rule overlay, bottom left */}
-      <div className="pointer-events-none absolute bottom-0 left-0 z-30 max-w-[70%] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-        <div
-          className="text-xl font-extrabold leading-tight"
-          style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
-        >
-          {meta.title}
-        </div>
-        <div className="mt-1 text-sm" style={{ color: "var(--ink-dim)" }}>
-          {meta.rule}
-          {locksGestures ? " · swipe from top edge to skip" : ""}
-        </div>
-      </div>
-
-      {/* right rail */}
+      {/* caption — Reels/TikTok style: title, era, expandable history */}
       <div
-        className="absolute bottom-24 right-2 z-30 flex flex-col items-center gap-4"
+        className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]"
         style={{ touchAction: "pan-y" }}
       >
-        <RailButton label="Ranks" icon="🏆" onClick={() => openSheet("leaderboard")} />
-        <RailButton label="Tune" icon="🎛️" onClick={() => openSheet("algo")} />
-        <RailButton label="Theme" icon="🎨" onClick={() => openSheet("theme")} />
-        <RailButton label={copied ? "Copied" : "Share"} icon="↗" onClick={share} />
-        <div className="mt-1 text-[10px] font-semibold" style={{ color: "var(--ink-dim)" }}>
+        <button
+          onClick={() => setExpanded((e) => !e)}
+          className="block text-left"
+        >
+          <div className="flex items-baseline gap-2">
+            <span
+              className="text-xl font-extrabold leading-tight"
+              style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
+            >
+              {meta.title}
+            </span>
+            <span
+              className="px-1.5 py-0.5 text-[10px] font-bold"
+              style={{
+                background: "var(--surface)",
+                color: "var(--ink-dim)",
+                borderRadius: "6px",
+              }}
+            >
+              est. {meta.year}
+            </span>
+          </div>
+          <div className="mt-1 text-sm leading-snug" style={{ color: "var(--ink)" }}>
+            {meta.rule}
+            {playing ? " · swipe right edge to leave" : ""}
+          </div>
+          {expanded ? (
+            <div className="mt-1.5 text-[13px] leading-snug" style={{ color: "var(--ink-dim)" }}>
+              {meta.description}
+              <span className="mt-1 block">{meta.history}</span>
+              <span className="mt-0.5 block font-semibold" style={{ color: "var(--ink)" }}>
+                less
+              </span>
+            </div>
+          ) : (
+            <div className="mt-0.5 text-[13px]" style={{ color: "var(--ink-dim)" }}>
+              {meta.description.slice(0, 46)}
+              <span className="font-semibold" style={{ color: "var(--ink)" }}>
+                {" "}
+                ... more
+              </span>
+            </div>
+          )}
+        </button>
+
+        {/* like, right under the caption — the feed's clearest signal */}
+        <button
+          onClick={like}
+          aria-label={liked ? "Unlike this game" : "Like this game"}
+          className="pressable mt-2.5 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold"
+          style={{
+            background: liked ? "var(--danger)" : "var(--surface)",
+            color: liked ? "#fff" : "var(--ink)",
+            borderRadius: "999px",
+          }}
+        >
+          <HeartIcon size={16} filled={liked} />
+          {liked ? "More like this" : "Like this game"}
+        </button>
+      </div>
+
+      {/* right rail — symbolic line icons, Instagram spacing */}
+      <div
+        className="absolute bottom-28 right-2.5 z-30 flex flex-col items-center gap-5"
+        style={{ touchAction: "pan-y", color: "var(--ink)" }}
+      >
+        <RailButton label="Ranks" onClick={() => openSheet("leaderboard")}>
+          <TrophyIcon size={26} />
+        </RailButton>
+        <RailButton label="Tune" onClick={() => openSheet("algo")}>
+          <SlidersIcon size={26} />
+        </RailButton>
+        <RailButton label="Theme" onClick={() => openSheet("theme")}>
+          <DropletIcon size={26} />
+        </RailButton>
+        <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
+          <SendIcon size={26} />
+        </RailButton>
+        <div className="text-[10px] font-semibold" style={{ color: "var(--ink-dim)" }}>
           @{typeof window === "undefined" ? "guest" : getHandle()}
         </div>
       </div>
@@ -163,26 +339,27 @@ export function GameCard({ card, index }: Props) {
 
 function RailButton({
   label,
-  icon,
   onClick,
+  tint,
+  children,
 }: {
   label: string;
-  icon: string;
   onClick: () => void;
+  tint?: string;
+  children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
-      className="pressable flex flex-col items-center gap-0.5"
+      className="pressable flex flex-col items-center gap-1"
       aria-label={label}
+      style={{ color: tint ?? "inherit" }}
     >
+      {children}
       <span
-        className="theme-smooth flex h-12 w-12 items-center justify-center text-xl"
-        style={{ background: "color-mix(in srgb, var(--surface) 80%, transparent)", borderRadius: "var(--radius)" }}
+        className="text-[10px] font-semibold"
+        style={{ color: "var(--ink)" }}
       >
-        {icon}
-      </span>
-      <span className="text-[10px] font-semibold" style={{ color: "var(--ink)" }}>
         {label}
       </span>
     </button>

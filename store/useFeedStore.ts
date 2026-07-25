@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { sampleQueue } from "@/lib/algorithm";
+import { slugBoosts } from "@/lib/memories";
 import { CATALOG } from "@/games/registry";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 
@@ -16,6 +17,8 @@ interface FeedState {
   init: () => void;
   setActive: (i: number) => void;
   ensureAhead: () => void;
+  /** Splice a game in directly after the active card. */
+  insertNext: (slug: string) => void;
   /** Rebuild everything after the active card using the current vector. */
   retune: () => void;
 }
@@ -36,7 +39,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   init: () => {
     if (get().cards.length > 0) return;
     const vec = useAlgorithmStore.getState().vector;
-    const slugs = sampleQueue(CATALOG, vec, [], AHEAD + 1);
+    const slugs = sampleQueue(CATALOG, vec, [], AHEAD + 1, slugBoosts());
     set({ cards: slugs.map((slug) => ({ uid: nextUid++, slug })) });
   },
 
@@ -51,10 +54,17 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     if (cards.length - activeIndex > AHEAD) return;
     const vec = useAlgorithmStore.getState().vector;
     const recent = recentSlugsFrom(cards, cards.length - 1);
-    const slugs = sampleQueue(CATALOG, vec, recent, AHEAD);
+    const slugs = sampleQueue(CATALOG, vec, recent, AHEAD, slugBoosts());
     set({
       cards: [...cards, ...slugs.map((slug) => ({ uid: nextUid++, slug }))],
     });
+  },
+
+  insertNext: (slug: string) => {
+    const { cards, activeIndex } = get();
+    const next = [...cards];
+    next.splice(activeIndex + 1, 0, { uid: nextUid++, slug });
+    set({ cards: next });
   },
 
   retune: () => {
@@ -63,7 +73,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     const vec = useAlgorithmStore.getState().vector;
     const keep = cards.slice(0, activeIndex + 1);
     const recent = recentSlugsFrom(cards, activeIndex);
-    const slugs = sampleQueue(CATALOG, vec, recent, AHEAD);
+    const slugs = sampleQueue(CATALOG, vec, recent, AHEAD, slugBoosts());
     set({
       cards: [...keep, ...slugs.map((slug) => ({ uid: nextUid++, slug }))],
     });
