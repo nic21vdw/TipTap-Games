@@ -6,6 +6,7 @@ import { getMeta, getModule } from "@/games/registry";
 import { currentTheme, useThemeStore } from "@/store/useThemeStore";
 import { haptic } from "@/lib/haptics";
 import { bumpSignals, submitRun } from "@/lib/storage";
+import { openRun, recordRun } from "@/lib/cloud";
 
 export interface RunResult {
   score: number;
@@ -134,7 +135,10 @@ export function GameHost({
         if (!interactiveRef.current) return;
         runEnds += 1;
         bumpSignals(slug, { runs: 1, replays: runEnds > 1 ? 1 : 0 });
+        // Local first, so the toast is instant and correct with no backend.
         onRunEndRef.current({ score: finalScore, ...submitRun(slug, finalScore) });
+        // Then, if signed in, redeem the open ticket for a ranked score.
+        void recordRun(slug, finalScore);
       },
     });
     instRef.current = inst;
@@ -145,7 +149,19 @@ export function GameHost({
       activeSince = Date.now();
     if (!activeRef.current || document.hidden) inst.pause();
 
-    const unsubTheme = useThemeStore.subscribe(() => sizeBacking());
+    const unsubTheme = useThemeStore.subscribe(() => {
+      sizeBacking();
+      // Resizing the backing store wipes the canvas's pixels. If the loop is
+      // paused (card not active/visible) nothing will repaint it on its own,
+      // so force one frame through and re-pause right after.
+      const paused = !activeRef.current || document.hidden;
+      if (paused) {
+        inst.resume();
+        requestAnimationFrame(() => {
+          if (!activeRef.current || document.hidden) inst.pause();
+        });
+      }
+    });
     const onVis = () => {
       if (document.hidden) inst.pause();
       else if (activeRef.current) inst.resume();
@@ -201,6 +217,12 @@ export function GameHost({
   useEffect(() => {
     instRef.current?.autoplay?.(!interactive);
   }, [interactive]);
+
+  // Taking control is the start of a real run, so that's when the server
+  // ticket opens. Attract-mode play never gets one and never scores.
+  useEffect(() => {
+    if (active && interactive) void openRun(slug);
+  }, [active, interactive, slug]);
 
   return (
     <div ref={hostRef} className="h-full w-full" style={{ background: "var(--bg)" }}>
