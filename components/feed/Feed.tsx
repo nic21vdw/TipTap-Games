@@ -2,21 +2,27 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GameCard } from "@/components/feed/GameCard";
+import { getMeta } from "@/games/registry";
+import { resumeMusic, suspendMusic, unlockAudio } from "@/lib/music";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
+import { useMusicStore } from "@/store/useMusicStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useUiStore } from "@/store/useUiStore";
 
 export function Feed() {
   const cards = useFeedStore((s) => s.cards);
+  const activeIndex = useFeedStore((s) => s.activeIndex);
   const playing = useUiStore((s) => s.playingUid !== null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
+  const activeSlug = cards[activeIndex]?.slug;
 
   // hydrate stores + build the first queue, client-side only
   useEffect(() => {
     useThemeStore.getState().hydrate();
     useAlgorithmStore.getState().hydrate();
+    useMusicStore.getState().hydrate();
     // re-register any games the player generated in earlier sessions
     import("@/games/custom").then(({ registerSpec }) => {
       import("@/lib/storage").then(({ loadCustomSpecs }) => {
@@ -45,6 +51,41 @@ export function Feed() {
     root.querySelectorAll("[data-index]").forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, [cards.length]);
+
+  // Autoplay policy: the very first gesture anywhere on the page is what
+  // lets the soundtrack start. After that this never runs again.
+  useEffect(() => {
+    const go = () => unlockAudio();
+    const opts = { passive: true } as const;
+    window.addEventListener("pointerdown", go, opts);
+    window.addEventListener("touchstart", go, opts);
+    window.addEventListener("keydown", go);
+    return () => {
+      window.removeEventListener("pointerdown", go);
+      window.removeEventListener("touchstart", go);
+      window.removeEventListener("keydown", go);
+    };
+  }, []);
+
+  // One card, one song: landing on a card drops its track in on the beat.
+  useEffect(() => {
+    if (!ready || !activeSlug) return;
+    const m = getMeta(activeSlug);
+    useMusicStore.getState().cue({
+      slug: m.slug,
+      intensity: m.intensity,
+      nostalgia: m.nostalgia,
+      luck: m.luck,
+      tags: m.tags,
+    });
+  }, [ready, activeSlug]);
+
+  // Backgrounded tabs go quiet, and stay quiet until you come back.
+  useEffect(() => {
+    const onVis = () => (document.hidden ? suspendMusic() : resumeMusic());
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
 
   return (
     <div
