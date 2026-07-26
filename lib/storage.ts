@@ -1,3 +1,5 @@
+import { getMeta } from "@/games/registry";
+
 // Client-side persistence layer. Everything the Supabase schema models
 // (profiles, scores, signals, prefs) works locally first, so the app is fully
 // playable with zero backend, and every read stays synchronous — a card that
@@ -275,6 +277,16 @@ export interface CustomGameSpec {
   intensity: number;
   luck: number;
   nostalgia: number;
+  /** the game's own five colours — absent on specs saved before this existed */
+  palette?: {
+    hero: string;
+    foe: string;
+    prize: string;
+    deep: string;
+    glow: string;
+  };
+  /** speed/density dials handed to the engine through ctx.tune */
+  tune?: { speed: number; density: number };
 }
 
 export function loadCustomSpecs(): CustomGameSpec[] {
@@ -358,6 +370,9 @@ function mulberry32(a: number) {
 }
 
 // Rough "good score" scale per game so seeds look human, not random noise.
+// Hand-tuned for the first nine; every other card derives its scale from the
+// anti-cheat ceiling in its own meta, which keeps a hundred leaderboards
+// plausible without a hundred magic numbers.
 const SCORE_SCALE: Record<string, number> = {
   "reflex-gate": 24,
   "tap-rush": 60,
@@ -370,9 +385,25 @@ const SCORE_SCALE: Record<string, number> = {
   "cash-out": 900,
 };
 
+/** A decent run is roughly this many seconds of scoring at the cap. */
+const GOOD_RUN_SECONDS = 22;
+
+function scaleFor(slug: string): number {
+  const fixed = SCORE_SCALE[slug];
+  if (fixed) return fixed;
+  try {
+    const m = getMeta(slug);
+    return Math.max(5, Math.round(m.maxScorePerSecond * GOOD_RUN_SECONDS * 0.45));
+  } catch {
+    // a slug with no module yet (a spec still being registered) still deserves
+    // a board rather than a crash
+    return 50;
+  }
+}
+
 export function seededScores(slug: string): LeaderboardEntry[] {
   const rnd = mulberry32(hash(slug));
-  const scale = SCORE_SCALE[slug] ?? 50;
+  const scale = scaleFor(slug);
   const entries: LeaderboardEntry[] = [];
   const used = new Set<number>();
   for (let i = 0; i < 12; i++) {
