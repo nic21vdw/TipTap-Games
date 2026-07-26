@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 interface Props {
   open: boolean;
@@ -10,6 +10,16 @@ interface Props {
 }
 
 export function Sheet({ open, onClose, title, children }: Props) {
+  // Escape closes, for anyone driving this with a keyboard rather than a thumb
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   return (
     <>
       <div
