@@ -10,7 +10,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | # | Requirement | Status |
 |---|-------------|--------|
 | 1 | Vertical snap feed, 1 swipe = 1 card (touch/wheel/trackpad) | ✅ |
-| 2 | 6+ genuinely different games | ✅ 18 shipped, incl. two in 3D |
+| 2 | 6+ genuinely different games | ✅ 19 shipped, incl. two in 3D |
 | 3 | Auto start >60% visible, hard stop on leave, zero zombie rAF | ✅ verified: `__rafActive === 1` after 12 swipes |
 | 4 | Guest play first, login only at a win moment | ✅ guest + Google OAuth, prompted only on a best/top-ten |
 | 5 | Persisted scores | ✅ localStorage always; Postgres when Supabase env vars exist |

@@ -79,6 +79,7 @@ import snowCarve from "@/games/snow-carve";
 import sphereChain from "@/games/sphere-chain";
 import spiralFall from "@/games/spiral-fall";
 import split from "@/games/split";
+import iceLine from "@/games/ice-line";
 import basementDefense from "@/games/basement-defense";
 import hardwater from "@/games/hardwater";
 import spreadSim from "@/games/spread-sim";
@@ -184,6 +185,7 @@ const ALL: GameModule[] = [
   sphereChain,
   spiralFall,
   split,
+  iceLine,
   spreadSim,
   sprintRelay,
   stackFall,
