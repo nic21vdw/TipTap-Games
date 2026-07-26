@@ -107,6 +107,10 @@ body {
     animation: none;
     transform: scaleY(0.7);
   }
+  /* the springy inline transitions — volume flyout, slider swell, fill */
+  [data-motion="spring"] {
+    transition-duration: 1ms !important;
+  }
 }
 /* colour tokens cross-fade on theme switch */
 body,

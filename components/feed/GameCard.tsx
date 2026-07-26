@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GameHost, type RunResult } from "@/components/feed/GameHost";
+import { RailButton } from "@/components/feed/RailButton";
+import { SoundRail } from "@/components/feed/SoundRail";
 import { goToCard, useFinePointer } from "@/components/feed/nav";
 import {
   HeartIcon,
@@ -377,13 +379,7 @@ export function GameCard({ card, index }: Props) {
         <RailButton label="Theme" onClick={() => openSheet("theme")}>
           <DropletIcon size={26} />
         </RailButton>
-        <RailButton
-          label={musicOn ? "Sound" : "Muted"}
-          onClick={toggleMusic}
-          tint={musicOn ? undefined : "rgba(255,255,255,.55)"}
-        >
-          {musicOn ? <SoundOnIcon size={26} /> : <SoundOffIcon size={26} />}
-        </RailButton>
+        <SoundRail />
         <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
           <SendIcon size={26} />
         </RailButton>
@@ -535,31 +531,3 @@ function EqBars() {
   );
 }
 
-function RailButton({
-  label,
-  onClick,
-  tint,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  tint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="pressable flex flex-col items-center gap-1"
-      aria-label={label}
-      style={{ color: tint ?? "inherit" }}
-    >
-      {children}
-      <span
-        className="text-[10px] font-semibold"
-        style={{ color: "#fff" }}
-      >
-        {label}
-      </span>
-    </button>
-  );
-}
