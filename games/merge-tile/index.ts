@@ -30,7 +30,7 @@ type Dir = "left" | "right" | "up" | "down";
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
-  const boardSize = Math.min(W, H) * 0.86;
+  const boardSize = Math.min(W, H * 0.94);
   const bx = (W - boardSize) / 2;
   const by = (H - boardSize) / 2;
   const pad = boardSize * 0.035;

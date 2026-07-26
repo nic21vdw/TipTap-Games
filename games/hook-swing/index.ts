@@ -63,7 +63,7 @@ function mount(ctx: GameContext): GameInstance {
       const px = prev ? prev.x : 0;
       const py = prev ? prev.y : H * 0.35;
       const nx = px + rand(170, 235);
-      const ny = Math.min(H * 0.52, Math.max(H * 0.24, py + rand(-70, 70)));
+      const ny = Math.min(H * 0.66, Math.max(H * 0.12, py + rand(-110, 110)));
       anchors.push({ x: nx, y: ny });
     }
   };

@@ -45,13 +45,13 @@ function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
 
   const colGap = W / 7;
-  const cardW = Math.min(colGap * 0.82, 48);
+  const cardW = colGap * 0.9;
   const cardH = cardW * 1.42;
   const colX = (i: number) => i * colGap + (colGap - cardW) / 2;
-  const topY = 12;
-  const tableauTopY = topY + cardH + 18;
-  const FACE_DOWN_OFFSET = cardH * 0.14;
-  const FACE_UP_OFFSET = cardH * 0.32;
+  const topY = H * 0.035;
+  const tableauTopY = topY + cardH + H * 0.05;
+  const FACE_DOWN_OFFSET = cardH * 0.45;
+  const FACE_UP_OFFSET = cardH * 0.62;
 
   let stock: Card[] = [];
   let waste: Card[] = [];

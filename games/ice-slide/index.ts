@@ -36,9 +36,9 @@ interface Cell {
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
-  const cell = Math.min(W / COLS, (H * 0.85) / ROWS);
+  const cell = Math.min(W / COLS, H / ROWS);
   const ox = (W - cell * COLS) / 2;
-  const oy = H * 0.08;
+  const oy = (H - cell * ROWS) / 2;
   let grid: Cell[][] = [];
   let px = 0;
   let py = 0;

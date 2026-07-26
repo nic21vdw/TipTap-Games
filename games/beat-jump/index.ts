@@ -33,13 +33,13 @@ interface Obstacle {
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
 
-  const groundY = H * 0.72;
+  const groundY = H * 0.88;
   const playerX = W * 0.28;
   const playerR = Math.min(W, H) * 0.032;
   const obstacleW = playerR * 1.6;
   const obstacleH = playerR * 2.1;
   const jumpDur = 0.46;
-  const jumpHeight = H * 0.24;
+  const jumpHeight = H * 0.32;
 
   let worldX = 0;
   let speed = 0;

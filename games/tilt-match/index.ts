@@ -26,14 +26,16 @@ const meta = {
 } satisfies GameModule["meta"];
 
 const COLS = 6;
-const ROWS = 7;
 type Dir = "L" | "R" | "U" | "D";
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
-  const cell = Math.min(W / COLS, (H * 0.82) / ROWS);
-  const ox = (W - cell * COLS) / 2;
-  const oy = H * 0.12;
+  // Square cells, full width, and as many rows as the phone actually has room
+  // for — a fixed row count left a third of a tall screen empty below the board.
+  const cell = W / COLS;
+  const ROWS = Math.max(7, Math.floor(H / cell));
+  const ox = 0;
+  const oy = (H - cell * ROWS) / 2;
   const colors = [pal.hero, pal.foe, pal.prize, pal.glow];
   let grid: number[][] = [];
   let score = 0;

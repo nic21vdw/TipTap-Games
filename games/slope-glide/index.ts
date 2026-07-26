@@ -55,7 +55,7 @@ const PLAYER_SCREEN_X_FRAC = 0.32;
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
-  const baseY = H * 0.58;
+  const baseY = H * 0.72;
   const playerScreenX = W * PLAYER_SCREEN_X_FRAC;
 
   let worldX = 0;
@@ -172,6 +172,20 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = sky;
     g.fillRect(0, 0, W, H);
 
+    // Far ridge, drawn tall and slow: the sky used to be a third of the phone
+    // with nothing in it, and on a full-bleed card that reads as dead screen.
+    g.fillStyle = shade(pal.deep, 0.06);
+    g.beginPath();
+    g.moveTo(0, H);
+    const far = worldX * 0.12;
+    for (let sx = 0; sx <= W; sx += 20) {
+      const wx = far + (sx - playerScreenX) * 0.3;
+      g.lineTo(sx, baseY - terrainHeight(wx) * 2.2 - H * 0.42);
+    }
+    g.lineTo(W, H);
+    g.closePath();
+    g.fill();
+
     // distant silhouette layer (parallax)
     g.fillStyle = shade(pal.deep, -0.15);
     g.beginPath();
@@ -180,7 +194,7 @@ function mount(ctx: GameContext): GameInstance {
     for (let sx = 0; sx <= W; sx += 16) {
       const wx = parallax + (sx - playerScreenX) * 0.6;
       const hgt = terrainHeight(wx) * 0.5;
-      g.lineTo(sx, baseY - hgt - 30);
+      g.lineTo(sx, baseY - hgt - H * 0.11);
     }
     g.lineTo(W, H);
     g.closePath();

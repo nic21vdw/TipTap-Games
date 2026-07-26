@@ -39,8 +39,8 @@ function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
 
   const logX = W / 2;
-  const logY = H * 0.38;
-  const logR = Math.min(W, H) * 0.16;
+  const logY = H * 0.4;
+  const logR = Math.min(W * 0.42, H * 0.24);
 
   let rotation = 0;
   let rotSpeed = 1.1;

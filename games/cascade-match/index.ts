@@ -25,7 +25,7 @@ const meta = {
   maxScorePerSecond: 6,
 } satisfies GameModule["meta"];
 
-const N = 7;
+const COLS = 7;
 const START_MOVES = 25;
 const CLEAR_DUR = 0.18;
 const DROP_DUR = 0.22;
@@ -36,12 +36,14 @@ function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
   const COLORS = [pal.hero, pal.foe, pal.prize, pal.glow, shade(pal.hero, -0.35)];
 
-  const gridSize = Math.min(W * 0.94, H * 0.68);
-  const cell = gridSize / N;
-  const offX = (W - gridSize) / 2;
-  const offY = H * 0.18;
+  // Full-width square cells with the row count taken from the phone: a fixed
+  // square board left better than a third of a tall screen doing nothing.
+  const cell = W / COLS;
+  const ROWS = Math.max(COLS, Math.floor(H / cell));
+  const offX = 0;
+  const offY = (H - cell * ROWS) / 2;
 
-  const idx = (r: number, c: number) => r * N + c;
+  const idx = (r: number, c: number) => r * COLS + c;
 
   let grid: number[] = [];
   let dropOffset: number[] = [];
@@ -57,9 +59,9 @@ function mount(ctx: GameContext): GameInstance {
   const randColor = () => Math.floor(Math.random() * COLORS.length);
 
   const fillGridNoMatches = () => {
-    grid = new Array(N * N);
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
+    grid = new Array(ROWS * COLS);
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
         let cv: number;
         do {
           cv = randColor();
@@ -70,16 +72,16 @@ function mount(ctx: GameContext): GameInstance {
         grid[idx(r, c)] = cv;
       }
     }
-    dropOffset = new Array(N * N).fill(0);
+    dropOffset = new Array(ROWS * COLS).fill(0);
   };
 
   const findMatches = (): Set<number> => {
     const matched = new Set<number>();
-    for (let r = 0; r < N; r++) {
+    for (let r = 0; r < ROWS; r++) {
       let runStart = 0;
-      for (let c = 1; c <= N; c++) {
-        const cur = c < N ? grid[idx(r, c)] : -2;
-        if (c < N && cur !== -1 && cur === grid[idx(r, runStart)]) continue;
+      for (let c = 1; c <= COLS; c++) {
+        const cur = c < COLS ? grid[idx(r, c)] : -2;
+        if (c < COLS && cur !== -1 && cur === grid[idx(r, runStart)]) continue;
         const runLen = c - runStart;
         if (runLen >= 3 && grid[idx(r, runStart)] !== -1) {
           for (let k = runStart; k < c; k++) matched.add(idx(r, k));
@@ -87,11 +89,11 @@ function mount(ctx: GameContext): GameInstance {
         runStart = c;
       }
     }
-    for (let c = 0; c < N; c++) {
+    for (let c = 0; c < COLS; c++) {
       let runStart = 0;
-      for (let r = 1; r <= N; r++) {
-        const cur = r < N ? grid[idx(r, c)] : -2;
-        if (r < N && cur !== -1 && cur === grid[idx(runStart, c)]) continue;
+      for (let r = 1; r <= ROWS; r++) {
+        const cur = r < ROWS ? grid[idx(r, c)] : -2;
+        if (r < ROWS && cur !== -1 && cur === grid[idx(runStart, c)]) continue;
         const runLen = r - runStart;
         if (runLen >= 3 && grid[idx(runStart, c)] !== -1) {
           for (let k = runStart; k < r; k++) matched.add(idx(k, c));
@@ -123,7 +125,7 @@ function mount(ctx: GameContext): GameInstance {
   const cellAt = (px: number, py: number): { r: number; c: number } | null => {
     const c = Math.floor((px - offX) / cell);
     const r = Math.floor((py - offY) / cell);
-    if (r < 0 || r >= N || c < 0 || c >= N) return null;
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return null;
     return { r, c };
   };
 
@@ -171,7 +173,7 @@ function mount(ctx: GameContext): GameInstance {
     let tc = sc;
     if (Math.abs(dx) > Math.abs(dy)) tc += dx > 0 ? 1 : -1;
     else tr += dy > 0 ? 1 : -1;
-    if (tr < 0 || tr >= N || tc < 0 || tc >= N) return;
+    if (tr < 0 || tr >= ROWS || tc < 0 || tc >= COLS) return;
     attemptSwap(idx(sr, sc), idx(tr, tc));
   };
   ctx.canvas.addEventListener("pointerdown", onDown);
@@ -183,14 +185,14 @@ function mount(ctx: GameContext): GameInstance {
   let autoCd = 0.5;
 
   const autoFindMove = (): [number, number] | null => {
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
         const neighbors: [number, number][] = [
           [r, c + 1],
           [r + 1, c],
         ];
         for (const [nr, nc] of neighbors) {
-          if (nr >= N || nc >= N) continue;
+          if (nr >= ROWS || nc >= COLS) continue;
           const a = idx(r, c);
           const b = idx(nr, nc);
           const tmp = grid[a];
@@ -229,9 +231,9 @@ function mount(ctx: GameContext): GameInstance {
           ctx.haptic("hit");
           for (const i of clearingSet) grid[i] = -1;
           clearingSet.clear();
-          for (let c = 0; c < N; c++) {
-            let write = N - 1;
-            for (let r = N - 1; r >= 0; r--) {
+          for (let c = 0; c < COLS; c++) {
+            let write = ROWS - 1;
+            for (let r = ROWS - 1; r >= 0; r--) {
               if (grid[idx(r, c)] !== -1) {
                 if (write !== r) {
                   grid[idx(write, c)] = grid[idx(r, c)];
@@ -273,12 +275,12 @@ function mount(ctx: GameContext): GameInstance {
     g.fillRect(0, 0, W, H);
 
     g.fillStyle = shade(pal.deep, -0.15);
-    roundRect(g, offX - 8, offY - 8, gridSize + 16, gridSize + 16, 14);
+    roundRect(g, offX - 8, offY - 8, cell * COLS + 16, cell * ROWS + 16, 14);
     g.fill();
 
     const dropEase = phase === "dropping" ? 1 - phaseT / DROP_DUR : 0;
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
         const i = idx(r, c);
         const color = grid[i];
         if (color === -1 || color === undefined) continue;

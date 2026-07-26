@@ -38,10 +38,10 @@ function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
 
   const heightAt = (x: number): number =>
-    H * 0.58 -
-    H * 0.1 * Math.sin(x * 0.006) -
-    H * 0.05 * Math.sin(x * 0.014 + 1.7) -
-    H * 0.025 * Math.sin(x * 0.031 + 3.1);
+    H * 0.66 -
+    H * 0.16 * Math.sin(x * 0.006) -
+    H * 0.08 * Math.sin(x * 0.014 + 1.7) -
+    H * 0.04 * Math.sin(x * 0.031 + 3.1);
 
   const slopeAngleAt = (x: number): number => {
     const eps = 3;

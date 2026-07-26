@@ -178,10 +178,10 @@ function mount(ctx: GameContext): GameInstance {
   };
 
   const board = () => {
-    const size = Math.min(W, H * 0.72) * 0.86;
+    const size = Math.min(W, H * 0.94);
     const cell = size / gridSize;
     const bx = (W - size) / 2;
-    const by = H * 0.24 + (H * 0.72 - size) / 2;
+    const by = (H - size) / 2;
     return { size, cell, bx, by };
   };
 

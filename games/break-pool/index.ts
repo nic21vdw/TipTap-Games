@@ -41,8 +41,8 @@ function mount(ctx: GameContext): GameInstance {
 
   const tableL = W * 0.08;
   const tableR = W * 0.92;
-  const tableT = H * 0.2;
-  const tableB = H * 0.8;
+  const tableT = H * 0.045;
+  const tableB = H * 0.955;
   const midX = (tableL + tableR) / 2;
   const ballR = W * 0.026;
   const pocketR = W * 0.05;

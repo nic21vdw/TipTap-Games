@@ -38,7 +38,7 @@ function mount(ctx: GameContext): GameInstance {
   const cx = W / 2;
   const cy = H / 2;
   const orbitR = Math.min(W, H) * 0.22;
-  const maxR = Math.min(W, H) * 0.62;
+  const maxR = Math.hypot(W, H) * 0.54;
   const wedgeSize = Math.min(W, H) * 0.045;
 
   let angle = 0;

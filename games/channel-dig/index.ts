@@ -41,12 +41,12 @@ function mount(ctx: GameContext): GameInstance {
 
   const margin = 14;
   const cell = Math.floor(
-    Math.min((W - margin * 2) / COLS, (H * 0.82) / ROWS)
+    Math.min((W - margin * 2) / COLS, H / ROWS)
   );
   const boardW = cell * COLS;
   const boardH = cell * ROWS;
   const boardX = (W - boardW) / 2;
-  const boardY = H * 0.08;
+  const boardY = (H - boardH) / 2;
 
   let dirt: boolean[][] = [];
   let water: boolean[][] = [];

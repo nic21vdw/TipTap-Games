@@ -33,7 +33,7 @@ interface Enemy {
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
   const heroX = W * 0.24;
-  const groundY = H * 0.72;
+  const groundY = H * 0.88;
 
   let enemies: Enemy[] = [];
   let health = 3;

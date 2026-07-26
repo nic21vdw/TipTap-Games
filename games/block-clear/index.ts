@@ -54,14 +54,17 @@ interface TraySlot {
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
 
-  const boardMargin = 16;
-  const boardSize = Math.min(W - boardMargin * 2, H * 0.56);
+  const boardMargin = 8;
+  // The board takes the full width it can get and the tray sits centred in
+  // whatever is left, so the pair spans the phone instead of hugging the top.
+  const boardSize = Math.min(W - boardMargin * 2, H * 0.62);
   const cell = boardSize / GRID;
   const boardX = (W - boardSize) / 2;
-  const boardY = H * 0.07;
-  const trayY = boardY + boardSize + 26;
+  const trayGap = (H - boardSize) / 3;
+  const boardY = trayGap * 0.85;
   const traySlotW = (W - boardMargin * 2) / 3;
-  const traySlotH = Math.min(H - trayY - 14, 96);
+  const traySlotH = Math.min(H - (boardY + boardSize) - 20, 140);
+  const trayY = boardY + boardSize + (H - (boardY + boardSize) - traySlotH) / 2;
 
   const colors = [pal.hero, pal.foe, pal.prize, pal.glow];
 
