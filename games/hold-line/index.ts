@@ -117,8 +117,8 @@ function mount(ctx: GameContext): GameInstance {
 
     const bx = W / 2 - 44;
     const bw = 88;
-    const by = H * 0.78;
-    const bh = H * 0.56;
+    const by = H * 0.95;
+    const bh = H * 0.9;
 
     // tube
     g.fillStyle = t.surface;
