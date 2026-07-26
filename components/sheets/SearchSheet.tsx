@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { SparkleIcon } from "@/components/ui/icons";
 import { registerSpec } from "@/games/custom";
@@ -18,9 +18,11 @@ export function SearchSheet() {
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mine, setMine] = useState<CustomGameSpec[]>(() =>
-    typeof window === "undefined" ? [] : loadCustomSpecs()
-  );
+  const [mine, setMine] = useState<CustomGameSpec[]>([]);
+
+  // localStorage after mount only — reading it during render makes the first
+  // client pass disagree with the server's HTML, and React throws the tree away.
+  useEffect(() => setMine(loadCustomSpecs()), []);
 
   const generate = async () => {
     if (busy || !prompt.trim()) return;

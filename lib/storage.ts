@@ -2,6 +2,7 @@
 // (players, scores, signals, prefs) works locally first, so the app is fully
 // playable with zero backend. Swap the internals for Supabase calls when
 // NEXT_PUBLIC_SUPABASE_URL is configured — the call sites don't change.
+import { normalizeSpec, type CustomGameSpec } from "@/lib/specs";
 
 export interface LeaderboardEntry {
   handle: string;
@@ -141,31 +142,29 @@ export function toggleLike(slug: string): boolean {
 
 // ---- player-generated games (specs only; engines stay ours) ----
 
-export interface CustomGameSpec {
-  slug: string;
-  base: string; // slug of the engine it runs on
-  title: string;
-  rule: string;
-  description: string;
-  history: string;
-  accent: string; // hex; recolours the base engine
-  tags: string[];
-  intensity: number;
-  luck: number;
-  nostalgia: number;
-}
+export type { CustomGameSpec };
 
+/**
+ * Anything already in localStorage was written by whatever build was live at
+ * the time, so it is repaired on the way out — a game saved with a broken
+ * accent or an unknown base still comes back playable.
+ */
 export function loadCustomSpecs(): CustomGameSpec[] {
   try {
-    return JSON.parse(safe.get(KEY.custom) ?? "[]");
+    const raw = JSON.parse(safe.get(KEY.custom) ?? "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((s) => s && typeof s === "object")
+      .map((s) => normalizeSpec(s as Partial<CustomGameSpec>));
   } catch {
     return [];
   }
 }
 
 export function saveCustomSpec(spec: CustomGameSpec) {
-  const all = loadCustomSpecs().filter((s) => s.slug !== spec.slug);
-  all.push(spec);
+  const clean = normalizeSpec(spec);
+  const all = loadCustomSpecs().filter((s) => s.slug !== clean.slug);
+  all.push(clean);
   safe.set(KEY.custom, JSON.stringify(all));
 }
 
