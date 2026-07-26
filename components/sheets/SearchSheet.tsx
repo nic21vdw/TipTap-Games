@@ -3,12 +3,8 @@
 import { useEffect, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { SparkleIcon } from "@/components/ui/icons";
-import { registerSpec } from "@/games/custom";
-import {
-  loadCustomSpecs,
-  saveCustomSpec,
-  type CustomGameSpec,
-} from "@/lib/storage";
+import { startGeneration } from "@/lib/generator";
+import { loadCustomSpecs, type CustomGameSpec } from "@/lib/storage";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
 
@@ -16,37 +12,24 @@ export function SearchSheet() {
   const open = useUiStore((s) => s.sheet === "search");
   const closeSheet = useUiStore((s) => s.closeSheet);
   const [prompt, setPrompt] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [mine, setMine] = useState<CustomGameSpec[]>([]);
+  const [building, setBuilding] = useState<string | null>(null);
+  const [mine, setMine] = useState<CustomGameSpec[]>(() =>
+    typeof window === "undefined" ? [] : loadCustomSpecs()
+  );
 
-  // localStorage after mount only — reading it during render makes the first
-  // client pass disagree with the server's HTML, and React throws the tree away.
-  useEffect(() => setMine(loadCustomSpecs()), []);
-
-  const generate = async () => {
-    if (busy || !prompt.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-      if (!res.ok) throw new Error(`generate failed: ${res.status}`);
-      const { spec } = (await res.json()) as { spec: CustomGameSpec };
-      if (!registerSpec(spec)) throw new Error("could not build that one");
-      saveCustomSpec(spec);
-      setMine(loadCustomSpecs());
-      useFeedStore.getState().insertNext(spec.slug);
-      setPrompt("");
-      closeSheet(); // swipe once — it's the next card
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "something broke, go again");
-    } finally {
-      setBusy(false);
-    }
+  // Fire and forget: the placeholder card drops into the feed and builds
+  // itself in the background, then swaps to the finished game in place.
+  const generate = () => {
+    if (!prompt.trim()) return;
+    const { title, done } = startGeneration(prompt);
+    setBuilding(title);
+    setPrompt("");
+    done
+      .then(() => setMine(loadCustomSpecs()))
+      .catch(() => {})
+      .finally(() => setBuilding((t) => (t === title ? null : t)));
+    // Close after a beat so the "it's building" line registers first.
+    setTimeout(closeSheet, 900);
   };
 
   const playNext = (slug: string) => {
@@ -58,7 +41,7 @@ export function SearchSheet() {
     <Sheet open={open} onClose={closeSheet} title="Make a game">
       <p className="mb-3 text-sm" style={{ color: "var(--ink-dim)" }}>
         Yap about a game you wish existed. The feed designs it and drops it in
-        as your next card.
+        as your next card — watch it build itself right there.
       </p>
       <textarea
         value={prompt}
@@ -74,7 +57,7 @@ export function SearchSheet() {
       />
       <button
         onClick={generate}
-        disabled={busy || !prompt.trim()}
+        disabled={!prompt.trim()}
         className="pressable mt-3 flex w-full items-center justify-center gap-2 py-3 text-sm font-bold disabled:opacity-40"
         style={{
           background: "var(--accent)",
@@ -83,11 +66,12 @@ export function SearchSheet() {
         }}
       >
         <SparkleIcon size={18} />
-        {busy ? "Designing..." : "Generate my game"}
+        Generate my game
       </button>
-      {error && (
-        <p className="mt-2 text-xs font-semibold" style={{ color: "var(--danger)" }}>
-          {error}
+      {building && (
+        <p className="mt-2 text-xs font-semibold" style={{ color: "var(--accent)" }}>
+          Building “{building}” — it's designing itself in your feed as the next
+          card.
         </p>
       )}
 

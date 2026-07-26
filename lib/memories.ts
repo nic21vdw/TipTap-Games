@@ -60,9 +60,44 @@ export function allMemories(): Memory[] {
   return cache;
 }
 
+const listeners = new Set<() => void>();
+
+/** Fires after any local edit to the memory list. Returns an unsubscribe. */
+export function onMemoriesChange(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
 function commit(list: Memory[]) {
   cache = list;
   safeSet(list);
+  for (const fn of listeners) fn();
+}
+
+/**
+ * Installs the account's memory list on sign-in. Memories are edits the
+ * player made by hand, so the newest row for a given axis/tag/game wins and
+ * the rest are dropped — the same rule addMemory uses. Silent by design: a
+ * pull is not an edit to push back.
+ */
+export function adoptMemories(incoming: Memory[]) {
+  const merged = [...incoming, ...allMemories()].sort(
+    (a, b) => b.createdAt - a.createdAt
+  );
+  const kept: Memory[] = [];
+  for (const m of merged) {
+    const dupe = kept.some(
+      (k) =>
+        k.id === m.id ||
+        (m.axis && k.axis === m.axis) ||
+        (m.tag && k.tag === m.tag && k.mode === m.mode) ||
+        (m.slug && k.slug === m.slug) ||
+        (m.kid !== undefined && k.kid !== undefined)
+    );
+    if (!dupe) kept.push(m);
+  }
+  cache = kept;
+  safeSet(kept);
 }
 
 function newId(): string {
@@ -150,7 +185,7 @@ export function slugBoosts(memories = allMemories()): Record<string, number> {
 }
 
 /**
- * "You liked Cash Out" also means "you like games that feel like Cash Out" —
+ * "You liked The Tab" also means "you like games that feel like The Tab" —
  * this expands a like into tag affinities the sampler can generalise from.
  */
 export function likeMemoryFor(
