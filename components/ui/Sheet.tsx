@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 interface Props {
   open: boolean;
@@ -10,6 +10,16 @@ interface Props {
 }
 
 export function Sheet({ open, onClose, title, children }: Props) {
+  // Escape closes, for anyone driving this with a keyboard rather than a thumb
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   return (
     <>
       <div
@@ -21,7 +31,7 @@ export function Sheet({ open, onClose, title, children }: Props) {
       <div
         // hidden by visibility as well as transform, so a closed sheet can
         // never intercept a tap even if layout shifts under it
-        className={`ease-sheet fixed inset-x-0 bottom-0 z-50 max-h-[80dvh] overflow-y-auto pb-[env(safe-area-inset-bottom)] transition-transform duration-[420ms] ${
+        className={`ease-sheet fixed inset-x-0 bottom-0 z-50 max-h-[calc(var(--app-h)*0.8)] overflow-y-auto pb-[var(--safe-bottom)] transition-transform duration-[420ms] ${
           open
             ? "translate-y-0"
             : "pointer-events-none invisible translate-y-full"

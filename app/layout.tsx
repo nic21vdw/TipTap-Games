@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
+import { DevicePreview } from "@/components/shell/DevicePreview";
 import "./globals.css";
 
 // Rounded, low-contrast, and quiet at small sizes — the whole UI is one family.
@@ -33,9 +34,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={nunito.variable}>
       <body>
-        {children}
-        <div className="fx-grain" />
-        <div className="fx-scanlines" />
+        {/* owns the desktop/iPhone preview switch; on a phone it renders the
+            app untouched. The grain + scanline overlays live inside it so
+            they clip to the simulated screen when framed. */}
+        <DevicePreview>{children}</DevicePreview>
       </body>
     </html>
   );

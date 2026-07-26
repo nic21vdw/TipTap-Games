@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GameInstance } from "@/games/types";
 import { getMeta, getModule } from "@/games/registry";
 import { currentTheme, useThemeStore } from "@/store/useThemeStore";
 import { haptic } from "@/lib/haptics";
 import { bumpSignals, submitRun } from "@/lib/storage";
+import { openRun, recordRun } from "@/lib/cloud";
 
 export interface RunResult {
   score: number;
@@ -13,6 +14,8 @@ export interface RunResult {
   rank: number;
   percentile: number;
   topTen: boolean;
+  /** the game's own game-over headline, e.g. "CRASHED" */
+  reason?: string;
 }
 
 interface Props {
@@ -26,7 +29,8 @@ interface Props {
 
 // Owns the full game lifecycle: mounts the module, sizes the canvas,
 // pauses on inactive/hidden, re-sizes the backing store on theme change
-// (no remount — same canvas, same instance), and reports signals on exit.
+// (no remount — same canvas, same instance), re-mounts the game when the
+// viewport changes shape, and reports signals on exit.
 export function GameHost({
   slug,
   active,
@@ -34,6 +38,7 @@ export function GameHost({
   onScore,
   onRunEnd,
 }: Props) {
+  const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const instRef = useRef<GameInstance | null>(null);
   const activeRef = useRef(active);
@@ -45,12 +50,51 @@ export function GameHost({
   const onRunEndRef = useRef(onRunEnd);
   onRunEndRef.current = onRunEnd;
 
+  // Games are laid out against the size they mount at, so the host owns that
+  // measurement. A card can mount at 0x0 (an offscreen tab, a preview pane
+  // that is still hidden, a device-frame switch): mounting then would bake in
+  // a 1px canvas and the game would render as a black rectangle forever.
+  // So: never mount without a real box, and remount when the box changes.
+  const [box, setBox] = useState<{ w: number; h: number } | null>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    let settle: ReturnType<typeof setTimeout> | null = null;
+    const measure = () => {
+      const w = Math.round(host.clientWidth);
+      const h = Math.round(host.clientHeight);
+      if (w <= 0 || h <= 0) return; // hidden — keep the last good size
+      setBox((prev) =>
+        // ignore sub-pixel jitter and the URL-bar shuffle on mobile; a real
+        // viewport change moves things far more than this
+        prev && Math.abs(prev.w - w) < 4 && Math.abs(prev.h - h) < 4
+          ? prev
+          : { w, h }
+      );
+    };
+
+    // A drag-resize fires continuously; remounting the game on every frame of
+    // it would be a strobe. Wait for the size to hold still, then remount once.
+    const ro = new ResizeObserver(() => {
+      if (settle) clearTimeout(settle);
+      settle = setTimeout(measure, 120);
+    });
+    ro.observe(host);
+    measure(); // first paint gets its size immediately
+
+    return () => {
+      ro.disconnect();
+      if (settle) clearTimeout(settle);
+    };
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    const parent = canvas?.parentElement;
-    if (!canvas || !parent) return;
-    const W = parent.clientWidth;
-    const H = parent.clientHeight;
+    if (!canvas || !box) return;
+    const W = box.w;
+    const H = box.h;
 
     const sizeBacking = () => {
       const t = currentTheme();
@@ -71,6 +115,7 @@ export function GameHost({
     let runEnds = 0;
     let activeSince: number | null = null;
     let dwellMs = 0;
+    let demoRestart: ReturnType<typeof setTimeout> | null = null;
 
     const inst = getModule(slug).mount({
       canvas,
@@ -88,12 +133,30 @@ export function GameHost({
         lastScore = n;
         onScoreRef.current(n);
       },
-      onRunEnd: (finalScore) => {
+      onRunEnd: (finalScore, reason) => {
         // Attract-mode runs are a shop window, not a score: never persist them.
-        if (!interactiveRef.current) return;
+        // They also have to keep going — a demo that loses and sits on its end
+        // card reads as a broken game, so hold the card long enough to see and
+        // then deal a fresh round. autoplay(false) is every module's reset.
+        if (!interactiveRef.current) {
+          if (demoRestart) clearTimeout(demoRestart);
+          demoRestart = setTimeout(() => {
+            if (interactiveRef.current) return;
+            instRef.current?.autoplay?.(false);
+            instRef.current?.autoplay?.(true);
+          }, 1400);
+          return;
+        }
         runEnds += 1;
         bumpSignals(slug, { runs: 1, replays: runEnds > 1 ? 1 : 0 });
-        onRunEndRef.current({ score: finalScore, ...submitRun(slug, finalScore) });
+        // Local first, so the sheet is instant and correct with no backend.
+        onRunEndRef.current({
+          score: finalScore,
+          reason,
+          ...submitRun(slug, finalScore),
+        });
+        // Then, if signed in, redeem the open ticket for a ranked score.
+        void recordRun(slug, finalScore);
       },
     });
     instRef.current = inst;
@@ -104,7 +167,19 @@ export function GameHost({
       activeSince = Date.now();
     if (!activeRef.current || document.hidden) inst.pause();
 
-    const unsubTheme = useThemeStore.subscribe(() => sizeBacking());
+    const unsubTheme = useThemeStore.subscribe(() => {
+      sizeBacking();
+      // Resizing the backing store wipes the canvas's pixels. If the loop is
+      // paused (card not active/visible) nothing will repaint it on its own,
+      // so force one frame through and re-pause right after.
+      const paused = !activeRef.current || document.hidden;
+      if (paused) {
+        inst.resume();
+        requestAnimationFrame(() => {
+          if (!activeRef.current || document.hidden) inst.pause();
+        });
+      }
+    });
     const onVis = () => {
       if (document.hidden) inst.pause();
       else if (activeRef.current) inst.resume();
@@ -134,6 +209,7 @@ export function GameHost({
 
     return () => {
       document.removeEventListener("visibilitychange", onVis);
+      if (demoRestart) clearTimeout(demoRestart);
       unsubTheme();
       inst.destroy();
       instRef.current = null;
@@ -144,7 +220,7 @@ export function GameHost({
         bumpSignals(slug, { fastSwipes: 1 });
       }
     };
-  }, [slug]);
+  }, [slug, box]);
 
   useEffect(() => {
     const inst = instRef.current;
@@ -161,17 +237,31 @@ export function GameHost({
     instRef.current?.autoplay?.(!interactive);
   }, [interactive]);
 
+  // Taking control is the start of a real run, so that's when the server
+  // ticket opens. Attract-mode play never gets one and never scores.
+  useEffect(() => {
+    if (active && interactive) void openRun(slug);
+  }, [active, interactive, slug]);
+
   return (
-    <canvas
-      ref={canvasRef}
-      className="block h-full w-full select-none"
-      style={{
-        // In preview mode the canvas is inert, so every gesture belongs to the
-        // feed. In play mode it takes the whole surface and nothing scrolls.
-        pointerEvents: interactive ? "auto" : "none",
-        touchAction: interactive ? "none" : "pan-y",
-      }}
-    />
+    <div ref={hostRef} className="h-full w-full" style={{ background: "var(--bg)" }}>
+      {box && (
+        <canvas
+          // A size change is a fresh mount: the key drops the old canvas so no
+          // frame is ever drawn against stale dimensions.
+          key={`${box.w}x${box.h}`}
+          ref={canvasRef}
+          className="block h-full w-full select-none"
+          style={{
+            // In preview mode the canvas is inert, so every gesture belongs to
+            // the feed. In play mode it takes the whole surface and nothing
+            // scrolls.
+            pointerEvents: interactive ? "auto" : "none",
+            touchAction: interactive ? "none" : "pan-y",
+          }}
+        />
+      )}
+    </div>
   );
 }
 
