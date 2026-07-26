@@ -17,7 +17,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | 6 | Per-game leaderboard + own rank | ✅ live board when signed in, seeded fallback otherwise |
 | 7 | Endless feed, no bottom | ✅ |
 | 8 | Algorithm tuner changes the queue within 1 swipe | ✅ verified live |
-| 9 | 3+ live-swappable themes | ✅ 4, no remount mid-run |
+| 9 | 3+ live-swappable themes | ✅ 6, no remount mid-run |
 | 10 | Deployed public URL | ⬜ connect repo to Vercel (no creds in build env) |
 | 11 | A soundtrack under the whole feed, one song per game | ✅ synthesised live, verified in Chromium |
 
