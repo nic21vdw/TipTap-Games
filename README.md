@@ -126,9 +126,11 @@ against.
   reorders before your eyes. Weighted-random sampling over a per-game
   feature vector, boosted by implicit signals (dwell time, replays,
   fast swipe-aways).
-- **4 live-switchable themes** — Arcade Dark, 8-Bit (pixelated canvas +
-  scanlines), Skeuomorph '08, Neon Felt. Games read theme tokens every
-  frame, so switching mid-run recolours without a remount.
+- **5 live-switchable themes** on top of the Coast default — Arcade Dark,
+  8-Bit (pixelated canvas + scanlines), Skeuomorph '08, Neon Felt, and Nic
+  (basement purple, mint and gold — One Gap redresses itself as his sky,
+  his pipes and his face). Games read theme tokens every frame, so
+  switching mid-run recolours without a remount.
 - **Guest identity, personal bests, per-game leaderboards** — localStorage
   by default, Postgres the moment Supabase env vars exist. See
   [Accounts and cloud saves](#accounts-and-cloud-saves-supabase).
