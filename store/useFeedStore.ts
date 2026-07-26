@@ -14,11 +14,16 @@ export interface FeedCard {
 interface FeedState {
   cards: FeedCard[];
   activeIndex: number;
+  /** Card the feed still has to scroll to; the Feed clears it once it has. */
+  scrollToUid: number | null;
   init: () => void;
   setActive: (i: number) => void;
   ensureAhead: () => void;
   /** Splice a game in directly after the active card. */
   insertNext: (slug: string) => void;
+  /** Splice a game in and scroll it into view — a search result, played now. */
+  jumpTo: (slug: string) => void;
+  clearScrollTarget: () => void;
   /** Rebuild everything after the active card using the current vector. */
   retune: () => void;
 }
@@ -35,6 +40,7 @@ function recentSlugsFrom(cards: FeedCard[], uptoIndex: number): string[] {
 export const useFeedStore = create<FeedState>((set, get) => ({
   cards: [],
   activeIndex: 0,
+  scrollToUid: null,
 
   init: () => {
     if (get().cards.length > 0) return;
@@ -66,6 +72,18 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     next.splice(activeIndex + 1, 0, { uid: nextUid++, slug });
     set({ cards: next });
   },
+
+  jumpTo: (slug: string) => {
+    const { cards, activeIndex } = get();
+    // already the card you're on — nothing to scroll to
+    if (cards[activeIndex]?.slug === slug) return;
+    const uid = nextUid++;
+    const next = [...cards];
+    next.splice(activeIndex + 1, 0, { uid, slug });
+    set({ cards: next, scrollToUid: uid });
+  },
+
+  clearScrollTarget: () => set({ scrollToUid: null }),
 
   retune: () => {
     const { cards, activeIndex } = get();

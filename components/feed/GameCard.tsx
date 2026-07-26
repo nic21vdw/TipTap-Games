@@ -141,6 +141,7 @@ export function GameCard({ card, index }: Props) {
   return (
     <section
       data-index={index}
+      data-uid={card.uid}
       className="relative h-dvh w-full snap-start snap-always overflow-hidden"
       style={{ background: "var(--bg)" }}
     >

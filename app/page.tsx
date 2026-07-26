@@ -28,7 +28,7 @@ function SearchButton() {
   return (
     <button
       onClick={() => openSheet("search")}
-      aria-label="Search and generate games"
+      aria-label="All games — search by name"
       className="pressable theme-smooth fixed right-3 top-[calc(env(safe-area-inset-top)+10px)] z-30 flex h-10 w-10 items-center justify-center"
       style={{
         background: "rgba(12,18,28,.55)",

@@ -8,7 +8,9 @@ import { getMeta } from "@/games/registry";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
+import { bestGameMatch } from "@/lib/searchGames";
 import type { MemorySource } from "@/lib/memories";
+import type { FullGameMeta } from "@/games/types";
 
 function fmt(ms: number): string {
   const s = Math.round(ms / 1000);
@@ -37,6 +39,7 @@ export function AlgorithmSheet() {
   const [query, setQuery] = useState("");
   const [understood, setUnderstood] = useState<string[]>([]);
   const [missed, setMissed] = useState(false);
+  const [named, setNamed] = useState<FullGameMeta | null>(null);
 
   // recomputed each time the sheet opens, so it always reflects this session
   const playTimes = useMemo(() => {
@@ -61,10 +64,19 @@ export function AlgorithmSheet() {
   const run = (text: string) => {
     const q = text.trim();
     if (!q) return;
-    const matched = applyQuery(q);
+    // typing a game's name here means "show me that game", not "tune"
+    const hit = bestGameMatch(q);
+    const matched = hit ? [] : applyQuery(q);
+    setNamed(hit);
     setUnderstood(matched.map((m) => m.effect));
-    setMissed(matched.length === 0);
+    setMissed(!hit && matched.length === 0);
     setQuery("");
+  };
+
+  const openNamed = (slug: string) => {
+    useFeedStore.getState().jumpTo(slug);
+    setNamed(null);
+    closeSheet();
   };
 
   const nextUp = cards.slice(activeIndex + 1, activeIndex + 6);
@@ -102,6 +114,26 @@ export function AlgorithmSheet() {
           Tune
         </button>
       </div>
+
+      {named && (
+        <button
+          onClick={() => openNamed(named.slug)}
+          className="pressable mt-2 flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left"
+          style={{ background: "var(--bg)", borderRadius: "var(--radius)" }}
+        >
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-bold" style={{ color: "var(--ink)" }}>
+              {named.title}
+            </span>
+            <span className="block truncate text-xs" style={{ color: "var(--ink-dim)" }}>
+              {named.rule}
+            </span>
+          </span>
+          <span className="shrink-0 text-xs font-bold" style={{ color: "var(--accent)" }}>
+            Play
+          </span>
+        </button>
+      )}
 
       {understood.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
