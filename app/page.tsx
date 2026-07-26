@@ -4,10 +4,11 @@ import { useEffect } from "react";
 import { Feed } from "@/components/feed/Feed";
 import { AccountSheet } from "@/components/sheets/AccountSheet";
 import { AlgorithmSheet } from "@/components/sheets/AlgorithmSheet";
+import { GamesSheet } from "@/components/sheets/GamesSheet";
 import { LeaderboardSheet } from "@/components/sheets/LeaderboardSheet";
 import { SearchSheet } from "@/components/sheets/SearchSheet";
 import { ThemeSheet } from "@/components/sheets/ThemeSheet";
-import { SearchIcon, SlidersIcon } from "@/components/ui/icons";
+import { GridIcon, SearchIcon, SlidersIcon } from "@/components/ui/icons";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useUiStore } from "@/store/useUiStore";
@@ -22,12 +23,32 @@ export default function Home() {
       <Feed />
       <AlgorithmPill />
       <SearchButton />
+      <GamesButton />
       <AlgorithmSheet />
       <LeaderboardSheet />
       <ThemeSheet />
       <SearchSheet />
+      <GamesSheet />
       <AccountSheet />
     </main>
+  );
+}
+
+function GamesButton() {
+  const openSheet = useUiStore((s) => s.openSheet);
+  return (
+    <button
+      onClick={() => openSheet("games")}
+      aria-label="Browse all games"
+      className="pressable theme-smooth fixed right-3 top-[calc(var(--safe-top)+58px)] z-30 flex h-10 w-10 items-center justify-center"
+      style={{
+        background: "rgba(12,18,28,.55)",
+        color: "#fff",
+        borderRadius: "var(--radius)",
+      }}
+    >
+      <GridIcon size={20} />
+    </button>
   );
 }
 
