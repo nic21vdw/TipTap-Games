@@ -39,7 +39,9 @@ function mount(ctx: GameContext): GameInstance {
   let tapFlash = -1;
   let tapFlashT = 0;
 
-  const cell = Math.min(W * 0.8, H * 0.5) / N;
+  // Pads as big as the phone allows: half-height cells left the card looking
+  // like a widget dropped in the middle of an empty screen.
+  const cell = Math.min(W, H * 0.86) / N;
   const gx = W / 2 - (cell * N) / 2;
   const gy = H / 2 - (cell * N) / 2;
 
@@ -91,7 +93,7 @@ function mount(ctx: GameContext): GameInstance {
     } else {
       over = true;
       ctx.haptic("fail");
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "WRONG TILE");
     }
   };
   ctx.canvas.addEventListener("pointerdown", onDown);

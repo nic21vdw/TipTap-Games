@@ -97,7 +97,7 @@ function mount(ctx: GameContext): GameInstance {
         const life = Math.max(0.9, 2.2 - score * 0.03);
         targets.push({
           x: rand(R + 20, W - R - 20),
-          y: rand(H * 0.18, H * 0.82),
+          y: rand(H * 0.07, H * 0.93),
           life,
           maxLife: life,
         });
@@ -111,7 +111,7 @@ function mount(ctx: GameContext): GameInstance {
           ctx.haptic("fail");
           if (misses >= 3) {
             over = true;
-            ctx.onRunEnd(score);
+            ctx.onRunEnd(score, "OUT OF MISSES");
           }
         }
       }
@@ -122,6 +122,22 @@ function mount(ctx: GameContext): GameInstance {
     ground.addColorStop(1, shade(pal.deep, -0.55));
     g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
+
+    // A faint full-bleed grid: the targets are sparse by design, and without
+    // it most of the phone reads as empty rather than as a wide open field.
+    g.strokeStyle = shade(pal.deep, 0.3);
+    g.lineWidth = 1;
+    const gstep = W / 6;
+    g.beginPath();
+    for (let x = gstep; x < W; x += gstep) {
+      g.moveTo(x, 0);
+      g.lineTo(x, H);
+    }
+    for (let y = gstep; y < H; y += gstep) {
+      g.moveTo(0, y);
+      g.lineTo(W, y);
+    }
+    g.stroke();
 
     for (const tg of targets) {
       const p = tg.life / tg.maxLife;
