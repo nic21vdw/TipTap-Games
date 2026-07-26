@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GameInstance } from "@/games/types";
 import { getMeta, getModule } from "@/games/registry";
 import { currentTheme, useThemeStore } from "@/store/useThemeStore";
@@ -27,7 +27,8 @@ interface Props {
 
 // Owns the full game lifecycle: mounts the module, sizes the canvas,
 // pauses on inactive/hidden, re-sizes the backing store on theme change
-// (no remount — same canvas, same instance), and reports signals on exit.
+// (no remount — same canvas, same instance), re-mounts the game when the
+// viewport changes shape, and reports signals on exit.
 export function GameHost({
   slug,
   active,
@@ -35,6 +36,7 @@ export function GameHost({
   onScore,
   onRunEnd,
 }: Props) {
+  const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const instRef = useRef<GameInstance | null>(null);
   const activeRef = useRef(active);
@@ -46,12 +48,51 @@ export function GameHost({
   const onRunEndRef = useRef(onRunEnd);
   onRunEndRef.current = onRunEnd;
 
+  // Games are laid out against the size they mount at, so the host owns that
+  // measurement. A card can mount at 0x0 (an offscreen tab, a preview pane
+  // that is still hidden, a device-frame switch): mounting then would bake in
+  // a 1px canvas and the game would render as a black rectangle forever.
+  // So: never mount without a real box, and remount when the box changes.
+  const [box, setBox] = useState<{ w: number; h: number } | null>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    let settle: ReturnType<typeof setTimeout> | null = null;
+    const measure = () => {
+      const w = Math.round(host.clientWidth);
+      const h = Math.round(host.clientHeight);
+      if (w <= 0 || h <= 0) return; // hidden — keep the last good size
+      setBox((prev) =>
+        // ignore sub-pixel jitter and the URL-bar shuffle on mobile; a real
+        // viewport change moves things far more than this
+        prev && Math.abs(prev.w - w) < 4 && Math.abs(prev.h - h) < 4
+          ? prev
+          : { w, h }
+      );
+    };
+
+    // A drag-resize fires continuously; remounting the game on every frame of
+    // it would be a strobe. Wait for the size to hold still, then remount once.
+    const ro = new ResizeObserver(() => {
+      if (settle) clearTimeout(settle);
+      settle = setTimeout(measure, 120);
+    });
+    ro.observe(host);
+    measure(); // first paint gets its size immediately
+
+    return () => {
+      ro.disconnect();
+      if (settle) clearTimeout(settle);
+    };
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    const parent = canvas?.parentElement;
-    if (!canvas || !parent) return;
-    const W = parent.clientWidth;
-    const H = parent.clientHeight;
+    if (!canvas || !box) return;
+    const W = box.w;
+    const H = box.h;
 
     const sizeBacking = () => {
       const t = currentTheme();
@@ -160,7 +201,7 @@ export function GameHost({
         bumpSignals(slug, { fastSwipes: 1 });
       }
     };
-  }, [slug]);
+  }, [slug, box]);
 
   useEffect(() => {
     const inst = instRef.current;
@@ -184,16 +225,24 @@ export function GameHost({
   }, [active, interactive, slug]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="block h-full w-full select-none"
-      style={{
-        // In preview mode the canvas is inert, so every gesture belongs to the
-        // feed. In play mode it takes the whole surface and nothing scrolls.
-        pointerEvents: interactive ? "auto" : "none",
-        touchAction: interactive ? "none" : "pan-y",
-      }}
-    />
+    <div ref={hostRef} className="h-full w-full" style={{ background: "var(--bg)" }}>
+      {box && (
+        <canvas
+          // A size change is a fresh mount: the key drops the old canvas so no
+          // frame is ever drawn against stale dimensions.
+          key={`${box.w}x${box.h}`}
+          ref={canvasRef}
+          className="block h-full w-full select-none"
+          style={{
+            // In preview mode the canvas is inert, so every gesture belongs to
+            // the feed. In play mode it takes the whole surface and nothing
+            // scrolls.
+            pointerEvents: interactive ? "auto" : "none",
+            touchAction: interactive ? "none" : "pan-y",
+          }}
+        />
+      )}
+    </div>
   );
 }
 
