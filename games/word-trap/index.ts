@@ -128,20 +128,20 @@ function mount(ctx: GameContext): GameInstance {
 
     // the word, rendered in the (possibly trap) colour
     g.fillStyle = roleColour(colour);
-    g.font = `800 64px ${t.fontDisplay}`;
-    g.fillText(word, W / 2, H * 0.45);
+    g.font = `800 ${Math.round(Math.min(W * 0.22, H * 0.1))}px ${t.fontDisplay}`;
+    g.fillText(word, W / 2, H * 0.5);
 
-    // countdown bar
-    const bw = W * 0.6;
+    // countdown: a full-width bar pinned to the bottom edge
+    const barH = H * 0.02;
     g.fillStyle = t.surface;
-    g.fillRect(W / 2 - bw / 2, H * 0.55, bw, 10);
+    g.fillRect(0, H - barH, W, barH);
     g.fillStyle = timer / window_ < 0.3 ? pal.foe : t.ink;
-    g.fillRect(W / 2 - bw / 2, H * 0.55, bw * Math.max(0, timer / window_), 10);
+    g.fillRect(0, H - barH, W * Math.max(0, timer / window_), barH);
 
     // lives
     for (let i = 0; i < 3; i++) {
       g.beginPath();
-      g.arc(W / 2 - 28 + i * 28, H * 0.09, 7, 0, Math.PI * 2);
+      g.arc(W / 2 - 28 + i * 28, H * 0.045, 9, 0, Math.PI * 2);
       g.fillStyle = i < lives ? pal.prize : t.surface;
       g.fill();
     }
