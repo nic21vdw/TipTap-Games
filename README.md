@@ -118,17 +118,22 @@ against.
   Drop Tower, Cross Traffic, Drift Field, Nic's Basement (a 3D lane defense
   in Nic's basement — build junk on a receding grid before the horde of
   Nic-faced zombies reaches the stairs), Hardwater (3D ice fishing — walk
-  the ice, set the hook, crank the fight), and Cash Out (arcade-casino:
-  virtual chips only, nothing to buy, free reset).
+  the ice, set the hook, crank the fight), Five Nights at Nic's Basement
+  (sit in the chair, spend the battery, survive six hours while three
+  copies of Nic come down the stairs, through the laundry and up the floor
+  drain), and Cash Out (arcade-casino: virtual chips only, nothing to buy,
+  free reset).
 - **The algorithm tuner** (`⚙` pill or the Tune button): 4 sliders
   (calm↔frantic, skill↔chance, modern↔2008, more-of-this↔surprise-me),
   tag demand/block chips, 4 presets, and a live **Next up** strip that
   reorders before your eyes. Weighted-random sampling over a per-game
   feature vector, boosted by implicit signals (dwell time, replays,
   fast swipe-aways).
-- **4 live-switchable themes** — Arcade Dark, 8-Bit (pixelated canvas +
-  scanlines), Skeuomorph '08, Neon Felt. Games read theme tokens every
-  frame, so switching mid-run recolours without a remount.
+- **5 live-switchable themes** on top of the Coast default — Arcade Dark,
+  8-Bit (pixelated canvas + scanlines), Skeuomorph '08, Neon Felt, and Nic
+  (basement purple, mint and gold — One Gap redresses itself as his sky,
+  his pipes and his face). Games read theme tokens every frame, so
+  switching mid-run recolours without a remount.
 - **Guest identity, personal bests, per-game leaderboards** — localStorage
   by default, Postgres the moment Supabase env vars exist. See
   [Accounts and cloud saves](#accounts-and-cloud-saves-supabase).

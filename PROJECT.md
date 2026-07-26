@@ -17,7 +17,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | 6 | Per-game leaderboard + own rank | ✅ live board when signed in, seeded fallback otherwise |
 | 7 | Endless feed, no bottom | ✅ |
 | 8 | Algorithm tuner changes the queue within 1 swipe | ✅ verified live |
-| 9 | 3+ live-swappable themes | ✅ 4, no remount mid-run |
+| 9 | 3+ live-swappable themes | ✅ 6, no remount mid-run |
 | 10 | Deployed public URL | ⬜ connect repo to Vercel (no creds in build env) |
 | 11 | A soundtrack under the whole feed, one song per game | ✅ synthesised live, verified in Chromium |
 
@@ -31,6 +31,13 @@ algorithm** via a tuner sheet with a live "Next up" strip.
   colours in `/games`.
 - Original titles, art, palettes only. Mechanics are homages; names, art
   and trade dress are never borrowed.
+- Nic is one face. Any game that puts him on screen calls `drawNicHead`
+  from `games/nic.ts` — nobody redraws the jaw, the swoop or the stare
+  locally, so the horde in Nic's Basement and the thing in the doorway in
+  Five Nights are recognisably the same man. Drop a square photo at
+  `public/nic.jpg` and every one of them switches to the real headshot,
+  masked into the same skull and lit by whatever lamp that game is running.
+  No file, no problem: the vector head is the fallback.
 - Casino = arcade-casino: virtual chips, free reset, no purchase
   affordance anywhere.
 - Scrolling goes both ways. A card is never dropped from the list once
@@ -57,6 +64,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 ## Key files
 
 - `games/types.ts` — the game contract; `games/registry.ts` — catalog
+- `games/nic.ts` — the headshot: one Nic, drawn or photographed, shared
 - `lib/algorithm.ts` — scoring + weighted sampling without replacement
 - `games/variants.ts` — mints fresh games once the catalog is exhausted
 - `lib/storage.ts` — the synchronous local layer everything reads from

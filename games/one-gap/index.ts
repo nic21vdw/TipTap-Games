@@ -75,6 +75,27 @@ function mount(ctx: GameContext): GameInstance {
   let threaded = 0; // tight passes this run
   let dead = false; // ragdoll after the final crash
 
+  // ---- clouds ----
+  // They own their own x. They used to be derived from `scroll`, which wraps
+  // every 40px for the ground texture — so the whole sky jumped backwards
+  // twice a second. Each cloud now drifts continuously and wraps by exactly
+  // one span, which keeps the spacing even and the motion seamless.
+  interface Cloud {
+    x: number;
+    y: number;
+    w: number;
+    par: number; // parallax: far clouds crawl, near ones keep up
+    a: number;
+  }
+  const SPAN = W + 240;
+  const clouds: Cloud[] = Array.from({ length: 5 }, (_, i) => ({
+    x: (i * SPAN) / 5 - 120,
+    y: H * (0.07 + i * 0.1) + rand(-10, 10),
+    w: 62 + i * 15,
+    par: 0.5 + i * 0.22,
+    a: 0.2 + (i % 2) * 0.16,
+  }));
+
   const reset = () => {
     by = H / 2;
     vy = 0;
@@ -148,7 +169,7 @@ function mount(ctx: GameContext): GameInstance {
     overAge = 0;
     dead = true;
     best = Math.max(best, score);
-    fx.flash(pal.foe, 0.3);
+    fx.flash(th.id === "nic" ? th.danger : pal.foe, 0.3);
     ctx.onRunEnd(score);
   };
 
@@ -233,27 +254,37 @@ function mount(ctx: GameContext): GameInstance {
       by = Math.min(H - GROUND - R, by + vy * dt);
     }
 
-    // ---- sky ----
+    // ---- scenery ----
+    // Nic's theme redresses the whole card: his sky, his pipes, his face on
+    // the bird. Every other theme keeps the game's own palette.
+    const nic = th.id === "nic";
+    const skyTop = nic ? shade(th.bg, -0.35) : shade(pal.deep, -0.25);
+    const skyMid = nic ? th.bg : pal.deep;
+    const skyLow = nic ? shade(th.surface, 0.3) : pal.glow;
+    const pipeC = nic ? th.accent : pal.foe;
+    const sunC = nic ? th.accentAlt : "#ffffff";
+
     const sky = g.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, shade(pal.deep, -0.25));
-    sky.addColorStop(0.55, pal.deep);
-    sky.addColorStop(1, pal.glow);
+    sky.addColorStop(0, skyTop);
+    sky.addColorStop(0.55, skyMid);
+    sky.addColorStop(1, skyLow);
     g.fillStyle = sky;
     g.fillRect(0, 0, W, H);
 
     // a low sun, so the sky has a focal point
-    halo(g, W * 0.78, H * 0.2, W * 0.5, "#ffffff", 0.18);
+    halo(g, W * 0.78, H * 0.2, W * 0.5, sunC, nic ? 0.14 : 0.18);
 
-    // drifting clouds, parallax at a third of pipe speed
-    g.fillStyle = "rgba(255,255,255,.5)";
-    for (let i = 0; i < 4; i++) {
-      const cw = 70 + i * 18;
-      const cx = ((i * 137 + scroll * 0.33 * (i + 1) + clock * 6) % (W + 160)) - 80;
-      const cy = H * (0.12 + i * 0.13);
+    // drifting clouds — a wind of their own, plus a share of the pipe speed
+    const wind = W * 0.05 + (started && !over ? speed * 0.22 : 0);
+    for (const c of clouds) {
+      c.x -= wind * c.par * dt;
+      while (c.x < -c.w) c.x += SPAN;
+      // on a dark sky a bright tint turns to mud, so Nic's clouds stay faint
+      g.fillStyle = hexA(nic ? th.ink : "#ffffff", nic ? c.a * 0.4 : c.a);
       g.beginPath();
-      g.arc(cx, cy, cw * 0.28, 0, Math.PI * 2);
-      g.arc(cx + cw * 0.3, cy + 4, cw * 0.22, 0, Math.PI * 2);
-      g.arc(cx - cw * 0.28, cy + 5, cw * 0.19, 0, Math.PI * 2);
+      g.arc(c.x, c.y, c.w * 0.28, 0, Math.PI * 2);
+      g.arc(c.x + c.w * 0.3, c.y + 4, c.w * 0.22, 0, Math.PI * 2);
+      g.arc(c.x - c.w * 0.28, c.y + 5, c.w * 0.19, 0, Math.PI * 2);
       g.fill();
     }
 
@@ -263,9 +294,9 @@ function mount(ctx: GameContext): GameInstance {
     // ---- pipes ----
     for (const p of pipes) {
       const body = g.createLinearGradient(p.x, 0, p.x + PIPE_W, 0);
-      body.addColorStop(0, shade(pal.foe, -0.22));
-      body.addColorStop(0.35, pal.foe);
-      body.addColorStop(1, shade(pal.foe, -0.32));
+      body.addColorStop(0, shade(pipeC, -0.22));
+      body.addColorStop(0.35, pipeC);
+      body.addColorStop(1, shade(pipeC, -0.32));
       const capH = 22;
       const topH = p.gapY - GAP / 2;
       const botY = p.gapY + GAP / 2;
@@ -294,9 +325,9 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     // ---- ground ----
-    g.fillStyle = shade(pal.foe, -0.45);
+    g.fillStyle = shade(pipeC, -0.45);
     g.fillRect(0, H - GROUND, W, GROUND);
-    g.fillStyle = shade(pal.foe, -0.1);
+    g.fillStyle = shade(pipeC, -0.1);
     g.fillRect(0, H - GROUND, W, 7);
     g.fillStyle = "rgba(0,0,0,.14)";
     for (let x = -scroll; x < W; x += 40) g.fillRect(x, H - GROUND + 7, 20, 5);
@@ -309,49 +340,137 @@ function mount(ctx: GameContext): GameInstance {
       g.save();
       g.translate(bx, by);
       g.rotate(tilt);
-      // body
-      g.beginPath();
-      g.ellipse(0, 0, R * 1.25, R, 0, 0, Math.PI * 2);
-      g.fillStyle = over ? shade(pal.hero, -0.3) : pal.hero;
-      g.fill();
-      g.strokeStyle = "rgba(0,0,0,.28)";
-      g.lineWidth = 2;
-      g.stroke();
-      // belly
-      g.beginPath();
-      g.ellipse(-2, 4, R * 0.72, R * 0.5, 0, 0, Math.PI * 2);
-      g.fillStyle = "rgba(255,255,255,.55)";
-      g.fill();
-      // wing — flaps on tap
-      const wing = flap > 0 ? -0.9 : 0.25;
-      g.save();
-      g.translate(-3, -1);
-      g.rotate(wing);
-      g.beginPath();
-      g.ellipse(0, 0, R * 0.62, R * 0.42, 0, 0, Math.PI * 2);
-      g.fillStyle = shade(pal.hero, -0.28);
-      g.fill();
-      g.strokeStyle = "rgba(0,0,0,.22)";
-      g.lineWidth = 1.5;
-      g.stroke();
-      g.restore();
-      // beak
-      g.beginPath();
-      g.moveTo(R * 1.15, -1);
-      g.lineTo(R * 1.85, 3);
-      g.lineTo(R * 1.1, 7);
-      g.closePath();
-      g.fillStyle = "#f4802f";
-      g.fill();
-      // eye
-      g.beginPath();
-      g.arc(R * 0.55, -R * 0.35, R * 0.3, 0, Math.PI * 2);
-      g.fillStyle = "#fff";
-      g.fill();
-      g.beginPath();
-      g.arc(over ? R * 0.5 : R * 0.66, -R * 0.35, R * 0.14, 0, Math.PI * 2);
-      g.fillStyle = "#1b1b1f";
-      g.fill();
+      if (nic) {
+        // ---- Nic mode: the same flight model, wearing his face ----
+        const beat = flap > 0 ? -1.0 : 0.3;
+        // wings, drawn behind the head
+        for (const s of [-1, 1]) {
+          g.save();
+          g.translate(s * R * 1.15, R * 0.2);
+          g.rotate(s * beat);
+          g.beginPath();
+          g.ellipse(s * R * 0.4, 0, R * 0.82, R * 0.26, 0, 0, Math.PI * 2);
+          g.fillStyle = hexA(th.accentAlt, 0.9);
+          g.fill();
+          g.strokeStyle = "rgba(0,0,0,.25)";
+          g.lineWidth = 1.5;
+          g.stroke();
+          g.restore();
+        }
+        const skin = over ? "#c69070" : "#e8b489";
+        // head
+        g.beginPath();
+        g.ellipse(0, R * 0.05, R * 0.92, R * 1.02, 0, 0, Math.PI * 2);
+        g.fillStyle = skin;
+        g.fill();
+        g.strokeStyle = "rgba(0,0,0,.3)";
+        g.lineWidth = 2;
+        g.stroke();
+        // ears
+        g.beginPath();
+        g.ellipse(-R * 0.9, R * 0.12, R * 0.16, R * 0.24, 0, 0, Math.PI * 2);
+        g.ellipse(R * 0.9, R * 0.12, R * 0.16, R * 0.24, 0, 0, Math.PI * 2);
+        g.fillStyle = skin;
+        g.fill();
+        // stubble along the jaw
+        g.beginPath();
+        g.ellipse(0, R * 0.52, R * 0.66, R * 0.4, 0, 0, Math.PI * 2);
+        g.fillStyle = hexA("#3b2b2b", 0.28);
+        g.fill();
+        // hair: one stubborn swoop, same as the basement
+        g.fillStyle = "#2b2233";
+        g.beginPath();
+        g.moveTo(-R * 0.95, -R * 0.3);
+        g.quadraticCurveTo(-R * 0.7, -R * 1.3, R * 0.15, -R * 1.1);
+        g.quadraticCurveTo(R * 1.05, -R * 1.0, R * 0.9, -R * 0.18);
+        g.quadraticCurveTo(R * 0.55, -R * 0.66, R * 0.05, -R * 0.52);
+        g.quadraticCurveTo(-R * 0.45, -R * 0.44, -R * 0.95, -R * 0.3);
+        g.closePath();
+        g.fill();
+        // eyes — wide open, because this is terrifying
+        g.fillStyle = "#ffffff";
+        g.beginPath();
+        g.ellipse(-R * 0.3, 0, R * 0.24, R * 0.22, 0, 0, Math.PI * 2);
+        g.ellipse(R * 0.36, -R * 0.02, R * 0.24, R * 0.22, 0, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = "#1b1b1f";
+        const look = over ? -R * 0.1 : R * 0.08;
+        g.beginPath();
+        g.arc(-R * 0.3 + look, R * 0.02, R * 0.1, 0, Math.PI * 2);
+        g.arc(R * 0.36 + look, 0, R * 0.1, 0, Math.PI * 2);
+        g.fill();
+        // brows
+        g.strokeStyle = "#2b2233";
+        g.lineWidth = Math.max(1, R * 0.12);
+        g.lineCap = "round";
+        g.beginPath();
+        g.moveTo(-R * 0.58, -R * 0.34);
+        g.lineTo(-R * 0.06, -R * 0.26);
+        g.moveTo(R * 0.12, -R * 0.28);
+        g.lineTo(R * 0.62, -R * 0.38);
+        g.stroke();
+        // mouth: open on the flap, flat when it all goes wrong
+        g.fillStyle = "#5a2b32";
+        g.beginPath();
+        if (over) {
+          g.ellipse(R * 0.05, R * 0.5, R * 0.26, R * 0.08, 0, 0, Math.PI * 2);
+        } else {
+          g.ellipse(
+            R * 0.05,
+            R * 0.5,
+            R * 0.22,
+            flap > 0 ? R * 0.26 : R * 0.12,
+            0,
+            0,
+            Math.PI * 2
+          );
+        }
+        g.fill();
+      } else {
+        // body
+        g.beginPath();
+        g.ellipse(0, 0, R * 1.25, R, 0, 0, Math.PI * 2);
+        g.fillStyle = over ? shade(pal.hero, -0.3) : pal.hero;
+        g.fill();
+        g.strokeStyle = "rgba(0,0,0,.28)";
+        g.lineWidth = 2;
+        g.stroke();
+        // belly
+        g.beginPath();
+        g.ellipse(-2, 4, R * 0.72, R * 0.5, 0, 0, Math.PI * 2);
+        g.fillStyle = "rgba(255,255,255,.55)";
+        g.fill();
+        // wing — flaps on tap
+        const wing = flap > 0 ? -0.9 : 0.25;
+        g.save();
+        g.translate(-3, -1);
+        g.rotate(wing);
+        g.beginPath();
+        g.ellipse(0, 0, R * 0.62, R * 0.42, 0, 0, Math.PI * 2);
+        g.fillStyle = shade(pal.hero, -0.28);
+        g.fill();
+        g.strokeStyle = "rgba(0,0,0,.22)";
+        g.lineWidth = 1.5;
+        g.stroke();
+        g.restore();
+        // beak
+        g.beginPath();
+        g.moveTo(R * 1.15, -1);
+        g.lineTo(R * 1.85, 3);
+        g.lineTo(R * 1.1, 7);
+        g.closePath();
+        g.fillStyle = "#f4802f";
+        g.fill();
+        // eye
+        g.beginPath();
+        g.arc(R * 0.55, -R * 0.35, R * 0.3, 0, Math.PI * 2);
+        g.fillStyle = "#fff";
+        g.fill();
+        g.beginPath();
+        g.arc(over ? R * 0.5 : R * 0.66, -R * 0.35, R * 0.14, 0, Math.PI * 2);
+        g.fillStyle = "#1b1b1f";
+        g.fill();
+      }
       g.restore();
     }
 

@@ -19,6 +19,7 @@ const REARM_MS = 500;
 export function Feed() {
   const cards = useFeedStore((s) => s.cards);
   const activeIndex = useFeedStore((s) => s.activeIndex);
+  const scrollToUid = useFeedStore((s) => s.scrollToUid);
   const playing = useUiStore((s) => s.playingUid !== null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
@@ -296,6 +297,21 @@ export function Feed() {
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
+
+  // A searched-for game scrolls itself into view, so picking it out of the
+  // search sheet lands you on it instead of queueing it one swipe away.
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!ready || !root || scrollToUid === null) return;
+    const el = root.querySelector<HTMLElement>(`[data-uid="${scrollToUid}"]`);
+    if (!el) return;
+    // next frame: the card was only just spliced in
+    const id = requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      useFeedStore.getState().clearScrollTarget();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [ready, scrollToUid, cards.length]);
 
   // Autoplay policy: the very first gesture anywhere on the page is what
   // lets the soundtrack start. After that this never runs again.

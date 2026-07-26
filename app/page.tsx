@@ -38,11 +38,14 @@ export default function Home() {
 
 function GamesButton() {
   const openSheet = useUiStore((s) => s.openSheet);
+  const playing = useUiStore((s) => s.playingUid !== null);
   return (
     <button
       onClick={() => openSheet("games")}
       aria-label="Browse all games"
-      className="pressable theme-smooth fixed right-3 top-[calc(var(--safe-top)+58px)] z-30 flex h-10 w-10 items-center justify-center"
+      className={`pressable theme-smooth fixed right-3 top-[calc(var(--safe-top)+58px)] z-30 flex h-10 w-10 items-center justify-center transition duration-200 ${
+        playing ? "pointer-events-none scale-90 opacity-0" : "scale-100 opacity-100"
+      }`}
       style={{
         background: "rgba(12,18,28,.55)",
         color: "#fff",
@@ -56,13 +59,18 @@ function GamesButton() {
 
 function TopRightButtons() {
   const openSheet = useUiStore((s) => s.openSheet);
+  const playing = useUiStore((s) => s.playingUid !== null);
   const chrome = {
     background: "rgba(12,18,28,.55)",
     color: "#fff",
     borderRadius: "var(--radius)",
   };
   return (
-    <div className="fixed right-3 top-[calc(var(--safe-top)+10px)] z-30 flex items-center gap-2">
+    <div
+      className={`fixed right-3 top-[calc(var(--safe-top)+10px)] z-30 flex items-center gap-2 transition duration-200 ${
+        playing ? "pointer-events-none scale-90 opacity-0" : "scale-100 opacity-100"
+      }`}
+    >
       <button
         onClick={() => openSheet("settings")}
         aria-label="Settings"
@@ -86,13 +94,16 @@ function TopRightButtons() {
 function AlgorithmPill() {
   const memories = useAlgorithmStore((s) => s.memories);
   const openSheet = useUiStore((s) => s.openSheet);
+  const playing = useUiStore((s) => s.playingUid !== null);
   const active = memories.filter((m) => m.enabled).length;
   const name =
     active === 0 ? "Tune your feed" : `${active} rule${active === 1 ? "" : "s"}`;
   return (
     <button
       onClick={() => openSheet("algo")}
-      className="pressable theme-smooth fixed left-3 top-[calc(var(--safe-top)+10px)] z-30 flex h-10 items-center gap-1.5 px-3 text-xs font-bold"
+      className={`pressable theme-smooth fixed left-3 top-[calc(var(--safe-top)+10px)] z-30 flex h-10 items-center gap-1.5 px-3 text-xs font-bold transition duration-200 ${
+        playing ? "pointer-events-none scale-90 opacity-0" : "scale-100 opacity-100"
+      }`}
       style={{
         background: "rgba(12,18,28,.55)",
         color: "#fff",
