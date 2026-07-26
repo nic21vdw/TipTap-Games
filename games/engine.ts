@@ -161,6 +161,9 @@ export function roundRect(
   g.closePath();
 }
 
+// The 16 games rebuilt on games/fx.ts use resultCard() there instead, which
+// shows the score, the personal best and a run stat. Every other game still
+// calls this plain version.
 interface EndTheme {
   ink: string;
   inkDim: string;

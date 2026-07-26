@@ -1,12 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { makeLoop, rand } from "@/games/engine";
+import {
+  createFx,
+  drawBackdrop,
+  resultCard,
+  hexA,
+  mix,
+  halo,
+  pulse,
+  groundInk,
+} from "@/games/fx";
 
 const meta = {
   slug: "drift-field",
   title: "Drift Field",
-  rule: "Aim with your thumb, hold to thrust",
+  rule: "Hold to aim and thrust. Guns auto-fire",
   year: 1979,
-  description: "Rotate 360°, thrust, and blast the rocks apart.",
+  description: "Rotate, thrust, and blast the rocks apart. Momentum is the enemy.",
   history:
     "Homage to the 1979 vector-graphics cabinet that defined space shooters — inertia, wrap-around edges, and rocks that split into more rocks.",
   tags: ["retro", "reflex", "drag", "endurance"],
@@ -14,7 +24,7 @@ const meta = {
     hero: "#4cc9f0",
     foe: "#f72585",
     prize: "#ffd60a",
-    deep: "#03045e",
+    deep: "#03041e",
     glow: "#7209b7",
   },
   intensity: 0.7,
@@ -26,7 +36,7 @@ const meta = {
   kidSafe: true,
   sessionLength: 0.6,
   scoreUnit: "pts",
-  maxScorePerSecond: 12,
+  maxScorePerSecond: 40,
 } satisfies GameModule["meta"];
 
 interface Rock {
@@ -38,6 +48,7 @@ interface Rock {
   spin: number;
   angle: number;
   shape: number[]; // per-vertex radius jitter
+  hit: number; // flash timer
 }
 
 interface Shot {
@@ -50,6 +61,7 @@ interface Shot {
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
+  const fx = createFx();
 
   let shipX = W / 2;
   let shipY = H / 2;
@@ -62,11 +74,15 @@ function mount(ctx: GameContext): GameInstance {
   let shots: Shot[] = [];
   let fireCd = 0;
   let score = 0;
+  let best = 0;
   let lives = 3;
   let over = false;
+  let overAge = 0;
   let invuln = 0;
   let wave = 1;
   let flameT = 0;
+  let clock = 0;
+  let kills = 0;
 
   const makeRock = (x: number, y: number, r: number): Rock => ({
     x,
@@ -77,6 +93,7 @@ function mount(ctx: GameContext): GameInstance {
     spin: rand(-1.4, 1.4),
     angle: rand(0, Math.PI * 2),
     shape: Array.from({ length: 9 }, () => rand(0.72, 1.25)),
+    hit: 0,
   });
 
   const spawnWave = () => {
@@ -101,10 +118,13 @@ function mount(ctx: GameContext): GameInstance {
     rocks = [];
     shots = [];
     score = 0;
+    kills = 0;
     lives = 3;
     wave = 1;
     over = false;
+    overAge = 0;
     invuln = 1.5;
+    fx.clear();
     ctx.onScore(0);
     spawnWave();
   };
@@ -118,7 +138,7 @@ function mount(ctx: GameContext): GameInstance {
 
   const onDown = (e: PointerEvent) => {
     if (over) {
-      reset();
+      if (overAge > 0.3) reset();
       return;
     }
     ctx.canvas.setPointerCapture(e.pointerId);
@@ -147,13 +167,24 @@ function mount(ctx: GameContext): GameInstance {
   const die = () => {
     lives -= 1;
     ctx.haptic("fail");
+    fx.shake(20);
+    fx.flash(pal.foe, 0.4);
+    fx.burst(shipX, shipY, {
+      count: 30,
+      colour: [pal.hero, pal.foe, "#ffffff"],
+      speed: 320,
+      life: 1,
+      size: 4,
+    });
     invuln = 2;
     shipX = W / 2;
     shipY = H / 2;
     vx = vy = 0;
     if (lives <= 0) {
       over = true;
-      ctx.onRunEnd(score, "LOST IN SPACE");
+      overAge = 0;
+      best = Math.max(best, score);
+      ctx.onRunEnd(score);
     }
   };
 
@@ -162,24 +193,29 @@ function mount(ctx: GameContext): GameInstance {
   let auto = false;
 
   const loop = makeLoop((dt) => {
-    const t = ctx.getTheme();
+    const th = ctx.getTheme();
+    const ink = groundInk(th, pal.deep);
+    clock += dt;
+    fx.update(dt);
 
     if (auto && !over) {
       // attract mode: swing onto the nearest rock and keep the guns hot
-      let best: Rock | null = null;
+      let target: Rock | null = null;
       let bestD = Infinity;
       for (const r of rocks) {
         const d = (r.x - shipX) ** 2 + (r.y - shipY) ** 2;
         if (d < bestD) {
           bestD = d;
-          best = r;
+          target = r;
         }
       }
-      if (best) targetAngle = Math.atan2(best.y - shipY, best.x - shipX);
+      if (target) targetAngle = Math.atan2(target.y - shipY, target.x - shipX);
       thrusting = true;
     }
 
-    if (!over) {
+    if (over) {
+      overAge += dt;
+    } else {
       // rotate smoothly toward the thumb — full 360, shortest arc
       let diff = targetAngle - angle;
       while (diff > Math.PI) diff -= Math.PI * 2;
@@ -190,6 +226,16 @@ function mount(ctx: GameContext): GameInstance {
         vx += Math.cos(angle) * 340 * dt;
         vy += Math.sin(angle) * 340 * dt;
         flameT += dt;
+        // exhaust, so thrust is felt as well as seen
+        if (Math.random() < 0.7) {
+          fx.trail(
+            shipX - Math.cos(angle) * 16,
+            shipY - Math.sin(angle) * 16,
+            hexA(pal.prize, 0.5),
+            4,
+            0.3
+          );
+        }
       }
       // space drag: gentle, keeps inertia readable on a phone
       const drag = Math.pow(0.55, dt);
@@ -237,6 +283,7 @@ function mount(ctx: GameContext): GameInstance {
         r.x += r.vx * dt;
         r.y += r.vy * dt;
         r.angle += r.spin * dt;
+        r.hit = Math.max(0, r.hit - dt * 4);
         wrap(r);
       }
 
@@ -248,9 +295,22 @@ function mount(ctx: GameContext): GameInstance {
           if ((s.x - r.x) ** 2 + (s.y - r.y) ** 2 < r.r * r.r) {
             shots.splice(j, 1);
             rocks.splice(i, 1);
-            score += r.r > 30 ? 20 : r.r > 18 ? 50 : 100;
+            const worth = r.r > 30 ? 20 : r.r > 18 ? 50 : 100;
+            score += worth;
+            kills += 1;
             ctx.onScore(score);
             ctx.haptic("hit");
+            fx.shake(r.r > 30 ? 5 : 3);
+            fx.ring(r.x, r.y, pal.foe, r.r * 0.8, 4);
+            fx.burst(r.x, r.y, {
+              count: Math.round(6 + r.r * 0.3),
+              colour: [pal.foe, mix(pal.foe, "#ffffff", 0.5), pal.glow],
+              speed: 60 + r.r * 5,
+              life: 0.6,
+              size: 3.2,
+              kind: "square",
+            });
+            fx.pop(r.x, r.y - r.r, `+${worth}`, pal.prize, r.r > 30 ? 18 : 22, th.fontDisplay);
             if (r.r > 18) {
               const nr = r.r * 0.55;
               rocks.push(makeRock(r.x, r.y, nr), makeRock(r.x, r.y, nr));
@@ -270,31 +330,27 @@ function mount(ctx: GameContext): GameInstance {
       if (rocks.length === 0) {
         wave += 1;
         invuln = Math.max(invuln, 1);
+        fx.flash(pal.hero, 0.18);
+        fx.pop(W / 2, H * 0.4, `WAVE ${wave}`, pal.hero, 28, th.fontDisplay);
         spawnWave();
       }
     }
 
     // ---- draw ----
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawBackdrop(g, W, H, pal, clock, {
+      kind: "stars",
+      intensity: 1,
+      scroll: clock * 8,
+      vignette: 0.6,
+    });
 
-    // starfield: deterministic dots so it doesn't shimmer
-    g.fillStyle = t.inkDim;
-    g.globalAlpha = 0.35;
-    for (let i = 0; i < 40; i++) {
-      const sx = ((i * 733) % 1000) / 1000 * W;
-      const sy = ((i * 947) % 1000) / 1000 * H;
-      g.fillRect(sx, sy, 2, 2);
-    }
-    g.globalAlpha = 1;
+    fx.begin(g);
+    fx.drawUnder(g);
 
-    // rocks — vector outlines, like the cabinet
-    g.strokeStyle = t.ink;
-    g.lineWidth = 2;
+    // rocks — vector outlines, like the cabinet, but lit
     for (const r of rocks) {
+      const col = r.hit > 0 ? "#ffffff" : mix(pal.foe, pal.glow, 0.35);
+      halo(g, r.x, r.y, r.r * 1.8, pal.foe, 0.12);
       g.beginPath();
       for (let k = 0; k < r.shape.length; k++) {
         const a = r.angle + (k / r.shape.length) * Math.PI * 2;
@@ -305,46 +361,70 @@ function mount(ctx: GameContext): GameInstance {
         else g.lineTo(px, py);
       }
       g.closePath();
+      g.fillStyle = hexA(mix(pal.deep, pal.foe, 0.3), 0.9);
+      g.fill();
+      g.strokeStyle = col;
+      g.lineWidth = 2.6;
       g.stroke();
     }
 
     // shots
-    g.fillStyle = pal.hero;
     for (const s of shots) {
+      const a = Math.atan2(s.vy, s.vx);
+      g.strokeStyle = pal.prize;
+      g.lineWidth = 3;
+      g.lineCap = "round";
       g.beginPath();
-      g.arc(s.x, s.y, 3, 0, Math.PI * 2);
-      g.fill();
+      g.moveTo(s.x, s.y);
+      g.lineTo(s.x - Math.cos(a) * 12, s.y - Math.sin(a) * 12);
+      g.stroke();
+      g.lineCap = "butt";
     }
 
     // ship
     if (!over && (invuln <= 0 || Math.floor(invuln * 10) % 2 === 0)) {
+      if (invuln > 0) {
+        g.strokeStyle = hexA(pal.hero, 0.4);
+        g.lineWidth = 2;
+        g.beginPath();
+        g.arc(shipX, shipY, 26, 0, Math.PI * 2);
+        g.stroke();
+      }
+      halo(g, shipX, shipY, 40, pal.hero, 0.3);
       g.save();
       g.translate(shipX, shipY);
       g.rotate(angle);
       if (thrusting) {
-        g.strokeStyle = pal.foe;
+        const flick = 1 + Math.sin(flameT * 40) * 0.35;
+        const flame = g.createLinearGradient(-10, 0, -26 * flick, 0);
+        flame.addColorStop(0, hexA(pal.prize, 0.9));
+        flame.addColorStop(1, hexA(pal.foe, 0));
+        g.fillStyle = flame;
         g.beginPath();
-        g.moveTo(-10, -5);
-        g.lineTo(-16 - Math.sin(flameT * 40) * 5, 0);
-        g.lineTo(-10, 5);
-        g.stroke();
+        g.moveTo(-9, -6);
+        g.lineTo(-24 * flick, 0);
+        g.lineTo(-9, 6);
+        g.closePath();
+        g.fill();
       }
-      g.strokeStyle = pal.hero;
-      g.lineWidth = 2.4;
+      g.fillStyle = hexA(pal.hero, 0.25);
       g.beginPath();
       g.moveTo(17, 0);
       g.lineTo(-11, -11);
       g.lineTo(-6, 0);
       g.lineTo(-11, 11);
       g.closePath();
+      g.fill();
+      g.strokeStyle = "#ffffff";
+      g.lineWidth = 2.2;
       g.stroke();
       g.restore();
     }
 
-    // lives
+    // ---- HUD
     for (let i = 0; i < lives; i++) {
       g.save();
-      g.translate(20 + i * 20, H * 0.08);
+      g.translate(20 + i * 20, H * 0.07);
       g.rotate(-Math.PI / 2);
       g.strokeStyle = pal.hero;
       g.lineWidth = 1.6;
@@ -357,17 +437,33 @@ function mount(ctx: GameContext): GameInstance {
       g.stroke();
       g.restore();
     }
+    g.textAlign = "right";
+    g.fillStyle = hexA(ink.main, 0.45);
+    g.font = `800 13px ${th.fontBody}`;
+    g.fillText(`WAVE ${wave}`, W - 18, H * 0.07 + 4);
 
     g.textAlign = "center";
-    g.fillStyle = t.inkDim;
-    g.font = `500 13px ${t.fontBody}`;
-    if (!over)
-      g.fillText("hold anywhere to aim + thrust · guns auto-fire", W / 2, H * 0.93);
-
-    if (over) {
-      endCard(g, t, W, H, "LOST IN SPACE");
+    if (!over && kills === 0) {
+      g.fillStyle = hexA(ink.main, 0.35 + pulse(clock, 1.6) * 0.35);
+      g.font = `700 13px ${th.fontBody}`;
+      g.fillText("hold anywhere to aim and thrust · guns auto-fire", W / 2, H * 0.78);
     }
     g.textAlign = "left";
+
+    fx.drawOver(g, W, H);
+    fx.end(g);
+
+    if (over) {
+      resultCard(g, th, W, H, {
+        title: "lost in space",
+        score,
+        unit: meta.scoreUnit,
+        best,
+        sub: `wave ${wave} · ${kills} rocks split`,
+        age: overAge,
+        accent: pal.hero,
+      });
+    }
   });
   loop.start();
 
