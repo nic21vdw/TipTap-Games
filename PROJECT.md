@@ -86,11 +86,11 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 
 Expiring "story" games · like/comment-modifies-the-game/share ·
 profile XP per run · vibe-coded games via a `+` button ·
-RPS / defuse-bomb / minesweeper / racing mechanics ·
-friends-only leaderboards on top of the `profiles` table ·
-Cloudflare Pages deploy (needs `@opennextjs/cloudflare` + wrangler) ·
-music that reacts to the run (filter opens with your combo, track drops
-out on a fail).
+RPS / defuse-bomb / minesweeper / racing mechanics · OAuth + guest merge
+once Supabase env vars exist · friends-only leaderboards on top of the
+`profiles` table · Cloudflare Pages deploy (needs `@opennextjs/cloudflare`
++ wrangler) · music that reacts to the run (filter opens with your combo,
+track drops out on a fail).
 
 ## Tip Tap Radio
 

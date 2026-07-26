@@ -7,6 +7,7 @@ export type SheetId =
   | "leaderboard"
   | "theme"
   | "search"
+  | "settings"
   | "games"
   | "account"
   | null;

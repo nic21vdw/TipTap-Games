@@ -53,6 +53,7 @@ export function GameCard({ card, index }: Props) {
   const signedIn = useAuthStore((s) => s.status === "signedIn");
   const playerHandle = useAuthStore((s) => s.player?.handle);
 
+
   const musicOn = useMusicStore((s) => s.enabled);
   const musicUnlocked = useMusicStore((s) => s.unlocked);
   const toggleMusic = useMusicStore((s) => s.toggle);
