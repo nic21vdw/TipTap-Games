@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "hill-drive",
-  title: "Hill Drive",
+  title: "Nic's Hill Drive",
   rule: "Hold to gas, ease off in the air, don't flip",
   year: 2012,
   description: "Gun it up the hills, ease off for the landing, don't go over.",

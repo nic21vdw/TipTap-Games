@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine
 
 const meta = {
   slug: "glide-up",
-  title: "Updraft",
+  title: "Nic's Updraft",
   rule: "Drag to steer the bounce onto each platform",
   year: 2009,
   description: "Bounce, drift, climb. Don't look down.",

@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "limb-flail",
-  title: "Limb Flail",
+  title: "Nic's Limb Flail",
   rule: "Alternate drag zones to shuffle forward",
   year: 2008,
   description: "Two legs, zero coordination, one faceplant.",

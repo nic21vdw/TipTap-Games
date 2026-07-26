@@ -14,6 +14,18 @@ const VALID_TAGS = new Set<string>([
 const clamp = (n: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(hi, Number.isFinite(n) ? n : lo));
 
+/**
+ * Every game in the feed carries Nic's name — the hand-built catalog does it
+ * by hand, and player- and AI-designed drops get it here, at the one place
+ * every spec has to pass through.
+ */
+function nicTitle(raw: unknown): string {
+  const title = String(raw ?? "").trim();
+  if (!title) return "Nic's Wildcard";
+  if (/\bnic/i.test(title)) return title.slice(0, 24);
+  return `Nic's ${title}`.slice(0, 24);
+}
+
 export function specToModule(spec: CustomGameSpec): GameModule | null {
   const base = MODULES[spec.base];
   if (!base || MODULES[spec.slug]) return null;
@@ -37,7 +49,7 @@ export function specToModule(spec: CustomGameSpec): GameModule | null {
   const meta = {
     ...base.meta,
     slug: spec.slug,
-    title: String(spec.title).slice(0, 24),
+    title: nicTitle(spec.title),
     rule: String(spec.rule).slice(0, 48),
     year: 2026,
     description: String(spec.description).slice(0, 140),

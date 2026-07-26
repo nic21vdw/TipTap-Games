@@ -15,7 +15,7 @@ import {
 
 const meta = {
   slug: "flash-recall",
-  title: "Fridge Order",
+  title: "Nic's Fridge Order",
   rule: "Watch the shelf. Play it back",
   year: 1978,
   description: "The glowing memory grid, rebuilt as nine cans on one shelf.",

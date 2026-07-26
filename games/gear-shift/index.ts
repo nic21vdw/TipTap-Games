@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade, clamp, rand } from "@/games/engine
 
 const meta = {
   slug: "gear-shift",
-  title: "Gear Shift",
+  title: "Nic's Gear Shift",
   rule: "Hold to rev, release in the green to shift",
   year: 2009,
   description: "Rev it up. Nail the shift. Beat the ghost to the line.",

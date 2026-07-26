@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "deep-cast",
-  title: "Deep Cast",
+  title: "Nic's Deep Cast",
   rule: "Hold to drop the hook, tap to launch",
   year: 2013,
   description: "Drop deep, dodge the sting, launch for bonus.",

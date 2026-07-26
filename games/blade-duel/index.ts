@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "blade-duel",
-  title: "Blade Duel",
+  title: "Nic's Blade Duel",
   rule: "Swipe the telegraphed direction to parry",
   year: 2010,
   description: "Read the tell. Swing true. One bad guess ends it.",

@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "break-pool",
-  title: "Break Pool",
+  title: "Nic's Break Pool",
   rule: "Drag back from the cue ball, release to shoot",
   year: 2010,
   description: "Pull back, let go, pot the rack. Don't sink the cue.",

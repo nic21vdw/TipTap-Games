@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "channel-dig",
-  title: "Channel Dig",
+  title: "Nic's Channel Dig",
   rule: "Dig channels to guide water into the basin",
   year: 2011,
   description: "Dig smart, let gravity do the rest, fill the basin.",

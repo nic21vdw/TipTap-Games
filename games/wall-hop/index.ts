@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "wall-hop",
-  title: "Wall Hop",
+  title: "Nic's Wall Hop",
   rule: "Tap to switch walls and dodge the spikes",
   year: 2010,
   description: "Bounce wall to wall. One tap, one chance.",

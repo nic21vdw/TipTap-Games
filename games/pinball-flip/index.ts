@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "pinball-flip",
-  title: "Pinball Flip",
+  title: "Nic's Pinball",
   rule: "Flip left, flip right. Keep the ball alive.",
   year: 1995,
   description: "No high score is safe from one bad bounce.",

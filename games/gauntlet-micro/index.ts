@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "gauntlet-micro",
-  title: "Micro Gauntlet",
+  title: "Nic's Micro Gauntlet",
   rule: "Read it, do it, survive the next one",
   year: 2013,
   description:

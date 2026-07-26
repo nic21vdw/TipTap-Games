@@ -16,7 +16,7 @@ import {
 
 const meta = {
   slug: "reflex-gate",
-  title: "Perfect Pour",
+  title: "Nic's Perfect Pour",
   rule: "Tap on the line. Dead centre pays double",
   year: 2026,
   description: "Pure timing. The glass fills tighter every hit — the line never lies.",

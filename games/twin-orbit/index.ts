@@ -3,7 +3,7 @@ import { endCard, makeLoop, clamp, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "twin-orbit",
-  title: "Twin Orbit",
+  title: "Nic's Twin Orbit",
   rule: "Tap to flip the spin, thread the gate",
   year: 2013,
   description: "Flip the spin, thread the gate. Miss the gap once and it's over.",

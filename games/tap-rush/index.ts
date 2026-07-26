@@ -18,7 +18,7 @@ import {
 
 const meta = {
   slug: "tap-rush",
-  title: "Can Rush",
+  title: "Nic's Can Rush",
   rule: "Grab the cold ones. Never grab the warm",
   year: 2026,
   description: "The fridge run at feed speed. Gold pays triple, warm bites.",

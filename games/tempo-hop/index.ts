@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade, clamp } from "@/games/engine";
 
 const meta = {
   slug: "tempo-hop",
-  title: "Tempo Hop",
+  title: "Nic's Tempo Hop",
   rule: "Tap on the beat to clear the bars",
   year: 2009,
   description: "Jump to the pulse. Chain perfects. Don't eat a bar.",

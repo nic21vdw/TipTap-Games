@@ -99,7 +99,7 @@ function pickBase(vec: AlgorithmVector, boosts: Record<string, number>): string 
 }
 
 function titleFor(seed: number): string {
-  return `${ADJ[seed % ADJ.length]} ${NOUN[(seed >> 5) % NOUN.length]}`;
+  return `Nic's ${ADJ[seed % ADJ.length]} ${NOUN[(seed >> 5) % NOUN.length]}`;
 }
 
 /**

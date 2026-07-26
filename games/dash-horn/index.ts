@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine
 
 const meta = {
   slug: "dash-horn",
-  title: "Dash Horn",
+  title: "Nic's Dash Horn",
   rule: "Tap to jump, tap again to double jump",
   year: 2010,
   description:

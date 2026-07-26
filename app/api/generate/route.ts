@@ -92,12 +92,14 @@ function localSpec(prompt: string): Spec {
     .map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
   // pair a single strong word with a noun so it reads like a title
   const TAIL = ["Run", "Rush", "Drift", "Break", "Dash", "Nerve", "Loop", "Fall"];
-  const title =
+  // Every game in the feed is one of Nic's, so the name always says so.
+  const title = (
     words.length >= 2
-      ? words.join(" ")
+      ? `Nic's ${words.join(" ")}`
       : words.length === 1
-        ? `${words[0]} ${TAIL[h % TAIL.length]}`
-        : "Wildcard";
+        ? `Nic's ${words[0]} ${TAIL[h % TAIL.length]}`
+        : "Nic's Wildcard"
+  ).slice(0, 24);
 
   return {
     slug: `custom-${h.toString(36)}`,
@@ -132,7 +134,7 @@ async function deepseekSpec(prompt: string, key: string): Promise<Spec> {
       messages: [
         {
           role: "system",
-          content: `You design mini games for a swipe feed. Every game runs on one of a fixed set of proven engines — you cannot invent a new mechanic, you choose the engine whose feel best fits the wish, then dress it up. Given a player's rambling wish, return ONLY JSON: {"base": one of [${baseList}], "title": string (max 20 chars, punchy, original — never an existing game's name), "description": string (max 120 chars, Instagram-caption tone, describing the vibe), "history": string (max 240 chars, a fun origin blurb crediting the player's idea), "accent": hex colour string fitting the vibe, "tags": array from [reflex,precision,memory,endurance,luck,chaos,calm,retro,casino,oneTap,drag,hold], "intensity": 0..1, "luck": 0..1, "nostalgia": 0..1}. Pick the base whose feel best matches the wish — the actual gameplay WILL be that engine, so choose it faithfully. Do not write a rule; the engine's own rule is used so the card never lies about how it plays.`,
+          content: `You design mini games for a swipe feed. Every game runs on one of a fixed set of proven engines — you cannot invent a new mechanic, you choose the engine whose feel best fits the wish, then dress it up. Given a player's rambling wish, return ONLY JSON: {"base": one of [${baseList}], "title": string (max 24 chars, punchy, original — never an existing game's name — and it MUST contain the name Nic, who owns the feed, e.g. "Nic's Neon Rush"), "description": string (max 120 chars, Instagram-caption tone, describing the vibe), "history": string (max 240 chars, a fun origin blurb crediting the player's idea), "accent": hex colour string fitting the vibe, "tags": array from [reflex,precision,memory,endurance,luck,chaos,calm,retro,casino,oneTap,drag,hold], "intensity": 0..1, "luck": 0..1, "nostalgia": 0..1}. Pick the base whose feel best matches the wish — the actual gameplay WILL be that engine, so choose it faithfully. Do not write a rule; the engine's own rule is used so the card never lies about how it plays.`,
         },
         { role: "user", content: prompt.slice(0, 500) },
       ],

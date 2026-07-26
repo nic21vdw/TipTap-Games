@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "rail-dodge",
-  title: "Rail Dodge",
+  title: "Nic's Rail Dodge",
   rule: "Drag to stay on the rail. Dodge the beat.",
   year: 2016,
   description: "Auto-roll forward. Weave the winding rail. Don't miss a beat.",

@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "snip-swing",
-  title: "Snip Swing",
+  title: "Nic's Snip Swing",
   rule: "Cut ropes to swing the ball into the zone",
   year: 2010,
   description: "Snip the right rope. Swing it home.",

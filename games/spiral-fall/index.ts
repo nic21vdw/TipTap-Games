@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "spiral-fall",
-  title: "Spiral Fall",
+  title: "Nic's Spiral Fall",
   rule: "Drag to rotate the tower, find the gap",
   year: 2018,
   description: "Spin the tower. Slip through the gap. Repeat until you don't.",

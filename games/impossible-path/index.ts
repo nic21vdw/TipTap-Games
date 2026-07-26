@@ -3,7 +3,7 @@ import { makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "impossible-path",
-  title: "Impossible Path",
+  title: "Nic's Impossible Path",
   rule: "Rotate tiles to steer the walker to the goal",
   year: 2014,
   description: "Turn the tiles. Bend the path. Never lose a step.",

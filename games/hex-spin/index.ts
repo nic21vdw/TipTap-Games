@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "hex-spin",
-  title: "Hex Spin",
+  title: "Nic's Hex Spin",
   rule: "Tap left or right to orbit through the gaps.",
   year: 2012,
   description: "Spin the wedge. Thread every closing ring.",

@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "roll-physics",
-  title: "Roll Physics",
+  title: "Nic's Roll Physics",
   rule: "Drag to steer. Roll to the goal.",
   year: 2008,
   description: "A ball, a hill, a goal. Momentum does the rest.",

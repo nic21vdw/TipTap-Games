@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "pipe-flow",
-  title: "Pipe Flow",
+  title: "Nic's Pipe Flow",
   rule: "Drag matching dots together, fill the grid",
   year: 2012,
   description: "Connect the dots. Don't cross the streams.",

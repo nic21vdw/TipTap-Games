@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "tank-arena",
-  title: "Tank Arena",
+  title: "Nic's Tank Arena",
   rule: "Drag to roll, auto-fire kills the swarm",
   year: 2016,
   description: "Drag your tank, auto-fire does the rest. Survive the swarm.",

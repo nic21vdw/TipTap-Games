@@ -17,7 +17,7 @@ import {
 
 const meta = {
   slug: "word-trap",
-  title: "Label Trap",
+  title: "Nic's Label Trap",
   rule: "Does the label match the colour? Yes or no",
   year: 1935,
   description: "The Stroop test, run on one fridge. Your brain will lie to you.",

@@ -17,7 +17,7 @@ import {
 
 const meta = {
   slug: "black-keys",
-  title: "Zero Sugar",
+  title: "Nic's Zero Sugar",
   rule: "Tap the black can. Nail the line for bonus",
   year: 2014,
   description: "Only the black cans. Hit them on the line and they pay double.",

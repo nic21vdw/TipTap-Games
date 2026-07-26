@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "coil-arena",
-  title: "Coil",
+  title: "Nic's Coil",
   rule: "Drag to steer. Don't cross any trail.",
   year: 2016,
   description: "Grow your coil, cut off the bots, don't cross a line.",

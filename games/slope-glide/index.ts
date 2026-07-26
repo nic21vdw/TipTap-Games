@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "slope-glide",
-  title: "Slope Glide",
+  title: "Nic's Slope Glide",
   rule: "Hold to pump downhills. Catch air off crests.",
   year: 2011,
   description: "Pump the hills, catch big air, don't eat the uphill.",

@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade, clamp, rand } from "@/games/engine";
 
 const meta = {
   slug: "collect-hunt",
-  title: "Field Collector",
+  title: "Nic's Field Hunt",
   rule: "Drag to walk. Tap near creatures to catch.",
   year: 2016,
   description: "Wander the grass, snag the rare ones, log it all.",

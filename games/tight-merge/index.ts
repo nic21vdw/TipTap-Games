@@ -3,7 +3,7 @@ import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "tight-merge",
-  title: "Tight Merge",
+  title: "Nic's Tight Merge",
   rule: "Swipe to slide. Same tiles merge.",
   year: 2014,
   description:

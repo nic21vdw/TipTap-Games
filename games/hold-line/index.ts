@@ -16,7 +16,7 @@ import {
 
 const meta = {
   slug: "hold-line",
-  title: "The Pour",
+  title: "Nic's Pour",
   rule: "Hold to pour. Release on the line",
   year: 2026,
   description: "One press, one release. Nerves of glass, glass of cola.",

@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "ice-slide",
-  title: "Ice Slide",
+  title: "Nic's Ice Slide",
   rule: "Swipe. The puck slides until it hits something.",
   year: 2002,
   description: "Frictionless. Every swipe is a commitment.",

@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "stack-fall",
-  title: "Fall Stacker",
+  title: "Nic's Fall Stacker",
   rule: "Shift, rotate, and drop pieces to clear rows",
   year: 1984,
   description: "Stack the shapes. Clear the lines. Don't top out.",

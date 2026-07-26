@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "rooftop-run",
-  title: "Rooftop Run",
+  title: "Nic's Rooftop Run",
   rule: "Tap to jump the gap. Timing is everything.",
   year: 2009,
   description: "Auto-runner across the skyline. One tap decides it all.",

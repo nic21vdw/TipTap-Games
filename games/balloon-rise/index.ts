@@ -3,7 +3,7 @@ import { endCard, makeLoop, clamp, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "balloon-rise",
-  title: "Balloon Rise",
+  title: "Nic's Balloon Rise",
   rule: "Drag left or right, dodge every spike",
   year: 2018,
   description: "Up, up, and don't drift into a spike.",

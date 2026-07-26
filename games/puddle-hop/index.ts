@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "puddle-hop",
-  title: "Puddle Hop",
+  title: "Nic's Puddle Hop",
   rule: "Hop before the platform sinks.",
   year: 2015,
   description: "The water rises. The platforms don't wait.",

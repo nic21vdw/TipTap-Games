@@ -15,7 +15,7 @@ import {
 
 const meta = {
   slug: "cross-traffic",
-  title: "Cable Run",
+  title: "Nic's Cable Run",
   rule: "Tap to step. Mind the cans and the spills",
   year: 2014,
   description: "Step. Wait. Step. Barefoot, in the dark, across eleven feet of floor.",

@@ -3,7 +3,7 @@ import { endCard, makeLoop, clamp, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "copter-thrust",
-  title: "Copter Thrust",
+  title: "Nic's Copter",
   rule: "Tap to flip thrust and weave the gaps",
   year: 2014,
   description: "One tap flips your thrust. Climb forever, don't clip a bar.",

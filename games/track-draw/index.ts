@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "track-draw",
-  title: "Track Draw",
+  title: "Nic's Track Draw",
   rule: "Draw a track, then watch the sled ride it",
   year: 2006,
   description: "Sketch the hill. Physics does the rest.",

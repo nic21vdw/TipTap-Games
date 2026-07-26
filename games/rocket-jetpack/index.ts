@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine
 
 const meta = {
   slug: "rocket-jetpack",
-  title: "Thrust Run",
+  title: "Nic's Thrust Run",
   rule: "Hold to thrust, thread the gates",
   year: 2011,
   description: "Hold to fly. Let go to fall. Thread every gate.",

@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, pick, roundRect, shade } from "@/games/engine
 
 const meta = {
   slug: "temple-dash",
-  title: "Ruin Runner",
+  title: "Nic's Ruin Runner",
   rule: "Swipe to switch lanes, jump, or slide.",
   year: 2011,
   description: "Swipe fast, don't trip — the ruins won't wait.",

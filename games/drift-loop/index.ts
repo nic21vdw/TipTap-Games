@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade, clamp } from "@/games/engine";
 
 const meta = {
   slug: "drift-loop",
-  title: "Drift Loop",
+  title: "Nic's Drift Loop",
   rule: "Drag to steer. Hold a drift. Tap to boost.",
   year: 2009,
   description: "Drift the corners, bank the boost, own the straight.",

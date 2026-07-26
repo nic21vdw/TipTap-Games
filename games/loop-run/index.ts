@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "loop-run",
-  title: "Loop Runner",
+  title: "Nic's Loop Runner",
   rule: "Tap to hop, hold to hop higher. Don't spike.",
   year: 2013,
   description: "One tap, one beat, one spike away from zero.",

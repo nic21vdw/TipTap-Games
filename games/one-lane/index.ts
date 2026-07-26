@@ -16,7 +16,7 @@ import {
 
 const meta = {
   slug: "one-lane",
-  title: "Basement Run",
+  title: "Nic's Basement Run",
   rule: "Tap to switch sides. Grab the cold ones",
   year: 2012,
   description: "The endless-runner era, compressed into one basement and one nerve.",

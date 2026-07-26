@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine
 
 const meta = {
   slug: "rage-climb",
-  title: "Rage Climb",
+  title: "Nic's Rage Climb",
   rule: "Swing the lever. Vault up the slope. Don't slip.",
   year: 2017,
   description: "One pot, one hammer, one brutal hill. Rage-quit not included.",

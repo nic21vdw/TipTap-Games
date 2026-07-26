@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "sprint-relay",
-  title: "Sprint Relay",
+  title: "Nic's Sprint Relay",
   rule: "Alternate left/right taps to sprint, tap to hop hurdles",
   year: 2013,
   description: "Left, right, left, right. Don't trip on the hurdle.",

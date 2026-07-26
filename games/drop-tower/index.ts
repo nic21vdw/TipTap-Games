@@ -18,7 +18,7 @@ import {
 
 const meta = {
   slug: "drop-tower",
-  title: "Can Stack",
+  title: "Nic's Can Stack",
   rule: "Tap to drop. Perfect rows grow it back",
   year: 2016,
   description: "Stack it clean or shave it thin. Perfect drops pay you back.",

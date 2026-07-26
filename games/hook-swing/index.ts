@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "hook-swing",
-  title: "Hook Swing",
+  title: "Nic's Hook Swing",
   rule: "Tap to release, swing to the next anchor",
   year: 2019,
   description: "Release, swing, repeat — don't miss the next hook.",

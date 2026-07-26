@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, pick, shade } from "@/games/engine";
 
 const meta = {
   slug: "sphere-chain",
-  title: "Sphere Chain",
+  title: "Nic's Sphere Chain",
   rule: "Aim and fire, match 3 to clear the chain",
   year: 2003,
   description: "Aim, fire, match three. Don't let the chain reach the pit.",

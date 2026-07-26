@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade, clamp } from "@/games/engine";
 
 const meta = {
   slug: "horde-run",
-  title: "Horde Run",
+  title: "Nic vs the Horde",
   rule: "Tap top or bottom to swap lanes, keep your crowd",
   year: 2012,
   description: "Collect the crowd. Dodge the gaps. Don't lose them all.",

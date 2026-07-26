@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, pick, clamp, shade, roundRect } from "@/games/
 
 const meta = {
   slug: "ice-line",
-  title: "Ice Line",
+  title: "Nic's Ice Line",
   rule: "Walk the ice. Tap when the rod tugs.",
   year: 2026,
   description: "Drill in, drop a line, and wait for the rod to twitch.",
