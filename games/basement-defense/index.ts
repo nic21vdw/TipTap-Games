@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade, roundRect } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "basement-defense",
@@ -351,69 +352,25 @@ function mount(ctx: GameContext): GameInstance {
     ink: string
   ) => {
     const skin = z.hurt > 0 ? shade(pal.foe, 0.45) : pal.foe;
+    // the canonical head — same one that fills the screen in Five Nights
+    drawNicHead(g, {
+      x: cx,
+      y: cy,
+      r,
+      skin,
+      hair: shade(pal.deep, 0.16),
+      eye: shade(pal.prize, 0.6),
+      pupil: shade(pal.deep, -0.1),
+      dark: shade(pal.deep, -0.35),
+      tooth: shade(pal.prize, 0.7),
+      lean,
+      gaze: Math.sin(z.seed * 3 + z.z * 1.6),
+      gape: z.eating ? 0.35 + Math.sin(z.seed + z.z * 22) * 0.15 : 0.1,
+    });
+    // the accessories stay local: they belong to the horde, not to the face
     g.save();
     g.translate(cx, cy);
     g.rotate(lean);
-    // head
-    g.fillStyle = shade(skin, -0.22);
-    g.beginPath();
-    g.ellipse(0, r * 0.12, r * 0.92, r, 0, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = skin;
-    g.beginPath();
-    g.ellipse(-r * 0.08, r * 0.06, r * 0.86, r * 0.95, 0, 0, Math.PI * 2);
-    g.fill();
-    // ears
-    g.beginPath();
-    g.ellipse(-r * 0.92, r * 0.1, r * 0.16, r * 0.24, 0, 0, Math.PI * 2);
-    g.ellipse(r * 0.86, r * 0.1, r * 0.16, r * 0.24, 0, 0, Math.PI * 2);
-    g.fill();
-    // hair: one stubborn swoop
-    g.fillStyle = shade(pal.deep, 0.16);
-    g.beginPath();
-    g.moveTo(-r * 0.95, -r * 0.28);
-    g.quadraticCurveTo(-r * 0.7, -r * 1.25, r * 0.15, -r * 1.05);
-    g.quadraticCurveTo(r * 1.05, -r * 0.95, r * 0.9, -r * 0.15);
-    g.quadraticCurveTo(r * 0.55, -r * 0.62, r * 0.05, -r * 0.5);
-    g.quadraticCurveTo(-r * 0.45, -r * 0.42, -r * 0.95, -r * 0.28);
-    g.closePath();
-    g.fill();
-    // eyes — dead white, pupils drifting on their own schedule
-    const drift = Math.sin(z.seed * 3 + z.z * 1.6) * r * 0.09;
-    g.fillStyle = shade(pal.prize, 0.6);
-    g.beginPath();
-    g.ellipse(-r * 0.36, 0, r * 0.24, r * 0.22, 0, 0, Math.PI * 2);
-    g.ellipse(r * 0.34, -r * 0.02, r * 0.24, r * 0.22, 0, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = shade(pal.deep, -0.1);
-    g.beginPath();
-    g.arc(-r * 0.36 + drift, r * 0.03, r * 0.09, 0, Math.PI * 2);
-    g.arc(r * 0.34 + drift * 0.5, r * 0.01, r * 0.09, 0, Math.PI * 2);
-    g.fill();
-    // brows
-    g.strokeStyle = shade(pal.deep, 0.16);
-    g.lineWidth = Math.max(1, r * 0.13);
-    g.lineCap = "round";
-    g.beginPath();
-    g.moveTo(-r * 0.62, -r * 0.34);
-    g.lineTo(-r * 0.12, -r * 0.24);
-    g.moveTo(r * 0.12, -r * 0.28);
-    g.lineTo(r * 0.6, -r * 0.4);
-    g.stroke();
-    // stubble + open mouth
-    g.fillStyle = shade(skin, -0.3);
-    g.globalAlpha = 0.5;
-    g.beginPath();
-    g.ellipse(-r * 0.05, r * 0.62, r * 0.62, r * 0.34, 0, 0, Math.PI * 2);
-    g.fill();
-    g.globalAlpha = 1;
-    g.fillStyle = shade(pal.deep, -0.35);
-    const gape = z.eating ? 0.34 + Math.sin(z.seed + z.z * 22) * 0.12 : 0.24;
-    roundRect(g, -r * 0.3, r * 0.4, r * 0.6, r * gape * 2, r * 0.14);
-    g.fill();
-    g.fillStyle = shade(pal.prize, 0.7);
-    g.fillRect(-r * 0.2, r * 0.4, r * 0.14, r * 0.16);
-    g.fillRect(r * 0.06, r * 0.4, r * 0.14, r * 0.16);
     if (z.kind === "basket") {
       // laundry basket helmet: honest protection
       g.fillStyle = shade(pal.glow, -0.25);

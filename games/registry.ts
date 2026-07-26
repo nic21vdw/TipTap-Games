@@ -82,6 +82,7 @@ import split from "@/games/split";
 import iceLine from "@/games/ice-line";
 import basementDefense from "@/games/basement-defense";
 import hardwater from "@/games/hardwater";
+import fiveNights from "@/games/five-nights";
 import spreadSim from "@/games/spread-sim";
 import sprintRelay from "@/games/sprint-relay";
 import stackFall from "@/games/stack-fall";
@@ -209,6 +210,7 @@ const ALL: GameModule[] = [
   wordTrap,
   basementDefense,
   hardwater,
+  fiveNights,
 ];
 
 /**

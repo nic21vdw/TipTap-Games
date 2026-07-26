@@ -118,8 +118,11 @@ against.
   Drop Tower, Cross Traffic, Drift Field, Nic's Basement (a 3D lane defense
   in Nic's basement — build junk on a receding grid before the horde of
   Nic-faced zombies reaches the stairs), Hardwater (3D ice fishing — walk
-  the ice, set the hook, crank the fight), and Cash Out (arcade-casino:
-  virtual chips only, nothing to buy, free reset).
+  the ice, set the hook, crank the fight), Five Nights at Nic's Basement
+  (sit in the chair, spend the battery, survive six hours while three
+  copies of Nic come down the stairs, through the laundry and up the floor
+  drain), and Cash Out (arcade-casino: virtual chips only, nothing to buy,
+  free reset).
 - **The algorithm tuner** (`⚙` pill or the Tune button): 4 sliders
   (calm↔frantic, skill↔chance, modern↔2008, more-of-this↔surprise-me),
   tag demand/block chips, 4 presets, and a live **Next up** strip that
