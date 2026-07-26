@@ -416,18 +416,18 @@ export function groundInk(
 // ---------------------------------------------------------------- safe area
 
 /**
- * The feed draws chrome over the canvas: score + tuner at the top, the
- * caption and now-playing chip at the bottom, the action rail down the
- * right. Anything a player must see or hit belongs inside this box.
+ * Play mode now collapses all feed chrome to a score and one small controls
+ * button. Keep interactive elements clear of those two corners without
+ * sacrificing a permanent rail-width strip of the actual game.
  */
 export function safeBox(W: number, H: number) {
-  const top = H * 0.16;
-  const bottom = H * 0.8;
+  const top = H * 0.13;
+  const bottom = H - 76;
   return {
     top,
     bottom,
-    left: 0,
-    right: W - 84, // the Like / Ranks / Tune rail
+    left: 16,
+    right: W - 16,
     /** vertical centre of the usable area */
     midY: (top + bottom) / 2,
     height: bottom - top,
