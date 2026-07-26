@@ -10,11 +10,11 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | # | Requirement | Status |
 |---|-------------|--------|
 | 1 | Vertical snap feed, 1 swipe = 1 card (touch/wheel/trackpad) | ✅ |
-| 2 | 6+ genuinely different games | ✅ 9 shipped |
+| 2 | 6+ genuinely different games | ✅ 19 shipped, incl. two in 3D |
 | 3 | Auto start >60% visible, hard stop on leave, zero zombie rAF | ✅ verified: `__rafActive === 1` after 12 swipes |
-| 4 | Guest play first, login only at a win moment | ✅ guest / ⬜ OAuth (needs Supabase creds) |
-| 5 | Persisted scores | ✅ localStorage / ⬜ Postgres (schema ready) |
-| 6 | Per-game leaderboard + own rank | ✅ seeded + local best merged |
+| 4 | Guest play first, login only at a win moment | ✅ guest + Google OAuth, prompted only on a best/top-ten |
+| 5 | Persisted scores | ✅ localStorage always; Postgres when Supabase env vars exist |
+| 6 | Per-game leaderboard + own rank | ✅ live board when signed in, seeded fallback otherwise |
 | 7 | Endless feed, no bottom | ✅ |
 | 8 | Algorithm tuner changes the queue within 1 swipe | ✅ verified live |
 | 9 | 3+ live-swappable themes | ✅ 4, no remount mid-run |
@@ -24,13 +24,28 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 ## Hard rules
 
 - Games are plain canvas/DOM + rAF. No engines. `mount` returns instantly,
-  `destroy` leaves zero listeners/timers/loops.
+  `destroy` leaves zero listeners/timers/loops. 3D is allowed on the same
+  terms — `games/hardwater` and `games/basement-defense` project their own
+  world and paint back-to-front, so they still ship zero dependencies.
 - Games draw only with theme tokens from `ctx.getTheme()` — no hard-coded
   colours in `/games`.
 - Original titles, art, palettes only. Mechanics are homages; names, art
   and trade dress are never borrowed.
 - Casino = arcade-casino: virtual chips, free reset, no purchase
   affordance anywhere.
+- Scrolling goes both ways. A card is never dropped from the list once
+  it's been shown, so scrolling back lands on the game you just left, not a
+  fresh draw — and that has to hold while a game owns the surface too. On a
+  desktop the wheel, arrow keys, Enter and Esc drive the same navigation the
+  swipe gestures do (`components/feed/nav.ts`).
+- The feed never repeats. A game you've scrolled past is struck off the
+  ledger (`ttg:seen`) for good; when the catalog runs out the feed mints
+  new games (`games/variants.ts`) instead of recycling. Liking a game is
+  the one thing that buys it a comeback, and never within 14 cards.
+- The web build is a shop window for an App Store app. Anything
+  viewport-shaped reads `--app-h` / `--safe-top` / `--safe-bottom`, never
+  `dvh` or `env(safe-area-*)` directly — that seam is what lets the iPhone
+  preview simulate a screen.
 - Music is synthesised in the browser, never streamed or bundled. No audio
   file ever enters the repo, so there is nothing to license or attribute.
 - A track always starts on the drop. No intros, no builds, no fade-ins:
@@ -38,49 +53,30 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 - iOS-feel motion everywhere: sheet transitions use
   `cubic-bezier(0.32, 0.72, 0, 1)`, buttons have springy press-scale,
   scores pop, toasts slide in. Smoothness is a feature, not polish.
-- Every input gets a reaction. A hit throws particles, a ring and a score
-  pop; a fail shakes the camera and washes the screen. Silence is a bug.
-- No run may end on the first mistake. Games carry lives, a shield or a
-  save, so a card that lands on you is still worth ten seconds.
-- Nothing a player must see or hit may sit under the feed's chrome. Use
-  `safeBox(W, H)` from `games/fx.ts` — the caption, the score and the
-  action rail all overlay the canvas.
-- A generated card may invent a name, a look and a story, never the
-  controls: its rule line is copied from the engine that actually runs.
-
-## Game feel (`games/fx.ts`)
-
-The shared juice layer, so feel is a resource instead of something each
-game re-invents or skips.
-
-- `createFx()` — particles, shockwave rings, motion trails, floating score
-  pops, camera shake and full-screen flashes, all time-based and pooled.
-- `drawBackdrop()` — living grounds (drifting blobs, parallax starfields,
-  perspective grids, rotating light shafts, rolling hills) instead of the
-  two-stop gradient every game used to paste in.
-- `createCombo()` / `drawCombo()` — streaks that pay a multiplier.
-- `resultCard()` — one game-over card everywhere, showing the score you
-  earned, your best, and a stat worth chasing back ("6 perfect", "94%
-  accuracy", "biggest chain 9").
-- `groundInk()` — games paint their own dark ground out of their palette,
-  so HUD text picks whichever end of the theme actually reads on it. The
-  theme still chooses the colour; the player can still see the HUD.
 
 ## Key files
 
 - `games/types.ts` — the game contract; `games/registry.ts` — catalog
-- `games/fx.ts` — the shared juice layer (see above)
-- `lib/algorithm.ts` — scoring + weighted-random sampling
-- `lib/storage.ts` — persistence seam (localStorage now, Supabase later)
+- `lib/algorithm.ts` — scoring + weighted sampling without replacement
+- `games/variants.ts` — mints fresh games once the catalog is exhausted
+- `lib/storage.ts` — the synchronous local layer everything reads from
+- `lib/cloud.ts` — background replica: mirrors local writes to Postgres,
+  merges the account's copy back on sign-in, redeems run tickets
+- `lib/supabase/config.ts` — the one check for "does this build have a
+  backend?"; every cloud call site degrades to a no-op when it's false
 - `components/feed/GameHost.tsx` — lifecycle owner
 - `lib/music.ts` — Tip Tap Radio: the generative soundtrack engine
 - `store/useMusicStore.ts` — mute / volume / now-playing state
 - `components/sheets/AlgorithmSheet.tsx` — the demo centrepiece
-- `supabase/schema.sql` — ready-to-apply Postgres schema
+- `supabase/schema.sql` — tables, RLS policies, leaderboard functions
+- `app/api/runs/*` — the only writers to `scores`, service-role and
+  ticket-validated
+- `components/shell/DevicePreview.tsx` — desktop ⇄ iPhone preview shell
 
 ## Demo script (2 min)
 
-1. Open the URL on a phone. A game is already running — say nothing for 3s.
+1. Open the URL on a phone. A game is already live and playable — no demo,
+   no tap to start.
 2. Play, swipe, play, swipe. "No menus, no loading, no tutorial." Every
    swipe drops a different song — none of them exist as a file.
 3. Open the tuner. Drag nostalgia up — point at Next up reordering live.
@@ -92,8 +88,10 @@ game re-invents or skips.
 Expiring "story" games · like/comment-modifies-the-game/share ·
 profile XP per run · vibe-coded games via a `+` button ·
 RPS / defuse-bomb / minesweeper / racing mechanics · OAuth + guest merge
-once Supabase env vars exist · music that reacts to the run (filter opens
-with your combo, track drops out on a fail).
+once Supabase env vars exist · friends-only leaderboards on top of the
+`profiles` table · Cloudflare Pages deploy (needs `@opennextjs/cloudflare`
++ wrangler) · music that reacts to the run (filter opens with your combo,
+track drops out on a fail).
 
 ## Tip Tap Radio
 

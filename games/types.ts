@@ -63,8 +63,20 @@ export interface GameContext {
   /** this game's own colours, already resolved */
   pal: GamePalette;
   onScore: (score: number) => void;
-  onRunEnd: (finalScore: number) => void;
+  /** finalScore ends the run; reason is the game's own headline (e.g. "CRASHED"). */
+  onRunEnd: (finalScore: number, reason?: string) => void;
   haptic: (kind: "light" | "hit" | "fail") => void;
+  /**
+   * Variant dials. A player-generated game runs a shipped engine with these
+   * turned, so "same mechanic, faster and busier" really is a different game.
+   * Absent for catalog games — the kit defaults both to 1.
+   */
+  tune?: GameTuning;
+}
+
+export interface GameTuning {
+  speed: number; // multiplies simulated time
+  density: number; // multiplies how much stuff spawns
 }
 
 export interface GameInstance {
