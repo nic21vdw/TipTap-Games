@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "territory-claim",
-  title: "Claim",
+  title: "Nic's Claim",
   rule: "Drag out from your zone, loop back to claim",
   year: 2018,
   description: "Paint the field. Loop home before the rivals catch your line.",

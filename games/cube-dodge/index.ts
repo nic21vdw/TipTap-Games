@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "cube-dodge",
-  title: "Cube Dodge",
+  title: "Nic's Cube Dodge",
   rule: "Drag left or right to weave through the tunnel",
   year: 2008,
   description: "Endless tunnel, oncoming cubes, zero brakes.",

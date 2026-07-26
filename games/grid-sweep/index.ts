@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade, pick } from "@/games/engine";
 
 const meta = {
   slug: "grid-sweep",
-  title: "Grid Sweep",
+  title: "Nic's Grid Sweep",
   rule: "Tap to clear, long-press to flag mines",
   year: 1990,
   description:

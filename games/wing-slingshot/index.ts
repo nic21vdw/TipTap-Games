@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "wing-slingshot",
-  title: "Slingshot Yard",
+  title: "Nic's Slingshot Yard",
   rule: "Drag back, let go, knock down the yard.",
   year: 2009,
   description: "Pull back, let fly, and watch the yard tumble down.",

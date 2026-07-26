@@ -3,7 +3,7 @@ import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "block-clear",
-  title: "Block Clear",
+  title: "Nic's Block Clear",
   rule: "Drag blocks onto the grid to clear rows and columns",
   year: 2014,
   description: "Fit the blocks, clear the grid, keep it clean.",

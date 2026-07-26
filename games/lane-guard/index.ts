@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine
 
 const meta = {
   slug: "lane-guard",
-  title: "Lane Guard",
+  title: "Nic's Lane Guard",
   rule: "Tap a slot to place a defender before foes pass",
   year: 2009,
   description: "Place your defenders. Hold the line. Don't run dry.",

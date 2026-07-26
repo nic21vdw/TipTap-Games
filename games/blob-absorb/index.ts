@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand } from "@/games/engine";
 
 const meta = {
   slug: "blob-absorb",
-  title: "Blob Absorb",
+  title: "Nic's Blob Absorb",
   rule: "Steer into small dots. Dodge the big ones.",
   year: 2015,
   description: "Grow your blob, dodge the bigger ones, beat the shrinking ring.",

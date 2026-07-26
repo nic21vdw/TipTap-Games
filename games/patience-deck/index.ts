@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "patience-deck",
-  title: "Patience Deck",
+  title: "Nic's Patience Deck",
   rule: "Drag cards to build foundations by suit",
   year: 1990,
   description:

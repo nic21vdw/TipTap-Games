@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "glass-break",
-  title: "Glass Break",
+  title: "Nic's Glass Break",
   rule: "Aim your lane. Tap to shatter the wave.",
   year: 2014,
   description: "Tunnel vision. Shatter every pane before it hits you.",

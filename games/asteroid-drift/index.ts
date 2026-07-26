@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "asteroid-drift",
-  title: "Asteroid Drift",
+  title: "Nic's Asteroid Drift",
   rule: "Drag to rotate and thrust. Shoot what drifts.",
   year: 1979,
   description: "Momentum keeps going even after you let go.",

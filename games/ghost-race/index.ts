@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "ghost-race",
-  title: "Ghost Race",
+  title: "Racing Ghost Nic",
   rule: "Steer the loop, don't hit your own ghost",
   year: 2015,
   description: "Every lap you race your own last lap. Literally.",

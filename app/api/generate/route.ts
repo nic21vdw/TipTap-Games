@@ -30,7 +30,7 @@ async function deepseekSpec(
       messages: [
         {
           role: "system",
-          content: `You design mini games for a swipe feed. Given a player's rambling wish, return ONLY JSON: {"base": exactly one of these slugs, copied verbatim: [${baseList}], "title": string (max 20 chars, punchy, original — never an existing game's name), "description": string (max 120 chars, Instagram-caption tone), "history": string (max 240 chars, a fun origin blurb crediting the player's idea), "accent": a 6-digit hex colour like "#ff4d6d" fitting the vibe, "tags": array of 1-3 strings from [${VALID_TAGS.join(",")}], "intensity": number 0..1, "luck": number 0..1, "nostalgia": number 0..1}. Pick the base whose feel best matches the wish. The base slug must match one of the listed slugs character for character.`,
+          content: `You design mini games for a swipe feed. Given a player's rambling wish, return ONLY JSON: {"base": exactly one of these slugs, copied verbatim: [${baseList}], "title": string (max 24 chars, punchy, original — never an existing game's name — and must contain Nic, e.g. "Nic's Neon Rush"), "description": string (max 120 chars, Instagram-caption tone), "history": string (max 240 chars, a fun origin blurb crediting the player's idea), "accent": a 6-digit hex colour like "#ff4d6d" fitting the vibe, "tags": array of 1-3 strings from [${VALID_TAGS.join(",")}], "intensity": number 0..1, "luck": number 0..1, "nostalgia": number 0..1}. Pick the base whose feel best matches the wish. The base slug must match one of the listed slugs character for character.`,
         },
         { role: "user", content: prompt.slice(0, 500) },
       ],

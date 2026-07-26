@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "snow-carve",
-  title: "Snow Carve",
+  title: "Nic's Snow Carve",
   rule: "Hold to lean in, let go to line up jumps",
   year: 2015,
   description: "Lean into the mountain, catch air, chain the spins forever.",

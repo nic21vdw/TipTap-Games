@@ -3,7 +3,7 @@ import { endCard, makeLoop, clamp, rand, roundRect, shade } from "@/games/engine
 
 const meta = {
   slug: "ball-stream",
-  title: "Ball Stream",
+  title: "Nic's Ball Stream",
   rule: "Aim, release, break the numbered rows",
   year: 2017,
   description: "One shot, a burst of balls, and a wall of numbers.",

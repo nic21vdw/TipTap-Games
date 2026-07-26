@@ -15,7 +15,7 @@ import {
 
 const meta = {
   slug: "pop-chain",
-  title: "Empties",
+  title: "Nic's Empties",
   rule: "Tap groups of 3+. Bigger piles pay more",
   year: 1985,
   description: "Tap-to-collapse — the 4am desk cleanup. Clear it out for a bonus.",

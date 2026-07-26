@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "arc-glide",
-  title: "Arc Glide",
+  title: "Nic's Arc Glide",
   rule: "Hold to rise, release to arc down through gaps",
   year: 2011,
   description: "Hold, glide, weave, collect. Repeat forever.",

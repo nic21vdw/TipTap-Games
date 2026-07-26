@@ -193,9 +193,11 @@ function deriveTitle(prompt: string, h: number): string {
     .filter((w) => w.length > 2 && !STOP.has(w.toLowerCase()))
     .slice(0, 2)
     .map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
-  if (words.length >= 2) return words.join(" ");
-  if (words.length === 1) return `${words[0]} ${TAIL[h % TAIL.length]}`;
-  return "Wildcard";
+  // Every game in the feed carries Nic's name, placeholders included — so the
+  // building card reads the same as the finished one.
+  if (words.length >= 2) return `Nic's ${words.join(" ")}`.slice(0, 24);
+  if (words.length === 1) return `Nic's ${words[0]} ${TAIL[h % TAIL.length]}`.slice(0, 24);
+  return "Nic's Wildcard";
 }
 
 function hash(str: string): number {

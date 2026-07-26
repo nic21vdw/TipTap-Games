@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade, rand, clamp } from "@/games/engine
 
 const meta = {
   slug: "bounce-hop",
-  title: "Bounce Hop",
+  title: "Nic's Bounce Hop",
   rule: "Tap to boost the bounce, ride the springs",
   year: 2001,
   description:

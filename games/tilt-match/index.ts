@@ -3,7 +3,7 @@ import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "tilt-match",
-  title: "Tilt Match",
+  title: "Nic's Tilt Match",
   rule: "Tilt a direction. Gems slide and match.",
   year: 2008,
   description: "No swapping. Just tilt the whole board and watch it settle.",

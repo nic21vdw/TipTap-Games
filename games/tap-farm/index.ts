@@ -3,7 +3,7 @@ import { makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "tap-farm",
-  title: "Tap Farm",
+  title: "Nic's Tap Farm",
   rule: "Plant empty plots. Harvest ripe ones.",
   year: 2009,
   description: "Plant it, wait a beat, tap it ripe. Repeat forever.",

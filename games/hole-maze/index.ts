@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "hole-maze",
-  title: "Hole Maze",
+  title: "Nic's Hole Maze",
   rule: "Drag to tilt the board. Reach the goal hole.",
   year: 2008,
   description: "Tilt, roll, don't fall in the wrong hole.",

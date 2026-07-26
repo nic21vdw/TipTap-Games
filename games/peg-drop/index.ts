@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade, clamp } from "@/games/engine
 
 const meta = {
   slug: "peg-drop",
-  title: "Peg Drop",
+  title: "Nic's Peg Drop",
   rule: "Drag to aim, release to drop the ball",
   year: 2007,
   description: "Eight balls. One field of pins. Chase the bonus pegs.",

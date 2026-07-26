@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "dot-chain",
-  title: "Dot Chain",
+  title: "Nic's Dot Chain",
   rule: "Drag through same-color dots, release to clear",
   year: 2013,
   description:

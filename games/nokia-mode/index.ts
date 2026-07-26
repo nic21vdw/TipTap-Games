@@ -17,7 +17,7 @@ import {
 
 const meta = {
   slug: "nokia-mode",
-  title: "Snake Feed",
+  title: "Nic's Snake Feed",
   rule: "Tap left or right to turn. Eat. Grow.",
   year: 1997,
   description: "Grow the chain of cans. Don't bite yourself. Eat fast for the chain.",

@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "jewel-swap",
-  title: "Jewel Swap",
+  title: "Nic's Jewel Swap",
   rule: "Swap adjacent gems to match 3 or more",
   year: 2001,
   description: "Swap. Cascade. Chase the sparkle streak.",

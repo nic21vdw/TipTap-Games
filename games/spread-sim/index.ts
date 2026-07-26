@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "spread-sim",
-  title: "Color Spread",
+  title: "Nic's Color Spread",
   rule: "Tap regions to spread. Boost before the cure wins.",
   year: 2012,
   description: "Claim the grid before the cure claims you back.",

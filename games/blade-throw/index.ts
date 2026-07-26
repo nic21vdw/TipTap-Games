@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "blade-throw",
-  title: "Blade Throw",
+  title: "Nic's Blade Throw",
   rule: "Tap to stick a blade in the clean gap",
   year: 2018,
   description: "Stick the spinning log. Miss the blades already there.",

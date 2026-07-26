@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "mote-absorb",
-  title: "Mote Absorb",
+  title: "Nic's Mote Absorb",
   rule: "Drag away from motes to recoil toward smaller ones",
   year: 2009,
   description: "Eject mass, drift free, absorb the small ones.",

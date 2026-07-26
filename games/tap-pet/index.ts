@@ -3,7 +3,7 @@ import { clamp, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "tap-pet",
-  title: "Tap Pet",
+  title: "Nic's Tap Pet",
   rule: "Tap for combo. Freeze when it flares up.",
   year: 2010,
   description: "Poke the little guy. Build a combo. Know when to stop.",

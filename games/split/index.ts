@@ -16,7 +16,7 @@ import {
 
 const meta = {
   slug: "split",
-  title: "Stack Raid",
+  title: "Nic's Stack Raid",
   rule: "Grab left or right. Dodge the jars",
   year: 2014,
   description: "Grab fast. Watch the jars. The timer only takes.",

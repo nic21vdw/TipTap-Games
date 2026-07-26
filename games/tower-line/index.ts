@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "tower-line",
-  title: "Tower Line",
+  title: "Nic's Tower Line",
   rule: "Tap tiles by the path to build. Hold the line.",
   year: 2011,
   description: "One lane, endless waves. Build smart or lose lives.",

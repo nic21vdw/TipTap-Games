@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "side-blaster",
-  title: "Side Blaster",
+  title: "Nic's Side Blaster",
   rule: "Drag to dodge, tap to fire",
   year: 1999,
   description: "Dodge the lane, blast the block, ride the scroll faster and faster.",

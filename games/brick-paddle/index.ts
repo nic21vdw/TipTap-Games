@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "brick-paddle",
-  title: "Brick Paddle",
+  title: "Nic's Brick Paddle",
   rule: "Drag the paddle. Smash every brick.",
   year: 2003,
   description: "Angle it. Break it. Never let it drop.",

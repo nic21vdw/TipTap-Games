@@ -3,7 +3,7 @@ import { endCard, makeLoop, clamp, rand, roundRect, shade } from "@/games/engine
 
 const meta = {
   slug: "hazard-glide",
-  title: "Hazard Glide",
+  title: "Nic's Hazard Glide",
   rule: "Hold to climb, release to dive the gaps",
   year: 2013,
   description: "Hold to soar, let go to dive. The hazard field doesn't slow down.",

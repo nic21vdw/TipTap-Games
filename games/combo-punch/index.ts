@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "combo-punch",
-  title: "Combo Punch",
+  title: "Nic's Combo Punch",
   rule: "Tap in rhythm to punch enemies before impact",
   year: 2012,
   description: "Auto-run, timed taps, don't let combos drop.",

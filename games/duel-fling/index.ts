@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "duel-fling",
-  title: "Duel Fling",
+  title: "Nic's Duel Fling",
   rule: "Drag back, release, land the shot.",
   year: 2016,
   description: "Alternating turns. One trajectory to get it right.",

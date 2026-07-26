@@ -13,7 +13,7 @@ import {
 
 const meta = {
   slug: "one-gap",
-  title: "Foot Cam",
+  title: "Nic's Foot Cam",
   rule: "Tap to kick. Thread it close for bonus",
   year: 2013,
   description: "The camera was pointed down there anyway. Brush the stacks for points.",

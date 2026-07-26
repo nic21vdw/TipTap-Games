@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "cascade-match",
-  title: "Cascade",
+  title: "Nic's Cascade",
   rule: "Swap gems to match 3. Chain the cascades.",
   year: 2012,
   description: "Swap, match, chain reactions — how far can you stretch your moves?",

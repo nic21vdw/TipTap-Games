@@ -3,7 +3,7 @@ import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "merge-tile",
-  title: "Merge Tile",
+  title: "Nic's Merge Tile",
   rule: "Swipe to slide and merge matching numbers",
   year: 2014,
   description: "Swipe smart. Merge big. Don't fill the board.",

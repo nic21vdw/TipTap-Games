@@ -3,7 +3,7 @@ import { endCard, makeLoop, shade } from "@/games/engine";
 
 const meta = {
   slug: "hue-pass",
-  title: "Hue Pass",
+  title: "Nic's Hue Pass",
   rule: "Tap to match your color to the gate",
   year: 2015,
   description: "Cycle your hue, thread the spinning gate, don't clash.",

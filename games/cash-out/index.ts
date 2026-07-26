@@ -16,7 +16,7 @@ import {
 
 const meta = {
   slug: "cash-out",
-  title: "The Tab",
+  title: "Nic's Tab",
   rule: "Stop before the jitters take it",
   year: 2014,
   description: "The caffeine multiplier climbs. Your nerve decides. Cans are pretend.",

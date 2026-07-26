@@ -3,7 +3,7 @@ import { clamp, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "tap-tower",
-  title: "Tap Tower",
+  title: "Nic's Tap Tower",
   rule: "Tap floors for coins. Build when you can afford it.",
   year: 2011,
   description: "Tap tenants for coins, build another floor, watch it stack up.",

@@ -16,7 +16,7 @@ import {
 
 const meta = {
   slug: "drop-dodge",
-  title: "Crumb Field",
+  title: "Nic's Crumb Field",
   rule: "Drag through the gaps. Shave them for points",
   year: 2008,
   description: "Falling granola. Tiny gaps. One shield between you and the carpet.",

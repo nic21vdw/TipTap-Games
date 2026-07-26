@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "shaft-descent",
-  title: "Shaft Descent",
+  title: "Nic's Shaft Descent",
   rule: "Drag to steer, tap to shoot straight down",
   year: 2015,
   description: "Falling forever. Steer, shoot, survive deeper.",

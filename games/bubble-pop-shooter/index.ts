@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "bubble-pop-shooter",
-  title: "Bubble Pop",
+  title: "Nic's Bubble Pop",
   rule: "Drag to aim, release to fire and match 3",
   year: 1994,
   description: "Pop the ceiling before it pops you.",

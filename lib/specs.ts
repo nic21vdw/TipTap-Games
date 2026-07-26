@@ -111,7 +111,11 @@ export function normalizeSpec(
   seed = ""
 ): CustomGameSpec {
   const input = (raw ?? {}) as Partial<CustomGameSpec>;
-  const title = text(input.title, 24).replace(/^["'`]|["'`]$/g, "") || "Wildcard";
+  let title = text(input.title, 24).replace(/^["'`]|["'`]$/g, "") || "Wildcard";
+  // Every game in the feed carries Nic's name — add it if it's missing.
+  if (!/\bnic/i.test(title)) {
+    title = `Nic's ${title}`.slice(0, 24);
+  }
   const hint = `${seed} ${title}`.trim();
   const base = coerceBase(input.base) ?? baseForPrompt(hint);
   const baseMeta = MODULES[base].meta;

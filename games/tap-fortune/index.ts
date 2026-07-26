@@ -3,7 +3,7 @@ import { clamp, makeLoop, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "tap-fortune",
-  title: "Tap Fortune",
+  title: "Nic's Tap Fortune",
   rule: "Tap to earn. Upgrade to earn more.",
   year: 2013,
   description: "Numbers go up. That's the whole game and it works.",

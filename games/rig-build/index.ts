@@ -3,7 +3,7 @@ import { endCard, makeLoop, pick, rand, roundRect, shade } from "@/games/engine"
 
 const meta = {
   slug: "rig-build",
-  title: "Rig Build",
+  title: "Nic's Rig Build",
   rule: "Bolt on parts, then launch it downhill",
   year: 2012,
   description: "Build a wobbly little rig. Send it. Pray it rolls.",

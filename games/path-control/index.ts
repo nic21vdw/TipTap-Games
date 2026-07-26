@@ -3,7 +3,7 @@ import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
 
 const meta = {
   slug: "path-control",
-  title: "Flight Path",
+  title: "Nic's Flight Path",
   rule: "Drag to reroute planes. Avoid collisions.",
   year: 2009,
   description: "Draw the sky lanes. Land every plane. One clash ends it.",

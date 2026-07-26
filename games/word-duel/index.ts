@@ -3,7 +3,7 @@ import { endCard, makeLoop, roundRect, shade, clamp, pick } from "@/games/engine
 
 const meta = {
   slug: "word-duel",
-  title: "Word Duel",
+  title: "Nic's Word Duel",
   rule: "Tap letters to spell words before time runs out.",
   year: 2009,
   description: "Spell fast, clear tiles, beat the clock.",

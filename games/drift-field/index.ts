@@ -13,7 +13,7 @@ import {
 
 const meta = {
   slug: "drift-field",
-  title: "Zero-G Basement",
+  title: "Nic's Zero-G Basement",
   rule: "Hold to aim and thrust. Guns auto-fire",
   year: 1979,
   description: "Rotate, thrust, break the crumbs apart. Momentum is the enemy.",

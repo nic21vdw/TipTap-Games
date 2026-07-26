@@ -3,7 +3,7 @@ import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
   slug: "paper-toss-wind",
-  title: "Toss It",
+  title: "Toss It, Nic",
   rule: "Flick to toss. Read the wind.",
   year: 2009,
   description: "Flick it in the bin. The wind has other plans.",
