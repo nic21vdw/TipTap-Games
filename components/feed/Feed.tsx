@@ -227,6 +227,41 @@ export function Feed() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
+  // Autoplay policy: the very first gesture anywhere on the page is what
+  // lets the soundtrack start. After that this never runs again.
+  useEffect(() => {
+    const go = () => unlockAudio();
+    const opts = { passive: true } as const;
+    window.addEventListener("pointerdown", go, opts);
+    window.addEventListener("touchstart", go, opts);
+    window.addEventListener("keydown", go);
+    return () => {
+      window.removeEventListener("pointerdown", go);
+      window.removeEventListener("touchstart", go);
+      window.removeEventListener("keydown", go);
+    };
+  }, []);
+
+  // One card, one song: landing on a card drops its track in on the beat.
+  useEffect(() => {
+    if (!ready || !activeSlug) return;
+    const m = getMeta(activeSlug);
+    useMusicStore.getState().cue({
+      slug: m.slug,
+      intensity: m.intensity,
+      nostalgia: m.nostalgia,
+      luck: m.luck,
+      tags: m.tags,
+    });
+  }, [ready, activeSlug]);
+
+  // Backgrounded tabs go quiet, and stay quiet until you come back.
+  useEffect(() => {
+    const onVis = () => (document.hidden ? suspendMusic() : resumeMusic());
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   return (
     <div
       ref={containerRef}

@@ -64,20 +64,19 @@ export function GameCard({ card, index }: Props) {
   const enterPlay = useUiStore((s) => s.enterPlay);
   const exitPlay = useUiStore((s) => s.exitPlay);
   const playing = playingUid === card.uid;
-  const lastTapRef = useRef(0);
   const sectionRef = useRef<HTMLElement>(null);
   const swipeRef = useRef<Swipe | null>(null);
 
-  // double-tap the preview to take over
-  const onPreviewTap = (e: React.PointerEvent) => {
-    const now = e.timeStamp;
-    if (now - lastTapRef.current < 320) {
-      lastTapRef.current = 0;
-      enterPlay(card.uid);
-      haptic("hit");
-    } else {
-      lastTapRef.current = now;
-    }
+  // Scroll a card into view and you're playing immediately — no demo, no tap.
+  // The reflex has to fire the moment the game lands on screen.
+  useEffect(() => {
+    if (active) enterPlay(card.uid);
+  }, [active, card.uid, enterPlay]);
+
+  // If you swiped out but stayed on the card, a single tap drops you back in.
+  const resumePlay = () => {
+    enterPlay(card.uid);
+    haptic("hit");
   };
 
   // Hand control back and land on the neighbouring card in one motion —
@@ -197,12 +196,12 @@ export function GameCard({ card, index }: Props) {
         <CardPoster meta={meta} />
       )}
 
-      {/* Browsing: the canvas is inert and this layer catches the double-tap
-          that hands control over. Swipes pass straight through to the feed. */}
+      {/* Browsing: the canvas is inert and a tap hands control back over.
+          Swipes pass straight through to the feed. */}
       {!playing && (
         <div
           className="absolute inset-0 z-10"
-          onPointerDown={onPreviewTap}
+          onPointerDown={resumePlay}
           style={{ touchAction: "pan-y" }}
         />
       )}
@@ -226,7 +225,7 @@ export function GameCard({ card, index }: Props) {
         </div>
       )}
 
-      {/* browsing: "this is a demo, tap in to actually play" */}
+      {/* paused after swiping out but staying on the card — one tap resumes */}
       {!playing && active && (
         <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-1">
           <div
@@ -238,13 +237,13 @@ export function GameCard({ card, index }: Props) {
               fontFamily: "var(--font-display)",
             }}
           >
-            {fine ? "Double click to play" : "Double tap to play"}
+            {fine ? "Click to play" : "Tap to play"}
           </div>
           <span
             className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
             style={{ color: "rgba(255,255,255,.8)" }}
           >
-            demo running
+            paused
           </span>
         </div>
       )}
@@ -278,7 +277,7 @@ export function GameCard({ card, index }: Props) {
           </span>
         </div>
         <div className="text-xs font-semibold" style={{ color: "rgba(255,255,255,.78)" }}>
-          {playing ? `best ${Math.max(best, score)}` : "demo score"}
+          {playing ? `best ${Math.max(best, score)}` : "paused"}
         </div>
       </div>
 

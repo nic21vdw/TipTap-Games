@@ -75,7 +75,8 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 
 ## Demo script (2 min)
 
-1. Open the URL on a phone. A game is already running — say nothing for 3s.
+1. Open the URL on a phone. A game is already live and playable — no demo,
+   no tap to start.
 2. Play, swipe, play, swipe. "No menus, no loading, no tutorial." Every
    swipe drops a different song — none of them exist as a file.
 3. Open the tuner. Drag nostalgia up — point at Next up reordering live.
