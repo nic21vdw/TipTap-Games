@@ -74,6 +74,16 @@ export function SendIcon(p: IconProps) {
   );
 }
 
+export function MoreIcon(p: IconProps) {
+  return (
+    <Svg {...p} filled>
+      <circle cx="5" cy="12" r="1.35" stroke="none" />
+      <circle cx="12" cy="12" r="1.35" stroke="none" />
+      <circle cx="19" cy="12" r="1.35" stroke="none" />
+    </Svg>
+  );
+}
+
 export function SearchIcon(p: IconProps) {
   return (
     <Svg {...p}>
