@@ -13,19 +13,19 @@ import {
 
 const meta = {
   slug: "drift-field",
-  title: "Drift Field",
+  title: "Zero-G Basement",
   rule: "Hold to aim and thrust. Guns auto-fire",
   year: 1979,
-  description: "Rotate, thrust, and blast the rocks apart. Momentum is the enemy.",
+  description: "Rotate, thrust, break the crumbs apart. Momentum is the enemy.",
   history:
-    "Homage to the 1979 vector-graphics cabinet that defined space shooters — inertia, wrap-around edges, and rocks that split into more rocks.",
+    "Homage to the 1979 vector cabinet that defined space shooters — inertia, wrap-around edges, rocks that split into more rocks. Ours are granola, and gravity left hours ago.",
   tags: ["retro", "reflex", "drag", "endurance"],
   palette: {
-    hero: "#4cc9f0",
-    foe: "#f72585",
-    prize: "#ffd60a",
-    deep: "#03041e",
-    glow: "#7209b7",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#b07a3c",
   },
   intensity: 0.7,
   speed: 0.6,

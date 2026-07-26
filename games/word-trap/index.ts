@@ -17,19 +17,19 @@ import {
 
 const meta = {
   slug: "word-trap",
-  title: "Word Trap",
-  rule: "Does the ink match the word? Yes or no",
+  title: "Label Trap",
+  rule: "Does the label match the colour? Yes or no",
   year: 1935,
-  description: "The Stroop test, weaponized for your feed. Your brain will lie.",
+  description: "The Stroop test, run on one fridge. Your brain will lie to you.",
   history:
-    "John Ridley Stroop published the colour-word interference effect in 1935. Ninety years later it still short-circuits brains — now with two buttons and a countdown.",
+    "John Ridley Stroop published the colour-word interference effect in 1935. Ninety years later it still short-circuits brains — now it does it with a label.",
   tags: ["precision", "calm"],
   palette: {
-    hero: "#8338ec",
-    foe: "#ff006e",
-    prize: "#3a86ff",
-    deep: "#1b0033",
-    glow: "#c77dff",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#ded3b6",
   },
   intensity: 0.35,
   luck: 0.1,

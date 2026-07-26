@@ -16,19 +16,19 @@ import {
 
 const meta = {
   slug: "hold-line",
-  title: "Hold the Line",
-  rule: "Hold to fill. Release on the line",
+  title: "The Pour",
+  rule: "Hold to pour. Release on the line",
   year: 2026,
-  description: "One press, one release. Nerves of glass.",
+  description: "One press, one release. Nerves of glass, glass of cola.",
   history:
-    "An original — the power gauge from golf and fighting games, isolated into its purest, meanest form. The tolerance band only shrinks, and the line starts to drift.",
+    "An original — the power gauge from golf and fighting games, isolated into its purest, meanest form, then pointed at a glass.",
   tags: ["precision", "hold", "calm"],
   palette: {
-    hero: "#00e0a4",
-    foe: "#ff4d6d",
-    prize: "#ffd166",
-    deep: "#04222e",
-    glow: "#22a6f2",
+    hero: "#6d3b1c",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.3,
   luck: 0.05,

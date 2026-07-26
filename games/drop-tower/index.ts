@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { makeLoop, clamp, roundRect } from "@/games/engine";
+import { drawCanTop, skins } from "@/games/nic-art";
 import {
   createFx,
   createCombo,
@@ -17,19 +18,19 @@ import {
 
 const meta = {
   slug: "drop-tower",
-  title: "Drop Tower",
-  rule: "Tap to drop. Perfect stacks grow it back",
+  title: "Can Stack",
+  rule: "Tap to drop. Perfect rows grow it back",
   year: 2016,
   description: "Stack it clean or shave it thin. Perfect drops pay you back.",
   history:
-    "Homage to 2016's hypnotic block-stacker — towers of near-misses, shaved thinner with every sloppy drop. Ours hands width back for a perfect landing, so a steady thumb never dead-ends.",
+    "Homage to 2016's hypnotic block-stacker — towers of near-misses, shaved thinner with every sloppy drop. This one is built out of the recycling.",
   tags: ["precision", "oneTap", "calm"],
   palette: {
-    hero: "#4cc9f0",
-    foe: "#f72585",
-    prize: "#ffd166",
-    deep: "#101a3d",
-    glow: "#7b61ff",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.35,
   luck: 0.05,
@@ -269,6 +270,21 @@ function mount(ctx: GameContext): GameInstance {
 
     // the tower — the whole stack sways a hair after a sloppy drop
     const swayAmt = Math.sin(clock * 9) * sway;
+    const sk = skins(pal);
+    /** Lays can lids across a row, alternating drink by row. */
+    const lids = (x: number, y: number, w: number, row: number) => {
+      const r = (blockH - 8) / 2;
+      if (r < 3) return;
+      const step = r * 2 + 3;
+      const n = Math.floor(w / step);
+      if (n < 1) return;
+      const pad = (w - n * step) / 2;
+      const skin = sk[row % 2 === 0 ? "cola" : "energy"];
+      for (let i = 0; i < n; i++) {
+        drawCanTop(g, x + pad + step * i + step / 2, y + (blockH - 2) / 2, r, skin);
+      }
+    };
+
     for (let i = 0; i < stack.length; i++) {
       const L = stack[i];
       const y = layerY(i) + cam;
@@ -293,6 +309,8 @@ function mount(ctx: GameContext): GameInstance {
       // top highlight, so the stack reads as solid
       g.fillStyle = hexA("#ffffff", 0.22);
       g.fillRect(L.x + lean + 3, y + 1.5, L.w - 6, 2);
+      // the row is a flat of cans, lids up
+      lids(L.x + lean, y, L.w, i);
     }
 
     // falling debris
@@ -331,6 +349,7 @@ function mount(ctx: GameContext): GameInstance {
       g.fill();
       g.fillStyle = hexA("#ffffff", 0.25);
       g.fillRect(curX + 3, movY + 1.5, towerW - 6, 2);
+      lids(curX, movY, towerW, stack.length);
     }
 
     // ---- HUD

@@ -10,6 +10,7 @@
 
 import { clamp, rand, roundRect } from "@/games/engine";
 import type { GamePalette } from "@/games/types";
+import { drawBasement, drawHeadshot } from "@/games/nic-photo";
 
 // ---------------------------------------------------------------- maths
 
@@ -470,12 +471,21 @@ export function drawBackdrop(
   const k = opts.intensity ?? 1;
   const scroll = opts.scroll ?? 0;
 
+  // Every card is set in the same room. When the photograph is present it is
+  // the ground layer and the generated wash sits on top of it, tinted by the
+  // game's own palette; when it is not, the wash is the whole backdrop and
+  // nothing about the game changes.
+  const room = drawBasement(g, W, H, pal.deep, 0.66);
+
   const sky = g.createLinearGradient(0, 0, 0, H);
   sky.addColorStop(0, mix(pal.deep, pal.glow, 0.18));
   sky.addColorStop(0.55, pal.deep);
   sky.addColorStop(1, mix(pal.deep, "#000000", 0.55));
+  g.save();
+  if (room) g.globalAlpha = 0.5;
   g.fillStyle = sky;
   g.fillRect(0, 0, W, H);
+  g.restore();
 
   if (kind === "blobs") {
     for (let i = 0; i < 3; i++) {
@@ -785,6 +795,10 @@ export function resultCard(
   g.lineWidth = 1.5;
   roundRect(g, x + 0.75, y + 0.75, bw - 1.5, bh - 1.5, 23.5);
   g.stroke();
+
+  // the man whose basement this is, sitting on the lip of the card, watching
+  // how the run went. Falls away silently when the photo is not there.
+  drawHeadshot(g, W / 2, y, 30, accent);
 
   g.textAlign = "center";
   g.fillStyle = t.inkDim;

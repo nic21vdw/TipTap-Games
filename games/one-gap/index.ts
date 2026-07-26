@@ -13,19 +13,19 @@ import {
 
 const meta = {
   slug: "one-gap",
-  title: "One Gap",
-  rule: "Tap to flap. Thread it close for bonus",
+  title: "Foot Cam",
+  rule: "Tap to kick. Thread it close for bonus",
   year: 2013,
-  description: "Tap to flap. The gap is smaller than your ego — brush it for points.",
+  description: "The camera was pointed down there anyway. Brush the stacks for points.",
   history:
-    "Homage to 2013's infamous one-button rage game — pulled from the stores at its peak by its own creator, never really gone since. Ours pays you for cutting it fine, and gives you exactly one save.",
+    "Homage to 2013's infamous one-button rage game — pulled from the stores at its peak by its own creator. This one is shot on the basement foot cam.",
   tags: ["reflex", "oneTap", "endurance", "chaos"],
   palette: {
-    hero: "#ffd166",
-    foe: "#1f9c5a",
-    prize: "#ffffff",
-    deep: "#0b6f9e",
-    glow: "#8ecae6",
+    hero: "#e8b48c",
+    foe: "#8d97a3",
+    prize: "#e8a33d",
+    deep: "#1b2230",
+    glow: "#c9d3dc",
   },
   intensity: 0.7,
   speed: 0.8,

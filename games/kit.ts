@@ -15,6 +15,7 @@ import type {
   GameTuning,
 } from "@/games/types";
 import { endCard, makeLoop } from "@/games/engine";
+import { drawBasement } from "@/games/nic-photo";
 import type { ThemeTokens } from "@/lib/themes";
 
 export interface Api {
@@ -216,11 +217,18 @@ export function sky(
   top: string,
   bottom: string
 ) {
+  // The room photo, when it exists, is the ground layer under every catalog
+  // game; the gradient then tints it instead of replacing it. With no photo
+  // this is exactly the gradient it always was.
+  const room = drawBasement(g, W, H, bottom, 0.66);
   const grad = g.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, top);
   grad.addColorStop(1, bottom);
+  g.save();
+  if (room) g.globalAlpha = 0.5;
   g.fillStyle = grad;
   g.fillRect(0, 0, W, H);
+  g.restore();
 }
 
 /** Centred display text, used for counters and callouts inside a game. */

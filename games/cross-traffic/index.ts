@@ -15,19 +15,19 @@ import {
 
 const meta = {
   slug: "cross-traffic",
-  title: "Cross Traffic",
-  rule: "Tap to hop. Ride the logs, mind the drift",
+  title: "Cable Run",
+  rule: "Tap to step. Mind the cans and the spills",
   year: 2014,
-  description: "Hop. Wait. Hop. Roads flatten you, rivers just carry you off.",
+  description: "Step. Wait. Step. Barefoot, in the dark, across eleven feet of floor.",
   history:
-    "Homage to 2014's hop-across-traffic arcade — the one that made 'why did the chicken cross the road' a genre. Ours adds the river, because the river is where the panic lives.",
+    "Homage to 2014's hop-across-traffic arcade — the one that made 'why did the chicken cross the road' a genre. This crossing is one basement wide.",
   tags: ["precision", "oneTap", "endurance"],
   palette: {
-    hero: "#ffd166",
-    foe: "#ef476f",
-    prize: "#ffe066",
-    deep: "#062a3a",
-    glow: "#4cc9f0",
+    hero: "#e8b48c",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.6,
   luck: 0.2,

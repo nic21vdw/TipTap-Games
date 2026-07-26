@@ -30,7 +30,7 @@ export interface GameMeta {
   maxScorePerSecond: number; // anti-cheat ceiling
   /**
    * The game's own colours. Themes control the ground (bg/ink); this controls
-   * the game's character, so Nokia Mode is never the same green as Cash Out.
+   * the game's character, so Snake Feed is never the same blue as The Tab.
    */
   palette?: GamePalette;
   // Optional axes — registry.ts derives sane defaults when a game omits them.

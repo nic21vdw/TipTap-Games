@@ -15,19 +15,19 @@ import {
 
 const meta = {
   slug: "pop-chain",
-  title: "Pop Chain",
-  rule: "Tap groups of 3+. Bigger groups pay more",
+  title: "Empties",
+  rule: "Tap groups of 3+. Bigger piles pay more",
   year: 1985,
-  description: "Tap-to-collapse — the OG match puzzle. Clear it out for a bonus.",
+  description: "Tap-to-collapse — the 4am desk cleanup. Clear it out for a bonus.",
   history:
-    "Homage to SameGame (1985), the tile-collapse puzzle that predates match-3 itself and quietly spawned a whole genre's family tree.",
+    "Homage to SameGame (1985), the tile-collapse puzzle that predates match-3 itself. Here it is pointed at the pile beside the monitor.",
   tags: ["calm", "retro", "precision"],
   palette: {
-    hero: "#ff70a6",
-    foe: "#ff9770",
-    prize: "#ffd670",
-    deep: "#122c4a",
-    glow: "#70d6ff",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.15,
   luck: 0.35,
