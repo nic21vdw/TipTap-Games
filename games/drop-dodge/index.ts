@@ -16,19 +16,19 @@ import {
 
 const meta = {
   slug: "drop-dodge",
-  title: "Drop Dodge",
+  title: "Crumb Field",
   rule: "Drag through the gaps. Shave them for points",
   year: 2008,
-  description: "Falling walls. Tiny gaps. One shield between you and the floor.",
+  description: "Falling granola. Tiny gaps. One shield between you and the carpet.",
   history:
-    "Homage to the first wave of dodgers on the 2008 App Store, back when steering with your phone felt like the future. Ours trades tilt for a thumb, and pays you for cutting it fine.",
+    "Homage to the first wave of dodgers on the 2008 App Store, back when steering with your phone felt like the future. Ours trades tilt for a thumb and a very messy desk.",
   tags: ["endurance", "drag", "chaos"],
   palette: {
-    hero: "#ffd166",
-    foe: "#e63946",
-    prize: "#22e5a5",
-    deep: "#141a3a",
-    glow: "#5a7bff",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#b07a3c",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.75,
   luck: 0.2,

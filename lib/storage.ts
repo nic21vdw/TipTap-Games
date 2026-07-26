@@ -9,6 +9,7 @@ import { getMeta } from "@/games/registry";
 // change feed below and mirrors these writes to Postgres in the background,
 // then merges the cloud's copy back in on sign-in. localStorage stays the
 // read path either way; the cloud is a replica, not a dependency.
+import { normalizeSpec, type CustomGameSpec } from "@/lib/specs";
 
 export interface LeaderboardEntry {
   handle: string;
@@ -265,33 +266,20 @@ export function clearSeen() {
 
 // ---- player-generated games (specs only; engines stay ours) ----
 
-export interface CustomGameSpec {
-  slug: string;
-  base: string; // slug of the engine it runs on
-  title: string;
-  rule: string;
-  description: string;
-  history: string;
-  accent: string; // hex; recolours the base engine
-  tags: string[];
-  intensity: number;
-  luck: number;
-  nostalgia: number;
-  /** the game's own five colours — absent on specs saved before this existed */
-  palette?: {
-    hero: string;
-    foe: string;
-    prize: string;
-    deep: string;
-    glow: string;
-  };
-  /** speed/density dials handed to the engine through ctx.tune */
-  tune?: { speed: number; density: number };
-}
+export type { CustomGameSpec };
 
+/**
+ * Anything already in localStorage was written by whatever build was live at
+ * the time, so it is repaired on the way out — a game saved with a broken
+ * accent or an unknown base still comes back playable.
+ */
 export function loadCustomSpecs(): CustomGameSpec[] {
   try {
-    return JSON.parse(safe.get(KEY.custom) ?? "[]");
+    const raw = JSON.parse(safe.get(KEY.custom) ?? "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((s) => s && typeof s === "object")
+      .map((s) => normalizeSpec(s as Partial<CustomGameSpec>));
   } catch {
     return [];
   }
@@ -309,8 +297,9 @@ function applySpecBudget(all: CustomGameSpec[]): CustomGameSpec[] {
 }
 
 export function saveCustomSpec(spec: CustomGameSpec) {
-  const all = loadCustomSpecs().filter((s) => s.slug !== spec.slug);
-  all.push(spec);
+  const clean = normalizeSpec(spec);
+  const all = loadCustomSpecs().filter((s) => s.slug !== clean.slug);
+  all.push(clean);
   safe.set(KEY.custom, JSON.stringify(applySpecBudget(all)));
   emit("custom");
 }

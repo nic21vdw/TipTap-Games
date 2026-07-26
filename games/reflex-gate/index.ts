@@ -16,19 +16,19 @@ import {
 
 const meta = {
   slug: "reflex-gate",
-  title: "Reflex Gate",
-  rule: "Tap in the light. Centre pays double",
+  title: "Perfect Pour",
+  rule: "Tap on the line. Dead centre pays double",
   year: 2026,
-  description: "Pure timing. The gate shrinks every hit — the core never lies.",
+  description: "Pure timing. The glass fills tighter every hit — the line never lies.",
   history:
-    "An original for the feed — the timing-bar tension of arcade bonus rounds, distilled to one tap, a shrinking window, and a bullseye worth chasing.",
+    "An original for the feed — the timing-bar tension of arcade bonus rounds, distilled to one tap, one glass, and a fill line worth chasing.",
   tags: ["reflex", "precision", "oneTap"],
   palette: {
-    hero: "#00e5ff",
-    foe: "#ff2e63",
-    prize: "#3dffa2",
-    deep: "#04122b",
-    glow: "#7b61ff",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.55,
   luck: 0.1,

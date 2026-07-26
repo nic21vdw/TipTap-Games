@@ -16,19 +16,19 @@ import {
 
 const meta = {
   slug: "split",
-  title: "Split",
-  rule: "Chop left or right. Dodge the branches",
+  title: "Stack Raid",
+  rule: "Grab left or right. Dodge the jars",
   year: 2014,
-  description: "Chop fast. Watch the branches. The timer only takes.",
+  description: "Grab fast. Watch the jars. The timer only takes.",
   history:
-    "Homage to the 2014 side-switching lumberjack sprint — the purest speed test the app stores ever produced. Every chop buys you time; hesitation is the real enemy.",
+    "Homage to the 2014 side-switching lumberjack sprint — the purest speed test the app stores ever produced, aimed at a shelf stacked far too high.",
   tags: ["reflex", "oneTap", "chaos"],
   palette: {
-    hero: "#f2cc8f",
-    foe: "#bc4749",
-    prize: "#ffd166",
-    deep: "#14331f",
-    glow: "#6a994e",
+    hero: "#e8b48c",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.85,
   luck: 0.05,

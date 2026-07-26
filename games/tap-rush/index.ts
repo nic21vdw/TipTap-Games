@@ -18,19 +18,19 @@ import {
 
 const meta = {
   slug: "tap-rush",
-  title: "Tap Rush",
-  rule: "Pop the lights. Never pop the red",
+  title: "Can Rush",
+  rule: "Grab the cold ones. Never grab the warm",
   year: 2026,
-  description: "Whack-a-target at feed speed. Gold pays triple, red bites.",
+  description: "The fridge run at feed speed. Gold pays triple, warm bites.",
   history:
-    "An original descended from every light-gun cabinet and whack-a-mole machine ever built, rebuilt for one thumb — and one target you must not touch.",
+    "An original descended from every light-gun cabinet and whack-a-mole machine ever built, rebuilt for one thumb and one very full fridge.",
   tags: ["reflex", "chaos", "oneTap"],
   palette: {
-    hero: "#ff5fa2",
-    foe: "#ff1f4b",
-    prize: "#ffd60a",
-    deep: "#25004f",
-    glow: "#8a2be2",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.9,
   luck: 0.15,

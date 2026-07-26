@@ -17,19 +17,19 @@ import {
 
 const meta = {
   slug: "nokia-mode",
-  title: "Nokia Mode",
+  title: "Snake Feed",
   rule: "Tap left or right to turn. Eat. Grow.",
   year: 1997,
-  description: "Grow the line. Don't bite yourself. Eat fast for the chain.",
+  description: "Grow the chain of cans. Don't bite yourself. Eat fast for the chain.",
   history:
-    "Homage to the 1997 phone classic that shipped on 350 million handsets — the game that made mobile gaming exist in the first place.",
+    "Homage to the 1997 phone classic that shipped on 350 million handsets — the game that made mobile gaming exist. Now it is a fridge run in one long line.",
   tags: ["retro", "endurance", "precision"],
   palette: {
-    hero: "#43aa8b",
-    foe: "#f94144",
-    prize: "#f9c74f",
-    deep: "#0d3b4f",
-    glow: "#90be6d",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#b07a3c",
+    deep: "#171a24",
+    glow: "#e8a33d",
   },
   intensity: 0.45,
   luck: 0.05,

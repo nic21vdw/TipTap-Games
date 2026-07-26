@@ -16,19 +16,19 @@ import {
 
 const meta = {
   slug: "one-lane",
-  title: "One Lane",
-  rule: "Tap to switch lanes. Grab the sparks",
+  title: "Basement Run",
+  rule: "Tap to switch sides. Grab the cold ones",
   year: 2012,
-  description: "The endless-runner era, compressed into one tap and one nerve.",
+  description: "The endless-runner era, compressed into one basement and one nerve.",
   history:
-    "Homage to 2012's lane-runner boom — swipe-to-dodge commutes on a billion phones. Ours strips it to a single input, then dares you to cut it close.",
+    "Homage to 2012's lane-runner boom — swipe-to-dodge commutes on a billion phones. Ours strips it to a single input, bare feet, and no mercy.",
   tags: ["endurance", "oneTap", "retro"],
   palette: {
-    hero: "#ffb703",
-    foe: "#e63946",
-    prize: "#5ce1e6",
-    deep: "#12263a",
-    glow: "#2a9d8f",
+    hero: "#e8b48c",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#1f6fd0",
   },
   intensity: 0.65,
   luck: 0.1,

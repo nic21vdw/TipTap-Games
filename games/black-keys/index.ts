@@ -17,19 +17,19 @@ import {
 
 const meta = {
   slug: "black-keys",
-  title: "Black Keys",
-  rule: "Tap the lit tile. Nail the line for bonus",
+  title: "Zero Sugar",
+  rule: "Tap the black can. Nail the line for bonus",
   year: 2014,
-  description: "Only the lit tiles. Hit them on the line and they pay double.",
+  description: "Only the black cans. Hit them on the line and they pay double.",
   history:
-    "Homage to 2014's tile-tapper that turned pianos into reflex tests and bus rides into speedruns. Ours adds a strike line, so precision beats panic.",
+    "Homage to 2014's tile-tapper that turned pianos into reflex tests and bus rides into speedruns. Same four lanes, one correct drink.",
   tags: ["reflex", "oneTap", "precision"],
   palette: {
-    hero: "#7b2cff",
-    foe: "#ff2e88",
-    prize: "#31e1f7",
-    deep: "#0b0020",
-    glow: "#c77dff",
+    hero: "#e8a33d",
+    foe: "#d81f2a",
+    prize: "#1f6fd0",
+    deep: "#12141b",
+    glow: "#c9d3dc",
   },
   intensity: 0.8,
   luck: 0.05,

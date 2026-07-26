@@ -15,19 +15,19 @@ import {
 
 const meta = {
   slug: "flash-recall",
-  title: "Flash Recall",
-  rule: "Watch the pads. Play them back",
+  title: "Fridge Order",
+  rule: "Watch the shelf. Play it back",
   year: 1978,
-  description: "The glowing memory grid, reborn at nine pads and no mercy.",
+  description: "The glowing memory grid, rebuilt as nine cans on one shelf.",
   history:
-    "Homage to the 1978 electronic memory toys that started the pattern-repeat genre — four glowing buttons on every family's shelf, now nine on your feed.",
+    "Homage to the 1978 electronic memory toys that started the pattern-repeat genre — four glowing buttons on every family's shelf, now nine cans on this one.",
   tags: ["memory", "calm"],
   palette: {
-    hero: "#4cc9f0",
-    foe: "#ef476f",
-    prize: "#f9c74f",
-    deep: "#0d1b3e",
-    glow: "#b388ff",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.2,
   luck: 0.05,

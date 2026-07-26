@@ -16,19 +16,19 @@ import {
 
 const meta = {
   slug: "cash-out",
-  title: "Cash Out",
-  rule: "Bank it before the curve breaks",
+  title: "The Tab",
+  rule: "Stop before the jitters take it",
   year: 2014,
-  description: "The multiplier climbs. Your nerve decides. Chips are pretend.",
+  description: "The caffeine multiplier climbs. Your nerve decides. Cans are pretend.",
   history:
-    "Homage to the crash-curve games of the mid-2010s. Virtual chips only, free reset, and the house here charges absolutely nothing.",
+    "Homage to the crash-curve games of the mid-2010s, re-pointed at a running tab of energy drinks. Virtual cans only, free reset, nothing to buy anywhere.",
   tags: ["casino", "luck", "oneTap"],
   palette: {
-    hero: "#ffd60a",
-    foe: "#ff2d2d",
-    prize: "#70e000",
-    deep: "#050b1e",
-    glow: "#ffba08",
+    hero: "#e8a33d",
+    foe: "#d81f2a",
+    prize: "#3fbf6f",
+    deep: "#171a24",
+    glow: "#1f6fd0",
   },
   intensity: 0.7,
   luck: 0.85,
