@@ -84,6 +84,65 @@ export function shade(hex: string, amt: number): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }
 
+/** Blend two hex colours. t=0 is a, t=1 is b. */
+export function mix(a: string, b: string, t: number): string {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const l = (sh: number) => {
+    const va = (pa >> sh) & 255;
+    const vb = (pb >> sh) & 255;
+    return Math.round(va + (vb - va) * t);
+  };
+  return `#${((l(16) << 16) | (l(8) << 8) | l(0)).toString(16).padStart(6, "0")}`;
+}
+
+/** Hex plus an alpha channel, as an rgba() string. */
+export function alpha(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+export function circle(
+  g: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number
+) {
+  g.beginPath();
+  g.arc(x, y, r, 0, Math.PI * 2);
+}
+
+export function dist(ax: number, ay: number, bx: number, by: number): number {
+  return Math.hypot(ax - bx, ay - by);
+}
+
+/** Axis-aligned overlap between two centre-anchored boxes. */
+export function overlaps(
+  ax: number,
+  ay: number,
+  aw: number,
+  ah: number,
+  bx: number,
+  by: number,
+  bw: number,
+  bh: number
+): boolean {
+  return (
+    Math.abs(ax - bx) * 2 < aw + bw && Math.abs(ay - by) * 2 < ah + bh
+  );
+}
+
+/** Move `v` toward `to` by at most `step`. */
+export function approach(v: number, to: number, step: number): number {
+  return v < to ? Math.min(to, v + step) : Math.max(to, v - step);
+}
+
+/** Deterministic 0..1 noise from an integer — cheap scenery without state. */
+export function hashed(n: number): number {
+  const x = Math.sin(n * 127.1) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 export function roundRect(
   g: CanvasRenderingContext2D,
   x: number,
@@ -102,6 +161,9 @@ export function roundRect(
   g.closePath();
 }
 
+// The 16 games rebuilt on games/fx.ts use resultCard() there instead, which
+// shows the score, the personal best and a run stat. Every other game still
+// calls this plain version.
 interface EndTheme {
   ink: string;
   inkDim: string;

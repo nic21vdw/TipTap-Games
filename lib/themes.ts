@@ -16,9 +16,17 @@ export function resolvedFamily(): string {
   return cachedFamily;
 }
 
-export type ThemeId = "coast" | "arcade" | "eightbit" | "skeuo" | "felt";
+export type ThemeId =
+  | "coast"
+  | "arcade"
+  | "eightbit"
+  | "skeuo"
+  | "felt"
+  | "nic";
 
 export interface ThemeTokens {
+  /** games branch on this when a theme has its own scenery (see `nic`) */
+  id: ThemeId;
   bg: string;
   surface: string;
   ink: string;
@@ -36,7 +44,6 @@ export interface ThemeTokens {
 }
 
 export interface ThemeDef extends ThemeTokens {
-  id: ThemeId;
   name: string;
   blurb: string;
 }
@@ -137,6 +144,25 @@ export const THEMES: Record<ThemeId, ThemeDef> = {
     grain: 0.12,
     scanlines: false,
   },
+  nic: {
+    id: "nic",
+    name: "Nic",
+    blurb: "Basement purple, mint and gold",
+    bg: "#1b1430",
+    surface: "#2a1e4a",
+    ink: "#f6f1ff",
+    inkDim: "#a596c8",
+    accent: "#5ec98b",
+    accentAlt: "#ffd166",
+    success: "#7ee0ff",
+    danger: "#ff5d73",
+    fontDisplay: FALLBACK,
+    fontBody: FALLBACK,
+    radius: 18,
+    pixelate: false,
+    grain: 0.05,
+    scanlines: false,
+  },
 };
 
 export const THEME_ORDER: ThemeId[] = [
@@ -145,6 +171,7 @@ export const THEME_ORDER: ThemeId[] = [
   "eightbit",
   "skeuo",
   "felt",
+  "nic",
 ];
 
 export function applyThemeToDom(t: ThemeTokens) {
