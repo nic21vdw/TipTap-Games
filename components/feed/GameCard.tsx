@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { GameHost, type RunResult } from "@/components/feed/GameHost";
 import { RailButton } from "@/components/feed/RailButton";
 import { SoundRail } from "@/components/feed/SoundRail";
+import { goToCard, useFinePointer } from "@/components/feed/nav";
 import {
   HeartIcon,
   SendIcon,
@@ -14,6 +15,7 @@ import {
   TrophyIcon,
 } from "@/components/ui/icons";
 import { getMeta } from "@/games/registry";
+import type { FullGameMeta } from "@/games/types";
 import { haptic } from "@/lib/haptics";
 import { getBest, getHandle, likedSlugs, toggleLike } from "@/lib/storage";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
@@ -33,6 +35,7 @@ export function GameCard({ card, index }: Props) {
   const mounted = Math.abs(index - activeIndex) <= 1;
   const meta = getMeta(card.slug);
   const openSheet = useUiStore((s) => s.openSheet);
+  const fine = useFinePointer();
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
@@ -76,22 +79,11 @@ export function GameCard({ card, index }: Props) {
     }
   };
 
-  // Hand control back and land on the neighbouring card in one motion. The
-  // feed is overflow-hidden while playing, so the scroll waits for the frame
-  // that re-enables it.
+  // Hand control back and land on the neighbouring card in one motion —
+  // downwards for the next game, upwards for the one you just left.
   const leaveTo = (delta: number) => {
-    exitPlay();
     haptic("light");
-    const root = sectionRef.current?.parentElement;
-    if (!root) return;
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        const target = root.querySelector<HTMLElement>(
-          `[data-index="${index + delta}"]`
-        );
-        if (target) root.scrollTo({ top: target.offsetTop, behavior: "smooth" });
-      })
-    );
+    goToCard(sectionRef.current?.parentElement, index + delta);
   };
 
   // While playing, the game owns the surface — so the card watches the same
@@ -201,7 +193,7 @@ export function GameCard({ card, index }: Props) {
           onRunEnd={handleRunEnd}
         />
       ) : (
-        <div className="h-full w-full" />
+        <CardPoster meta={meta} />
       )}
 
       {/* Browsing: the canvas is inert and this layer catches the double-tap
@@ -226,7 +218,9 @@ export function GameCard({ card, index }: Props) {
             className="text-[10px] font-bold uppercase tracking-wider"
             style={{ color: "rgba(255,255,255,.8)" }}
           >
-            swipe up for the next game
+            {fine
+              ? "scroll or ↑ ↓ to move · esc to stop"
+              : "swipe up or down to move on"}
           </span>
         </div>
       )}
@@ -243,7 +237,7 @@ export function GameCard({ card, index }: Props) {
               fontFamily: "var(--font-display)",
             }}
           >
-            Double tap to play
+            {fine ? "Double click to play" : "Double tap to play"}
           </div>
           <span
             className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
@@ -443,6 +437,48 @@ export function GameCard({ card, index }: Props) {
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * Stands in for a card whose game isn't mounted. Only the active card and its
+ * two neighbours run a game, so scrolling several cards at once — forwards, or
+ * back through games you've already played — would otherwise fly over empty
+ * rectangles. The poster wears the game's own palette, so the card still reads
+ * as itself the moment it passes.
+ */
+function CardPoster({ meta }: { meta: FullGameMeta }) {
+  return (
+    <div
+      className="flex h-full w-full items-center justify-center"
+      style={{
+        background: `radial-gradient(130% 90% at 50% 32%, ${meta.palette.deep}, var(--bg))`,
+      }}
+    >
+      {/* the chrome stays white on a scrim, never themed, so it reads over a
+          pale palette as well as a dark one */}
+      <div
+        className="mx-8 flex max-w-[70%] flex-col items-center px-5 py-4 text-center"
+        style={{ background: "rgba(12,18,28,.72)", borderRadius: "var(--radius)" }}
+      >
+        <span
+          className="mb-2 block h-1 w-8 rounded-full"
+          style={{ background: meta.palette.glow }}
+        />
+        <div
+          className="text-2xl font-extrabold leading-tight"
+          style={{ fontFamily: "var(--font-display)", color: "#fff" }}
+        >
+          {meta.title}
+        </div>
+        <div
+          className="mt-1.5 text-[11px] font-bold uppercase tracking-wider"
+          style={{ color: "rgba(255,255,255,.72)" }}
+        >
+          {meta.rule}
+        </div>
+      </div>
+    </div>
   );
 }
 
