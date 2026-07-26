@@ -11,6 +11,10 @@ import {
   SendIcon,
   SlidersIcon,
   DropletIcon,
+  GearIcon,
+  GridIcon,
+  MoreIcon,
+  SearchIcon,
   SoundOffIcon,
   SoundOnIcon,
   TrophyIcon,
@@ -44,6 +48,7 @@ export function GameCard({ card, index }: Props) {
   // "guest" until mount: localStorage doesn't exist during the server render.
   const [localHandle, setLocalHandle] = useState("guest");
   const [expanded, setExpanded] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
   const [copied, setCopied] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
@@ -117,6 +122,12 @@ export function GameCard({ card, index }: Props) {
     if (!active && playing) exitPlay();
   }, [active, playing, exitPlay]);
 
+  // The compact menu belongs only to the live card. Never leave an invisible
+  // overlay hanging around after a swipe, pause, or game-over transition.
+  useEffect(() => {
+    if (!active || !playing || result) setControlsOpen(false);
+  }, [active, playing, result]);
+
   useEffect(() => {
     if (mounted) {
       setBest(getBest(card.slug));
@@ -170,6 +181,7 @@ export function GameCard({ card, index }: Props) {
   };
 
   const share = async () => {
+    setControlsOpen(false);
     const url = typeof window !== "undefined" ? window.location.href : "";
     const text = `I scored ${best || score} on ${meta.title} — Tip Tap Games`;
     try {
@@ -187,6 +199,13 @@ export function GameCard({ card, index }: Props) {
     } catch {
       // clipboard unavailable — nothing to do
     }
+  };
+
+  const openFromControls = (
+    id: "leaderboard" | "algo" | "theme" | "games" | "search" | "settings" | "account"
+  ) => {
+    setControlsOpen(false);
+    openSheet(id);
   };
 
   return (
@@ -264,16 +283,20 @@ export function GameCard({ card, index }: Props) {
         </div>
       )}
 
-      {/* Reels-style scrims: the chrome is white on gradient, never themed,
-          so it stays legible over any game's own artwork. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 z-20 h-40"
-        style={{ background: "linear-gradient(rgba(0,0,0,.5), transparent)" }}
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-64"
-        style={{ background: "linear-gradient(transparent, rgba(0,0,0,.62))" }}
-      />
+      {/* The heavy scrims are browsing chrome. Once play starts the artwork is
+          left untouched; the score's text shadow is enough to keep it legible. */}
+      {!playing && (
+        <>
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 z-20 h-40"
+            style={{ background: "linear-gradient(rgba(0,0,0,.5), transparent)" }}
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-64"
+            style={{ background: "linear-gradient(transparent, rgba(0,0,0,.62))" }}
+          />
+        </>
+      )}
 
       {/* score HUD */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(var(--safe-top)+14px)]">
@@ -298,10 +321,11 @@ export function GameCard({ card, index }: Props) {
       </div>
 
       {/* caption — Reels/TikTok style: title, era, expandable history */}
-      <div
-        className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(var(--safe-bottom)+16px)]"
-        style={{ touchAction: "pan-y" }}
-      >
+      {!playing && (
+        <div
+          className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(var(--safe-bottom)+16px)]"
+          style={{ touchAction: "pan-y" }}
+        >
         {/* now playing: the track is generated, so it gets a name too */}
         {active && (
           <button
@@ -372,13 +396,16 @@ export function GameCard({ card, index }: Props) {
           )}
         </button>
 
-      </div>
+        </div>
+      )}
 
-      {/* right rail — symbolic line icons, Instagram spacing */}
-      <div
-        className="absolute bottom-28 right-2.5 z-30 flex flex-col items-center gap-5"
-        style={{ touchAction: "pan-y", color: "#fff", filter: "drop-shadow(0 2px 8px rgba(0,0,0,.5))" }}
-      >
+      {/* Browsing keeps the descriptive rail. During play it collapses to one
+          small button so it cannot reserve or intercept a strip of canvas. */}
+      {!playing && (
+        <div
+          className="absolute bottom-28 right-2.5 z-30 flex flex-col items-center gap-5"
+          style={{ touchAction: "pan-y", color: "#fff", filter: "drop-shadow(0 2px 8px rgba(0,0,0,.5))" }}
+        >
         <RailButton
           label={liked ? "Liked" : "Like"}
           onClick={like}
@@ -412,7 +439,98 @@ export function GameCard({ card, index }: Props) {
             </span>
           )}
         </button>
-      </div>
+        </div>
+      )}
+
+      {playing && !result && (
+        <>
+          {controlsOpen && (
+            <button
+              aria-label="Close game controls"
+              className="absolute inset-0 z-[31] cursor-default"
+              onClick={() => setControlsOpen(false)}
+            />
+          )}
+          <div
+            className="absolute right-3 z-40"
+            style={{ bottom: "calc(var(--safe-bottom) + 58px)" }}
+          >
+            <div
+              aria-hidden={!controlsOpen}
+              className={`absolute bottom-12 right-0 grid w-[228px] grid-cols-3 gap-x-2 gap-y-4 rounded-[22px] border border-white/10 px-3 py-4 text-white shadow-2xl backdrop-blur-xl transition duration-200 ${
+                controlsOpen
+                  ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                  : "pointer-events-none translate-y-2 scale-95 opacity-0"
+              }`}
+              style={{
+                background: "rgba(9,14,23,.9)",
+                transformOrigin: "bottom right",
+              }}
+            >
+              <RailButton
+                label={liked ? "Liked" : "Like"}
+                onClick={() => {
+                  like();
+                  setControlsOpen(false);
+                }}
+                tint={liked ? "var(--danger)" : undefined}
+              >
+                <HeartIcon size={25} filled={liked} />
+              </RailButton>
+              <RailButton label="Ranks" onClick={() => openFromControls("leaderboard")}>
+                <TrophyIcon size={23} />
+              </RailButton>
+              <RailButton label="Tune" onClick={() => openFromControls("algo")}>
+                <SlidersIcon size={23} />
+              </RailButton>
+              <RailButton label="Theme" onClick={() => openFromControls("theme")}>
+                <DropletIcon size={23} />
+              </RailButton>
+              <SoundRail />
+              <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
+                <SendIcon size={23} />
+              </RailButton>
+              <RailButton label="Games" onClick={() => openFromControls("games")}>
+                <GridIcon size={23} />
+              </RailButton>
+              <RailButton label="Search" onClick={() => openFromControls("search")}>
+                <SearchIcon size={23} />
+              </RailButton>
+              <RailButton label="Settings" onClick={() => openFromControls("settings")}>
+                <GearIcon size={23} />
+              </RailButton>
+              <button
+                onClick={() => openFromControls("account")}
+                aria-label={signedIn ? "Your account" : "Save your progress"}
+                className="pressable col-span-3 -mt-1 text-[10px] font-semibold"
+                style={{ color: "rgba(255,255,255,.76)" }}
+              >
+                @{playerHandle ?? localHandle}
+                {!signedIn && (
+                  <span className="ml-1 font-bold" style={{ color: "var(--accent)" }}>
+                    save
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <button
+              onClick={() => setControlsOpen((open) => !open)}
+              aria-label={controlsOpen ? "Close game controls" : "Open game controls"}
+              aria-expanded={controlsOpen}
+              className="pressable flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white shadow-lg backdrop-blur-md"
+              style={{
+                background: controlsOpen
+                  ? "rgba(12,18,28,.92)"
+                  : "rgba(12,18,28,.58)",
+                filter: "drop-shadow(0 2px 8px rgba(0,0,0,.45))",
+              }}
+            >
+              <MoreIcon size={23} />
+            </button>
+          </div>
+        </>
+      )}
 
       {/* the iOS-style game-over sheet — only during real play, never the demo */}
       {playing && result && (
@@ -527,4 +645,3 @@ function EqBars() {
     </span>
   );
 }
-
