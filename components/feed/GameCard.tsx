@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GameHost, type RunResult } from "@/components/feed/GameHost";
+import { DeathScreen } from "@/components/feed/DeathScreen";
 import { RailButton } from "@/components/feed/RailButton";
 import { SoundRail } from "@/components/feed/SoundRail";
 import { goToCard, useFinePointer } from "@/components/feed/nav";
@@ -44,15 +45,8 @@ export function GameCard({ card, index }: Props) {
   const [localHandle, setLocalHandle] = useState("guest");
   const [expanded, setExpanded] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
-  const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [copied, setCopied] = useState(false);
-
-  const askToSave = useAuthStore((s) => s.askToSave);
-  const dismissPrompt = useAuthStore((s) => s.dismissPrompt);
-  const savePrompt = useAuthStore((s) => s.prompt);
-  const signedIn = useAuthStore((s) => s.status === "signedIn");
-  const playerHandle = useAuthStore((s) => s.player?.handle);
-
+  const sectionRef = useRef<HTMLElement>(null);
 
   const musicOn = useMusicStore((s) => s.enabled);
   const musicUnlocked = useMusicStore((s) => s.unlocked);
@@ -60,11 +54,16 @@ export function GameCard({ card, index }: Props) {
   const track = useMusicStore((s) => s.track);
   const soundLive = musicOn && musicUnlocked && track?.slug === card.slug;
 
+  const askToSave = useAuthStore((s) => s.askToSave);
+  const dismissPrompt = useAuthStore((s) => s.dismissPrompt);
+  const savePrompt = useAuthStore((s) => s.prompt);
+  const signedIn = useAuthStore((s) => s.status === "signedIn");
+  const playerHandle = useAuthStore((s) => s.player?.handle);
+
   const playingUid = useUiStore((s) => s.playingUid);
   const enterPlay = useUiStore((s) => s.enterPlay);
   const exitPlay = useUiStore((s) => s.exitPlay);
   const playing = playingUid === card.uid;
-  const sectionRef = useRef<HTMLElement>(null);
   const swipeRef = useRef<Swipe | null>(null);
 
   // Scroll a card into view and you're playing immediately — no demo, no tap.
@@ -126,11 +125,11 @@ export function GameCard({ card, index }: Props) {
     }
   }, [mounted, card.slug]);
 
+  // the death screen owns the screen until the player acts, so leaving play —
+  // by button or by swiping out — always tears it down.
   useEffect(() => {
-    return () => {
-      if (resultTimer.current) clearTimeout(resultTimer.current);
-    };
-  }, []);
+    if (!playing) setResult(null);
+  }, [playing]);
 
   const handleRunEnd = (r: RunResult) => {
     setResult(r);
@@ -138,10 +137,27 @@ export function GameCard({ card, index }: Props) {
     // Guest play comes first: the only moment we ever mention an account is
     // one where the player has just earned something worth keeping.
     if (r.score > 0 && (r.isBest || r.topTen)) askToSave();
-    // A toast carrying a call to action has to outlast a glance.
-    const asking = useAuthStore.getState().prompt;
-    if (resultTimer.current) clearTimeout(resultTimer.current);
-    resultTimer.current = setTimeout(() => setResult(null), asking ? 6500 : 2800);
+    haptic(r.isBest ? "hit" : "fail");
+  };
+
+  // "Play again" restarts in place: every game treats a tap on a dead board as
+  // "go again", so we hand the frozen canvas exactly that.
+  const playAgain = () => {
+    setResult(null);
+    const canvas = sectionRef.current?.querySelector("canvas");
+    if (!canvas) return;
+    haptic("light");
+    try {
+      canvas.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    } catch {
+      canvas.dispatchEvent(new Event("pointerdown"));
+    }
+  };
+
+  const leaveToFeed = () => {
+    setResult(null);
+    exitPlay();
+    haptic("light");
   };
 
   // A like is a visible, editable reason in the algorithm's memory list.
@@ -398,43 +414,24 @@ export function GameCard({ card, index }: Props) {
         </button>
       </div>
 
-      {/* run result toast */}
-      {result && (
-        <div
-          className="anim-toast absolute inset-x-0 top-[18%] z-30 mx-auto w-fit px-5 py-3 text-center"
-          style={{
-            background: "rgba(12,18,28,.85)",
-            borderRadius: "var(--radius)",
-            fontFamily: "var(--font-body)",
-          }}
-        >
-          <div className="text-sm font-bold" style={{ color: "#fff" }}>
-            {result.topTen
-              ? `#${result.rank} on ${meta.title}!`
-              : `You beat ${result.percentile}% of players`}
-          </div>
-          {result.isBest && result.score > 0 && (
-            <div className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
-              new personal best · {result.score} {meta.scoreUnit}
-            </div>
-          )}
-          {savePrompt && (
-            <button
-              onClick={() => {
-                dismissPrompt();
-                openSheet("account");
-              }}
-              className="pressable mt-2 w-full px-3 py-1.5 text-xs font-extrabold"
-              style={{
-                background: "var(--accent)",
-                color: "var(--bg)",
-                borderRadius: "var(--radius)",
-              }}
-            >
-              Keep this score — sign in
-            </button>
-          )}
-        </div>
+      {/* the iOS-style game-over sheet — only during real play, never the demo */}
+      {playing && result && (
+        <DeathScreen
+          result={result}
+          meta={meta}
+          best={best}
+          onPlayAgain={playAgain}
+          onLeave={leaveToFeed}
+          onSignIn={
+            savePrompt
+              ? () => {
+                  dismissPrompt();
+                  setResult(null);
+                  openSheet("account");
+                }
+              : undefined
+          }
+        />
       )}
     </section>
   );

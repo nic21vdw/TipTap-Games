@@ -93,7 +93,7 @@ function mount(ctx: GameContext): GameInstance {
     } else {
       over = true;
       ctx.haptic("fail");
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "WRONG TILE");
     }
   };
   ctx.canvas.addEventListener("pointerdown", onDown);

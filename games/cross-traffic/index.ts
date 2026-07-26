@@ -140,7 +140,7 @@ function mount(ctx: GameContext): GameInstance {
           if (px + pR > cx && px - pR < cx + cur.carW && Math.abs(y - laneY(row)) < rowH) {
             over = true;
             ctx.haptic("fail");
-            ctx.onRunEnd(score);
+            ctx.onRunEnd(score, "SPLAT");
           }
         }
       }

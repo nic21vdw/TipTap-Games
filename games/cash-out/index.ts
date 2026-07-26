@@ -105,7 +105,7 @@ function mount(ctx: GameContext): GameInstance {
         if (chips <= 0) {
           chips = 0;
           phase = "out";
-          ctx.onRunEnd(0);
+          ctx.onRunEnd(0, "CHIPS GONE");
         } else {
           phase = "busted";
           phaseT = 1.1;

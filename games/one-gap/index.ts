@@ -119,13 +119,13 @@ function mount(ctx: GameContext): GameInstance {
         if (inX && !inGap) {
           over = true;
           ctx.haptic("fail");
-          ctx.onRunEnd(score);
+          ctx.onRunEnd(score, "DOWN");
         }
       }
       if (by + R > H - GROUND || by - R < 0) {
         over = true;
         ctx.haptic("fail");
-        ctx.onRunEnd(score);
+        ctx.onRunEnd(score, "DOWN");
       }
     }
 

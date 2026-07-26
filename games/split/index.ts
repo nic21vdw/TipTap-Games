@@ -67,7 +67,7 @@ function mount(ctx: GameContext): GameInstance {
     if (segs[0] === side) {
       over = true;
       ctx.haptic("fail");
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "BRANCHED");
       return;
     }
     score += 1;
@@ -105,7 +105,7 @@ function mount(ctx: GameContext): GameInstance {
       if (fuel <= 0) {
         over = true;
         ctx.haptic("fail");
-        ctx.onRunEnd(score);
+        ctx.onRunEnd(score, "TOO SLOW");
       }
     }
 

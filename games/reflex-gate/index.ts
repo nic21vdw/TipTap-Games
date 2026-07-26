@@ -70,7 +70,7 @@ function mount(ctx: GameContext): GameInstance {
     } else {
       over = true;
       ctx.haptic("fail");
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "MISSED");
     }
   };
   const onDown = () => tap();

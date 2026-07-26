@@ -101,7 +101,7 @@ function mount(ctx: GameContext): GameInstance {
         if (o.lane === lane && Math.abs(o.y - py) < size * 0.95) {
           over = true;
           ctx.haptic("fail");
-          ctx.onRunEnd(score);
+          ctx.onRunEnd(score, "CRASHED");
         }
       }
     }
