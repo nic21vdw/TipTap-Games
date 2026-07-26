@@ -11,7 +11,7 @@
  * Two rules drive the design:
  *
  *  1. Every game has its own song. The track is derived deterministically
- *     from the slug, so Nokia Mode always sounds like Nokia Mode, and it is
+ *     from the slug, so Snake Feed always sounds like Snake Feed, and it is
  *     styled by the game's own algorithm axes (intensity / nostalgia / luck).
  *  2. A song never starts at the start. Scrolling into a card lands you on
  *     the drop: crash, kick, full bassline, bar one. Nobody doom scrolls

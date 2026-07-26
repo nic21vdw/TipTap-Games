@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade, roundRect } from "@/games/engine";
+import { drawCan, drawFoot, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "cross-traffic",
-  title: "Cross Traffic",
-  rule: "Tap to hop forward. Time the gaps.",
+  title: "Cable Run",
+  rule: "Tap to step forward. Time the gaps.",
   year: 2014,
-  description: "Hop. Wait. Hop. Don't get flattened.",
+  description: "Step. Wait. Step. Barefoot, in the dark.",
   history:
-    "Homage to 2014's hop-across-traffic arcade — the one that made 'why did the chicken cross the road' a genre.",
+    "Homage to 2014's hop-across-traffic arcade — the one that made 'why did the chicken cross the road' a genre. This crossing is eleven feet of basement floor.",
   tags: ["precision", "oneTap", "endurance"],
   palette: {
-    hero: "#ffd166",
-    foe: "#ef476f",
-    prize: "#06d6a0",
-    deep: "#073b4c",
-    glow: "#118ab2",
+    hero: "#e8b48c",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.6,
   luck: 0.2,
@@ -151,18 +152,19 @@ function mount(ctx: GameContext): GameInstance {
     ground.addColorStop(1, shade(pal.deep, -0.55));
     g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
+    const sk = skins(pal);
     const lo = Math.max(0, Math.floor(cam) - 4);
     const hi = Math.min(lanes.length - 1, Math.floor(cam) + 10);
     for (let i = lo; i <= hi; i++) {
       const y = laneY(i);
       const top = y - rowH / 2;
       if (lanes[i].kind === "road") {
-        // asphalt with a dashed centre line
-        g.fillStyle = "#2f3640";
+        // bare floor with the cable run taped down the middle
+        g.fillStyle = shade(pal.deep, 0.16);
         g.fillRect(0, top, W, rowH);
-        g.fillStyle = "rgba(255,255,255,.5)";
+        g.fillStyle = shade(pal.glow, -0.55);
         for (let x = 6; x < W; x += 34) g.fillRect(x, y - 1.5, 17, 3);
-        // cars: body, roof, headlights facing the way they travel
+        // rolling cans, lying on their sides, lids facing the way they travel
         for (const cx of lanes[i].cars) {
           const cw = lanes[i].carW;
           const ch = rowH * 0.56;
@@ -170,20 +172,16 @@ function mount(ctx: GameContext): GameInstance {
           g.fillStyle = "rgba(0,0,0,.28)";
           roundRect(g, cx + 3, cy + 4, cw, ch, 7);
           g.fill();
-          g.fillStyle = pal.glow;
-          roundRect(g, cx, cy, cw, ch, 7);
-          g.fill();
-          g.fillStyle = "rgba(255,255,255,.35)";
-          roundRect(g, cx + cw * 0.26, cy + ch * 0.16, cw * 0.44, ch * 0.42, 4);
-          g.fill();
-          g.fillStyle = pal.prize;
-          const lx = lanes[i].dir === 1 ? cx + cw - 6 : cx + 2;
-          g.fillRect(lx, cy + 3, 4, 5);
-          g.fillRect(lx, cy + ch - 8, 4, 5);
+          const kind = Math.floor(cx / 40) % 2 === 0 ? "cola" : "energy";
+          g.save();
+          g.translate(cx + cw / 2, y);
+          g.rotate((lanes[i].dir === 1 ? 1 : -1) * (Math.PI / 2));
+          drawCan(g, 0, 0, ch, cw, sk[kind], kind);
+          g.restore();
         }
       } else {
-        // grass verge with a mown stripe
-        g.fillStyle = "#3f7d3a";
+        // the rug: safe, and the only soft thing down here
+        g.fillStyle = shade(pal.deep, 0.34);
         g.fillRect(0, top, W, rowH);
         g.fillStyle = "rgba(255,255,255,.06)";
         g.fillRect(0, top, W, rowH * 0.5);
@@ -192,36 +190,25 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    // player: a chick with a beak, squashed slightly as it lands
+    // player: one bare foot, seen from above, pointing up the floor
     const pyNow = laneY(row);
     g.fillStyle = "rgba(0,0,0,.3)";
     g.beginPath();
     g.ellipse(px, pyNow + pR * 0.9, pR * 0.9, pR * 0.35, 0, 0, Math.PI * 2);
     g.fill();
-    g.beginPath();
-    g.arc(px, pyNow, pR, 0, Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.fill();
-    g.strokeStyle = "rgba(0,0,0,.3)";
-    g.lineWidth = 2;
-    g.stroke();
-    g.fillStyle = "#f4802f";
-    g.beginPath();
-    g.moveTo(px - 3, pyNow + 2);
-    g.lineTo(px + 3, pyNow + 2);
-    g.lineTo(px, pyNow + 8);
-    g.closePath();
-    g.fill();
-    for (const sgn of [-1, 1]) {
-      g.beginPath();
-      g.arc(px + sgn * pR * 0.35, pyNow - pR * 0.25, 2.6, 0, Math.PI * 2);
-      g.fillStyle = "#12161c";
-      g.fill();
-    }
+    drawFoot(
+      g,
+      px,
+      pyNow,
+      pR * 2.5,
+      -Math.PI / 2,
+      over ? pal.foe : pal.hero,
+      shade(pal.hero, 0.4)
+    );
 
     g.textAlign = "center";
     if (over) {
-      endCard(g, t, W, H, "SPLAT");
+      endCard(g, t, W, H, "FLATTENED");
     }
     g.textAlign = "left";
   });

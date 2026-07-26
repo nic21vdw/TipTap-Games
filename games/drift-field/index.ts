@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawCan, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "drift-field",
-  title: "Drift Field",
+  title: "Zero-G Basement",
   rule: "Aim with your thumb, hold to thrust",
   year: 1979,
-  description: "Rotate 360°, thrust, and blast the rocks apart.",
+  description: "Rotate 360°, thrust, and break the crumbs apart.",
   history:
-    "Homage to the 1979 vector-graphics cabinet that defined space shooters — inertia, wrap-around edges, and rocks that split into more rocks.",
+    "Homage to the 1979 vector-graphics cabinet that defined space shooters — inertia, wrap-around edges, and rocks that split into more rocks. Ours are granola, and gravity left hours ago.",
   tags: ["retro", "reflex", "drag", "endurance"],
   palette: {
-    hero: "#4cc9f0",
-    foe: "#f72585",
-    prize: "#ffd60a",
-    deep: "#03045e",
-    glow: "#7209b7",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#12161f",
+    glow: "#b07a3c",
   },
   intensity: 0.7,
   speed: 0.6,
@@ -280,8 +281,9 @@ function mount(ctx: GameContext): GameInstance {
     ground.addColorStop(1, shade(pal.deep, -0.55));
     g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
+    const sk = skins(pal);
 
-    // starfield: deterministic dots so it doesn't shimmer
+    // dust hanging in the monitor light: deterministic, so it doesn't shimmer
     g.fillStyle = t.inkDim;
     g.globalAlpha = 0.35;
     for (let i = 0; i < 40; i++) {
@@ -291,8 +293,8 @@ function mount(ctx: GameContext): GameInstance {
     }
     g.globalAlpha = 1;
 
-    // rocks — vector outlines, like the cabinet
-    g.strokeStyle = t.ink;
+    // floating granola chunks — vector outlines, like the cabinet
+    g.strokeStyle = pal.glow;
     g.lineWidth = 2;
     for (const r of rocks) {
       g.beginPath();
@@ -305,11 +307,13 @@ function mount(ctx: GameContext): GameInstance {
         else g.lineTo(px, py);
       }
       g.closePath();
+      g.fillStyle = pal.glow + "33";
+      g.fill();
       g.stroke();
     }
 
     // shots
-    g.fillStyle = pal.hero;
+    g.fillStyle = pal.prize;
     for (const s of shots) {
       g.beginPath();
       g.arc(s.x, s.y, 3, 0, Math.PI * 2);
@@ -329,33 +333,15 @@ function mount(ctx: GameContext): GameInstance {
         g.lineTo(-10, 5);
         g.stroke();
       }
-      g.strokeStyle = pal.hero;
-      g.lineWidth = 2.4;
-      g.beginPath();
-      g.moveTo(17, 0);
-      g.lineTo(-11, -11);
-      g.lineTo(-6, 0);
-      g.lineTo(-11, 11);
-      g.closePath();
-      g.stroke();
+      // the ship is a can, nose-first, still fizzing out the back
+      g.rotate(Math.PI / 2);
+      drawCan(g, 0, 0, 20, 34, sk.energy, "energy");
       g.restore();
     }
 
-    // lives
+    // lives, as cans still left in the fridge
     for (let i = 0; i < lives; i++) {
-      g.save();
-      g.translate(20 + i * 20, H * 0.08);
-      g.rotate(-Math.PI / 2);
-      g.strokeStyle = pal.hero;
-      g.lineWidth = 1.6;
-      g.beginPath();
-      g.moveTo(8, 0);
-      g.lineTo(-5, -5);
-      g.lineTo(-3, 0);
-      g.lineTo(-5, 5);
-      g.closePath();
-      g.stroke();
-      g.restore();
+      drawCan(g, 20 + i * 20, H * 0.08, 11, 19, sk.energy, "energy");
     }
 
     g.textAlign = "center";
@@ -365,7 +351,7 @@ function mount(ctx: GameContext): GameInstance {
       g.fillText("hold anywhere to aim + thrust · guns auto-fire", W / 2, H * 0.93);
 
     if (over) {
-      endCard(g, t, W, H, "LOST IN SPACE");
+      endCard(g, t, W, H, "LOST IN THE BASEMENT");
     }
     g.textAlign = "left";
   });

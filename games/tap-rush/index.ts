@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawCan, drawCanTop, drawRoom, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "tap-rush",
-  title: "Tap Rush",
-  rule: "Hit the targets before they vanish",
+  title: "Can Rush",
+  rule: "Grab the cans before they go warm",
   year: 2026,
-  description: "Whack-a-target at feed speed. Three misses and out.",
+  description: "The fridge run at feed speed. Three misses and out.",
   history:
-    "An original descended from every light-gun cabinet and whack-a-mole machine ever built, rebuilt for one thumb.",
+    "An original descended from every light-gun cabinet and whack-a-mole machine ever built, rebuilt for one thumb and one very full fridge.",
   tags: ["reflex", "chaos", "oneTap"],
   palette: {
-    hero: "#ff8fa3",
-    foe: "#c1121f",
-    prize: "#ffd60a",
-    deep: "#3a0ca3",
-    glow: "#f72585",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#f0b429",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.9,
   luck: 0.15,
@@ -117,18 +118,17 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
+    const sk = skins(pal);
 
     for (const tg of targets) {
       const p = tg.life / tg.maxLife;
-      g.beginPath();
-      g.arc(tg.x, tg.y, R * (0.45 + 0.55 * p), 0, Math.PI * 2);
-      g.fillStyle = p < 0.35 ? pal.foe : pal.hero;
-      g.fill();
+      const rr = R * (0.45 + 0.55 * p);
+      // which drink this one is, decided by where it spawned — purely cosmetic
+      const kind = Math.floor(tg.x) % 2 === 0 ? "cola" : "energy";
+      const skin = p < 0.35 ? { ...sk[kind], body: pal.foe } : sk[kind];
+      drawCan(g, tg.x, tg.y, rr * 1.5, rr * 2.3, skin, kind);
+      // the cold-timer ring: full circle when fresh, gone when it goes warm
       g.beginPath();
       g.arc(tg.x, tg.y, R + 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p);
       g.strokeStyle = t.ink;
@@ -136,15 +136,20 @@ function mount(ctx: GameContext): GameInstance {
       g.stroke();
     }
 
-    // miss pips
+    // miss pips, as cans you let go warm
     for (let i = 0; i < 3; i++) {
-      g.beginPath();
-      g.arc(W / 2 - 28 + i * 28, H * 0.09, 7, 0, Math.PI * 2);
-      g.fillStyle = i < misses ? pal.foe : t.surface;
-      g.fill();
+      const x = W / 2 - 28 + i * 28;
+      if (i < misses) {
+        drawCanTop(g, x, H * 0.09, 8, { ...sk.cola, body: pal.foe });
+      } else {
+        g.beginPath();
+        g.arc(x, H * 0.09, 7, 0, Math.PI * 2);
+        g.fillStyle = t.surface;
+        g.fill();
+      }
     }
 
-    if (over) endCard(g, t, W, H, "OUT OF MISSES");
+    if (over) endCard(g, t, W, H, "ALL WARM");
     g.textAlign = "left";
   });
   loop.start();

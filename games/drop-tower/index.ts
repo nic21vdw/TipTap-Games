@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawCanTop, drawRoom, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "drop-tower",
-  title: "Drop Tower",
-  rule: "Tap to drop the block on the stack",
+  title: "Can Stack",
+  rule: "Tap to land the row on the stack",
   year: 2016,
-  description: "Stack it clean or lose the edge.",
+  description: "Stack it clean or lose the edge of the desk.",
   history:
-    "Homage to 2016's hypnotic block-stacker — towers of near-misses, shaved thinner with every sloppy drop.",
+    "Homage to 2016's hypnotic block-stacker — towers of near-misses, shaved thinner with every sloppy drop. This one is built out of the recycling.",
   tags: ["precision", "oneTap", "calm"],
   palette: {
-    hero: "#4361ee",
-    foe: "#f72585",
-    prize: "#4cc9f0",
-    deep: "#1b263b",
-    glow: "#4cc9f0",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.35,
   luck: 0.05,
@@ -91,26 +92,47 @@ function mount(ctx: GameContext): GameInstance {
       flash = Math.max(0, flash - dt);
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
+    const sk = skins(pal);
+
+    /** A row of cans filling the rect a plain block used to occupy. */
+    const drawRow = (x: number, y: number, w: number, lit: boolean, row: number) => {
+      const kind = row % 2 === 0 ? "cola" : "energy";
+      const skin = lit ? { ...sk[kind], body: shade(sk[kind].body, 0.4) } : sk[kind];
+      g.fillStyle = shade(skin.rim, -0.4);
+      g.fillRect(x, y, w, blockH - 2);
+      const r = (blockH - 6) / 2;
+      const step = r * 2 + 2;
+      const n = Math.max(1, Math.floor(w / step));
+      const pad = (w - n * step) / 2;
+      for (let i = 0; i < n; i++) {
+        drawCanTop(g, x + pad + step * i + step / 2, y + (blockH - 2) / 2, r, skin);
+      }
+    };
 
     const baseY = H * 0.78;
     // stacked layers (draw the visible recent ones)
     const visible = Math.min(layers, Math.floor((baseY - H * 0.3) / blockH));
     for (let i = 0; i < visible; i++) {
-      g.fillStyle = i === visible - 1 && flash > 0 ? pal.hero : t.surface;
-      g.fillRect(towerX, baseY - (i + 1) * blockH, towerW, blockH - 2);
+      drawRow(
+        towerX,
+        baseY - (i + 1) * blockH,
+        towerW,
+        i === visible - 1 && flash > 0,
+        layers - visible + i
+      );
     }
-    // ground
+    // the desk
     g.fillStyle = t.inkDim;
     g.fillRect(0, baseY, W, 3);
-    // moving block
+    // the row still swinging
     const movY = baseY - (visible + 1) * blockH;
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.fillRect(curX, movY, towerW, blockH - 2);
+    if (over) {
+      g.fillStyle = pal.foe;
+      g.fillRect(curX, movY, towerW, blockH - 2);
+    } else {
+      drawRow(curX, movY, towerW, false, layers);
+    }
 
     g.textAlign = "center";
     if (flash > 0) {
@@ -119,7 +141,7 @@ function mount(ctx: GameContext): GameInstance {
       g.fillText("CLEAN", W / 2, movY - 18);
     }
     if (over) {
-      endCard(g, t, W, H, "OFF THE EDGE");
+      endCard(g, t, W, H, "OFF THE DESK");
     }
     g.textAlign = "left";
   });

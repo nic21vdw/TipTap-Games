@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawCan, drawRoom, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "flash-recall",
-  title: "Flash Recall",
-  rule: "Repeat the sequence",
+  title: "Fridge Order",
+  rule: "Repeat the order they lit up",
   year: 1978,
-  description: "The glowing memory grid, reborn at 9 tiles.",
+  description: "The glowing memory grid, rebuilt as a fridge shelf.",
   history:
-    "Homage to the 1978 electronic memory toys that started the pattern-repeat genre — four glowing buttons on every family's shelf, now nine on your feed.",
+    "Homage to the 1978 electronic memory toys that started the pattern-repeat genre — four glowing buttons on every family's shelf, now nine cans on one basement shelf.",
   tags: ["memory", "calm"],
   palette: {
-    hero: "#4cc9f0",
-    foe: "#ef476f",
-    prize: "#f9c74f",
-    deep: "#1d3557",
-    glow: "#a8dadc",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#12161f",
+    glow: "#c9d3dc",
   },
   intensity: 0.2,
   luck: 0.05,
@@ -138,11 +139,14 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
+    const sk = skins(pal);
+
+    // the shelf the cans stand on
+    g.fillStyle = shade(pal.deep, 0.18);
+    for (let r = 0; r <= N; r++) {
+      g.fillRect(gx - 10, gy + r * cell - 3, cell * N + 20, 4);
+    }
 
     for (let i = 0; i < N * N; i++) {
       const c = i % N;
@@ -150,22 +154,35 @@ function mount(ctx: GameContext): GameInstance {
       const lit =
         (phase === "show" && litTile === i) ||
         (tapFlashT > 0 && tapFlash === i);
-      g.fillStyle = lit ? pal.hero : t.surface;
       const pad = 6;
+      const x = gx + c * cell + cell / 2;
+      const y = gy + r * cell + cell / 2;
+      // slot recess, so an unlit shelf still reads as a grid
+      g.fillStyle = t.surface;
       g.fillRect(gx + c * cell + pad, gy + r * cell + pad, cell - pad * 2, cell - pad * 2);
+      // the can. Alternating drinks give the shelf a pattern to remember by.
+      const kind = (c + r) % 2 === 0 ? "cola" : "energy";
+      const skin = lit
+        ? { ...sk[kind], body: shade(sk[kind].body, 0.5), band: pal.prize }
+        : sk[kind];
+      if (lit) {
+        g.fillStyle = pal.hero + "55";
+        g.fillRect(gx + c * cell + pad, gy + r * cell + pad, cell - pad * 2, cell - pad * 2);
+      }
+      drawCan(g, x, y, cell * 0.42, cell * 0.66, skin, kind);
     }
 
     g.textAlign = "center";
     g.fillStyle = t.inkDim;
     g.font = `500 15px ${t.fontBody}`;
     g.fillText(
-      phase === "input" ? "your turn" : phase === "show" ? "watch..." : "get ready",
+      phase === "input" ? "your turn" : phase === "show" ? "watch the shelf..." : "get ready",
       W / 2,
       gy + N * cell + 40
     );
 
     if (over) {
-      endCard(g, t, W, H, "WRONG TILE");
+      endCard(g, t, W, H, "WRONG CAN");
     }
     g.textAlign = "left";
   });

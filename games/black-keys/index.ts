@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawCan, drawRoom, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "black-keys",
-  title: "Black Keys",
-  rule: "Tap only the dark tiles",
+  title: "Zero Sugar",
+  rule: "Tap only the black cans",
   year: 2014,
-  description: "Only the dark tiles. Ever.",
+  description: "Only the black cans. Ever.",
   history:
-    "Homage to 2014's tile-tapper that turned pianos into reflex tests and bus rides into speedruns.",
+    "Homage to 2014's tile-tapper that turned pianos into reflex tests and bus rides into speedruns. Same four lanes, one correct drink.",
   tags: ["reflex", "oneTap", "precision"],
   palette: {
-    hero: "#560bad",
-    foe: "#f72585",
-    prize: "#4cc9f0",
-    deep: "#10002b",
-    glow: "#b5179e",
+    hero: "#e8a33d",
+    foe: "#d81f2a",
+    prize: "#1f6fd0",
+    deep: "#12141b",
+    glow: "#c9d3dc",
   },
   intensity: 0.8,
   luck: 0.05,
@@ -73,7 +74,7 @@ function mount(ctx: GameContext): GameInstance {
       speed = Math.min(H * 1.1, speed + H * 0.008);
     } else {
       over = true;
-      overReason = "WRONG TILE";
+      overReason = "THAT ONE HAS SUGAR";
       ctx.haptic("fail");
       ctx.onRunEnd(score);
     }
@@ -105,7 +106,7 @@ function mount(ctx: GameContext): GameInstance {
         if (row.y > H) {
           if (!row.hit) {
             over = true;
-            overReason = "MISSED ONE";
+            overReason = "LET ONE GO WARM";
             ctx.haptic("fail");
             ctx.onRunEnd(score);
             break;
@@ -118,19 +119,23 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
+    const sk = skins(pal);
+    // the black can is the one worth tapping; grabbing it turns it gold
+    const black = { body: shade(pal.deep, 0.25), band: t.ink, rim: shade(pal.deep, 0.5) };
+    const taken = { body: pal.hero, band: shade(pal.hero, -0.35), rim: shade(pal.hero, -0.2) };
+
     for (const row of rows) {
       for (let l = 0; l < LANES; l++) {
-        if (l === row.dark && !row.hit) {
-          g.fillStyle = t.ink;
+        const cx = l * laneW + laneW / 2;
+        const cy = row.y + rowH / 2;
+        if (l === row.dark) {
+          g.fillStyle = row.hit ? pal.hero + "33" : t.ink;
           g.fillRect(l * laneW + 1, row.y + 1, laneW - 2, rowH - 2);
-        } else if (l === row.dark && row.hit) {
-          g.fillStyle = pal.hero;
-          g.fillRect(l * laneW + 1, row.y + 1, laneW - 2, rowH - 2);
+          drawCan(g, cx, cy, laneW * 0.5, rowH * 0.62, row.hit ? taken : black, "cola");
+        } else {
+          // the sugar ones. There to be left alone.
+          drawCan(g, cx, cy, laneW * 0.34, rowH * 0.4, sk.cola, "cola");
         }
       }
       g.strokeStyle = t.surface;

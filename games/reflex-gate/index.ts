@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, clamp, shade } from "@/games/engine";
+import { drawCan, drawRoom, drawBubbles, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "reflex-gate",
-  title: "Reflex Gate",
-  rule: "Tap when the bar hits green",
+  title: "Perfect Pour",
+  rule: "Tap when the pour hits the line",
   year: 2026,
-  description: "Pure timing. The green zone shrinks every single hit.",
+  description: "Pure timing. The fill line shrinks every single hit.",
   history:
-    "An original for the feed — the timing-bar tension of arcade bonus rounds, distilled to one tap and an ever-crueller window.",
+    "An original for the feed — the timing-bar tension of arcade bonus rounds, distilled to one tap, one glass, and an ever-crueller window.",
   tags: ["reflex", "precision", "oneTap"],
   palette: {
-    hero: "#00b4d8",
-    foe: "#ef476f",
-    prize: "#06d6a0",
-    deep: "#023e8a",
-    glow: "#90e0ef",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#f0b429",
+    deep: "#141821",
+    glow: "#c9d3dc",
   },
   intensity: 0.55,
   luck: 0.1,
@@ -91,21 +92,22 @@ function mount(ctx: GameContext): GameInstance {
       flash = Math.max(0, flash - dt);
     }
     const t = ctx.getTheme();
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
 
     const trackY = H * 0.5;
     const trackX = W * 0.12;
     const trackW = W * 0.76;
     const barH = 18;
+    const sk = skins(pal);
 
-    // track
+    // the glass: same rect the track always occupied, given walls and a base
     g.fillStyle = t.surface;
     g.fillRect(trackX, trackY - barH / 2, trackW, barH);
-    // green zone
+    g.strokeStyle = shade(pal.glow, -0.35);
+    g.lineWidth = 2;
+    g.strokeRect(trackX, trackY - barH / 2, trackW, barH);
+
+    // the fill line you are pouring to, with foam sitting on top of it
     g.fillStyle = flash > 0 ? pal.hero : pal.prize;
     g.fillRect(
       trackX + (zoneC - zoneW / 2) * trackW,
@@ -113,18 +115,32 @@ function mount(ctx: GameContext): GameInstance {
       zoneW * trackW,
       barH + 12
     );
-    // marker
-    g.fillStyle = over ? pal.foe : t.ink;
-    g.fillRect(trackX + pos * trackW - 4, trackY - barH / 2 - 18, 8, barH + 36);
+    drawBubbles(
+      g,
+      trackX + zoneC * trackW,
+      trackY,
+      (zoneW * trackW) / 2,
+      6,
+      shade(pal.prize, 0.5),
+      score
+    );
 
-    // streak dots
+    // the pour: a tilted can with a stream falling into the glass
+    const px = trackX + pos * trackW;
+    g.fillStyle = over ? pal.foe : shade(pal.foe, -0.15);
+    g.fillRect(px - 3, trackY - barH / 2 - 18, 6, barH + 24);
+    drawCan(g, px, trackY - barH / 2 - 44, 26, 46, sk.cola, "cola");
+    if (flash > 0) {
+      drawBubbles(g, px, trackY + barH, 22, 8, shade(pal.glow, 0.4), score);
+    }
+
     g.fillStyle = t.inkDim;
     g.font = `600 16px ${t.fontBody}`;
     g.textAlign = "center";
-    g.fillText(`speed x${(speed / 0.6).toFixed(1)}`, W / 2, trackY + 64);
+    g.fillText(`fizz x${(speed / 0.6).toFixed(1)}`, W / 2, trackY + 64);
 
     if (over) {
-      endCard(g, t, W, H, "MISSED");
+      endCard(g, t, W, H, "OVERFLOWED");
     }
   });
   loop.start();

@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, pick, shade } from "@/games/engine";
+import { endCard, makeLoop, pick } from "@/games/engine";
+import { drawCanTop, drawRoom, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "word-trap",
-  title: "Word Trap",
-  rule: "Tap only if the colour matches the word",
+  title: "Label Trap",
+  rule: "Tap only if the label matches the colour",
   year: 1935,
-  description: "The Stroop test, weaponized for your feed.",
+  description: "The Stroop test, run on the contents of one fridge.",
   history:
-    "John Ridley Stroop published the colour-word interference effect in 1935. Ninety years later it still short-circuits brains — now with a countdown.",
+    "John Ridley Stroop published the colour-word interference effect in 1935. Ninety years later it still short-circuits brains — now it is doing it with a label and a countdown.",
   tags: ["precision", "calm"],
   palette: {
-    hero: "#7209b7",
-    foe: "#f72585",
-    prize: "#4cc9f0",
-    deep: "#3a0ca3",
-    glow: "#b5179e",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#ded3b6",
   },
   intensity: 0.35,
   luck: 0.1,
@@ -25,8 +26,9 @@ const meta = {
   maxScorePerSecond: 2,
 } satisfies GameModule["meta"];
 
-// Colour names map onto theme token roles so every theme recolours the game.
-const ROLES = ["GOLD", "BLUE", "GREEN", "RED"] as const;
+// Label names map onto palette roles, so a theme switch recolours the trap
+// without changing which label is the honest one.
+const ROLES = ["COLA", "ENERGY", "BUTTER", "OATS"] as const;
 type Role = (typeof ROLES)[number];
 
 function mount(ctx: GameContext): GameInstance {
@@ -34,21 +36,21 @@ function mount(ctx: GameContext): GameInstance {
   let score = 0;
   let lives = 3;
   let over = false;
-  let word: Role = "GOLD";
-  let colour: Role = "GOLD";
+  let word: Role = "COLA";
+  let colour: Role = "COLA";
   let timer = 2.2;
   let window_ = 2.2;
 
   const roleColour = (role: Role): string => {
     const t = ctx.getTheme();
     switch (role) {
-      case "GOLD":
+      case "ENERGY":
         return pal.hero;
-      case "BLUE":
+      case "OATS":
         return pal.glow;
-      case "GREEN":
+      case "BUTTER":
         return pal.prize;
-      case "RED":
+      case "COLA":
         return pal.foe;
     }
   };
@@ -119,16 +121,12 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
     g.textAlign = "center";
 
-    // the word, rendered in the (possibly trap) colour
+    // the label, printed in the (possibly lying) colour of the contents
     g.fillStyle = roleColour(colour);
-    g.font = `800 64px ${t.fontDisplay}`;
+    g.font = `800 56px ${t.fontDisplay}`;
     g.fillText(word, W / 2, H * 0.45);
 
     // countdown bar
@@ -138,16 +136,22 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = timer / window_ < 0.3 ? pal.foe : t.ink;
     g.fillRect(W / 2 - bw / 2, H * 0.55, bw * Math.max(0, timer / window_), 10);
 
-    // lives
+    // lives, as cans still left in the fridge
+    const sk = skins(pal);
     for (let i = 0; i < 3; i++) {
-      g.beginPath();
-      g.arc(W / 2 - 28 + i * 28, H * 0.09, 7, 0, Math.PI * 2);
-      g.fillStyle = i < lives ? pal.prize : t.surface;
-      g.fill();
+      const x = W / 2 - 28 + i * 28;
+      if (i < lives) {
+        drawCanTop(g, x, H * 0.09, 8, sk.cola);
+      } else {
+        g.beginPath();
+        g.arc(x, H * 0.09, 7, 0, Math.PI * 2);
+        g.fillStyle = t.surface;
+        g.fill();
+      }
     }
 
     if (over) {
-      endCard(g, t, W, H, "TRAPPED");
+      endCard(g, t, W, H, "MISLABELLED");
     }
     g.textAlign = "left";
   });

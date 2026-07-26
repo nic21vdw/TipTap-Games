@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawCan, drawFoot, drawRoom, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "one-lane",
-  title: "One Lane",
-  rule: "Tap to flip lanes",
+  title: "Basement Run",
+  rule: "Tap to switch sides",
   year: 2012,
-  description: "The endless-runner era, compressed into one tap.",
+  description: "The endless-runner era, compressed into one basement.",
   history:
-    "Homage to 2012's lane-runner boom — swipe-to-dodge commutes on a billion phones. Ours strips it to a single input and no mercy.",
+    "Homage to 2012's lane-runner boom — swipe-to-dodge commutes on a billion phones. Ours strips it to a single input, bare feet, and no mercy.",
   tags: ["endurance", "oneTap", "retro"],
   palette: {
-    hero: "#f4a261",
-    foe: "#e76f51",
-    prize: "#e9c46a",
-    deep: "#264653",
-    glow: "#2a9d8f",
+    hero: "#e8b48c",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#1f6fd0",
   },
   intensity: 0.65,
   luck: 0.1,
@@ -106,37 +107,45 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
+    const sk = skins(pal);
 
-    // dashed centre line, scrolling
+    // floorboards running under you, scrolling
     g.fillStyle = t.surface;
+    for (let y = -48 + scroll; y < H; y += 48) {
+      g.fillRect(W * 0.14, y, W * 0.72, 3);
+    }
+    // the cable run taped down the middle of the floor
+    g.fillStyle = shade(pal.glow, -0.2);
     for (let y = -48 + scroll; y < H; y += 48) {
       g.fillRect(W / 2 - 3, y, 6, 26);
     }
-    // lane edges
+    // skirting boards
+    g.fillStyle = t.surface;
     g.fillRect(W * 0.14, 0, 4, H);
     g.fillRect(W * 0.86 - 4, 0, 4, H);
 
+    // the empties you left on the floor at 3am
     for (const o of obs) {
-      g.fillStyle = pal.foe;
-      g.fillRect(laneX[o.lane] - size / 2, o.y - size / 2, size, size);
+      const kind = o.lane === 0 ? "cola" : "energy";
+      drawCan(g, laneX[o.lane], o.y, size * 0.72, size * 1.1, sk[kind], kind);
     }
 
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
+    // you, barefoot, mid-stride
     const x = laneX[lane];
-    g.moveTo(x, py - size * 0.7);
-    g.lineTo(x + size * 0.55, py + size * 0.55);
-    g.lineTo(x - size * 0.55, py + size * 0.55);
-    g.closePath();
-    g.fill();
+    const stride = Math.sin(scroll * 0.22) * size * 0.12;
+    drawFoot(
+      g,
+      x,
+      py + stride,
+      size * 1.15,
+      -Math.PI / 2,
+      over ? pal.foe : pal.hero,
+      shade(pal.hero, 0.35)
+    );
 
     if (over) {
-      endCard(g, t, W, H, "CRASHED");
+      endCard(g, t, W, H, "STUBBED IT");
     }
   });
   loop.start();

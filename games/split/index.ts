@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawCanTop, drawJar, drawRoom, drawShades, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "split",
-  title: "Split",
-  rule: "Chop left or right, dodge the branches",
+  title: "Stack Raid",
+  rule: "Grab from the side with no jar",
   year: 2014,
-  description: "Chop fast. Watch the branches. Feed the timer.",
+  description: "Grab fast. Watch the jars. Feed the timer.",
   history:
-    "Homage to the 2014 side-switching lumberjack sprint — the purest speed test the app stores ever produced.",
+    "Homage to the 2014 side-switching lumberjack sprint — the purest speed test the app stores ever produced. Same sprint, aimed at a shelf that was stacked far too high.",
   tags: ["reflex", "oneTap", "chaos"],
   palette: {
-    hero: "#a68a64",
-    foe: "#bc4749",
-    prize: "#f2e8cf",
-    deep: "#386641",
-    glow: "#6a994e",
+    hero: "#e8b48c",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.85,
   luck: 0.05,
@@ -109,34 +110,49 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
+    const sk = skins(pal);
 
     const baseY = H * 0.82;
-    // trunk + branches
+    // the stack, and the jars jutting out of it that will land on your head
     for (let i = 0; i < segs.length; i++) {
       const y = baseY - (i + 1) * segH;
       g.fillStyle = t.surface;
       g.fillRect(W / 2 - trunkW / 2, y, trunkW, segH - 3);
+      const kind = i % 2 === 0 ? "cola" : "energy";
+      const r = Math.min(trunkW * 0.2, (segH - 3) * 0.34);
+      for (const s2 of [-1, 1]) {
+        drawCanTop(g, W / 2 + s2 * trunkW * 0.24, y + (segH - 3) / 2, r, sk[kind]);
+      }
       if (segs[i] !== 0) {
-        g.fillStyle = pal.glow;
         const bw = W * 0.24;
         const bx = segs[i] === -1 ? W / 2 - trunkW / 2 - bw : W / 2 + trunkW / 2;
+        g.fillStyle = shade(pal.prize, -0.45);
         g.fillRect(bx, y + segH * 0.22, bw, segH * 0.34);
+        drawJar(
+          g,
+          bx + (segs[i] === -1 ? bw * 0.28 : bw * 0.72),
+          y + segH * 0.39,
+          bw * 0.42,
+          segH * 0.56,
+          pal.prize,
+          shade(pal.prize, -0.5),
+          shade(pal.prize, 0.4)
+        );
       }
     }
-    // player
+
+    // you, sunglasses on, indoors, at 3am
     const px = side === -1 ? W / 2 - trunkW / 2 - W * 0.14 : W / 2 + trunkW / 2 + W * 0.14;
+    const hy = baseY - segH * 0.45;
     g.fillStyle = over ? pal.foe : pal.hero;
     g.beginPath();
-    g.arc(px, baseY - segH * 0.45, 17, 0, Math.PI * 2);
+    g.arc(px, hy, 17, 0, Math.PI * 2);
     g.fill();
-    g.fillRect(px - 9, baseY - segH * 0.45 + 12, 18, 26);
+    g.fillRect(px - 9, hy + 12, 18, 26);
+    drawShades(g, px, hy - 2, 26, shade(pal.deep, 0.25), t.ink);
 
-    // fuel bar
+    // stamina
     const fw = W * 0.5;
     g.fillStyle = t.surface;
     g.fillRect(W / 2 - fw / 2, H * 0.9, fw, 10);
@@ -145,7 +161,7 @@ function mount(ctx: GameContext): GameInstance {
 
     g.textAlign = "center";
     if (over) {
-      endCard(g, t, W, H, fuel <= 0 ? "TOO SLOW" : "BRANCHED");
+      endCard(g, t, W, H, fuel <= 0 ? "RAN OUT OF GAS" : "JARRED");
     }
     g.textAlign = "left";
   });

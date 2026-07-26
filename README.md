@@ -31,10 +31,18 @@ back to a local designer, so the feature works in the demo regardless.
 
 ## What's inside
 
-- **9 games**, all plain `<canvas>` + rAF, each an original take on a classic
-  mechanic: Reflex Gate, Tap Rush, Word Trap, Hold the Line, Flash Recall,
-  Drop Dodge, One Lane, Pop Chain, and Cash Out (arcade-casino: virtual
-  chips only, nothing to buy, free reset).
+- **16 games**, all plain `<canvas>` + rAF, each an original take on a classic
+  mechanic, and all of them set in one basement: Perfect Pour, Can Rush,
+  Label Trap, The Pour, Fridge Order, Crumb Field, Basement Run, Empties,
+  The Tab (arcade-casino: virtual cans only, nothing to buy, free reset),
+  Snake Feed, Foot Cam, Zero Sugar, Stack Raid, Can Stack, Cable Run and
+  Zero-G Basement.
+- **The Nic art kit** (`games/nic-art.ts`) — cans, jars, granola wraps,
+  crumbs, feet and sunglasses, all drawn from canvas primitives and coloured
+  from each game's palette. Zero image assets, and a theme switch still
+  recolours everything mid-run. The cans are original art: a silver body
+  with a red sweep, a blue body with a twin chevron. No wordmarks, no
+  borrowed trade dress.
 - **The algorithm tuner** (`⚙` pill or the Tune button): 4 sliders
   (calm↔frantic, skill↔chance, modern↔2008, more-of-this↔surprise-me),
   tag demand/block chips, 4 presets, and a live **Next up** strip that

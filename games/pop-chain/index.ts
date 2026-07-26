@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawBlob, drawCanTop, drawCrumb, drawRoom, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "pop-chain",
-  title: "Pop Chain",
-  rule: "Tap groups of 3 or more",
+  title: "Empties",
+  rule: "Tap groups of 3 or more to clear",
   year: 1985,
-  description: "Tap-to-collapse — the OG match puzzle.",
+  description: "Tap-to-collapse. The 4am desk cleanup.",
   history:
-    "Homage to SameGame (1985), the tile-collapse puzzle that predates match-3 itself and quietly spawned a whole genre's family tree.",
+    "Homage to SameGame (1985), the tile-collapse puzzle that predates match-3 itself and quietly spawned a whole genre's family tree. Here it is pointed at the pile beside the monitor.",
   tags: ["calm", "retro", "precision"],
   palette: {
-    hero: "#ff70a6",
-    foe: "#ff9770",
-    prize: "#ffd670",
-    deep: "#70d6ff",
-    glow: "#e9ff70",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.15,
   luck: 0.35,
@@ -156,21 +157,27 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
     flashT = Math.max(0, flashT - dt);
-    const colours = [pal.hero, pal.glow, pal.prize, pal.foe];
+    const colours = [pal.foe, pal.hero, pal.prize, pal.glow];
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
+    const sk = skins(pal);
 
+    // The four kinds of thing left on the desk. Each keeps its own tinted
+    // slot underneath so a big group still reads as one blob of colour.
     for (let c = 0; c < COLS; c++) {
       for (let r = 0; r < ROWS; r++) {
         const v = grid[c][r];
         if (v === null) continue;
-        g.fillStyle = colours[v];
         const pad = 2.5;
+        g.fillStyle = colours[v] + "33";
         g.fillRect(gx + c * cell + pad, gy + r * cell + pad, cell - pad * 2, cell - pad * 2);
+        const x = gx + c * cell + cell / 2;
+        const y = gy + r * cell + cell / 2;
+        const rr = cell * 0.36;
+        if (v === 0) drawCanTop(g, x, y, rr, sk.cola);
+        else if (v === 1) drawCanTop(g, x, y, rr, sk.energy);
+        else if (v === 2) drawBlob(g, x, y, rr, pal.prize, c + r);
+        else drawCrumb(g, x, y, rr, pal.glow, c * 3 + r);
       }
     }
 
@@ -183,7 +190,7 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "center";
 
     if (over) {
-      endCard(g, t, W, H, "NO MOVES LEFT");
+      endCard(g, t, W, H, "NOTHING LEFT TO CLEAR");
     }
     g.textAlign = "left";
   });

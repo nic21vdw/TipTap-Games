@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawCanTop, drawWrap, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "nokia-mode",
-  title: "Nokia Mode",
+  title: "Snake Feed",
   rule: "Tap left or right to turn. Eat. Grow.",
   year: 1997,
-  description: "Grow the line. Don't bite yourself.",
+  description: "Grow the chain of cans. Don't bite yourself.",
   history:
-    "Homage to the 1997 phone classic that shipped on 350 million handsets — the game that made mobile gaming exist in the first place.",
+    "Homage to the 1997 phone classic that shipped on 350 million handsets — the game that made mobile gaming exist in the first place. Now it is a fridge run in one long line.",
   tags: ["retro", "endurance", "precision"],
   palette: {
-    hero: "#43aa8b",
-    foe: "#f94144",
-    prize: "#f9c74f",
-    deep: "#277da1",
-    glow: "#90be6d",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#b07a3c",
+    deep: "#171a24",
+    glow: "#e8a33d",
   },
   intensity: 0.45,
   luck: 0.05,
@@ -153,29 +154,24 @@ function mount(ctx: GameContext): GameInstance {
       for (let r = 0; r < ROWS; r++)
         if ((c + r) % 2 === 0) g.fillRect(gx + c * cell, gy + r * cell, cell, cell);
 
-    // food: a berry with a leaf and a highlight
+    const sk = skins(pal);
+
+    // food: the granola wrap you are chasing, breathing on the grid
     const fx = gx + food.x * cell + cell / 2;
     const fy = gy + food.y * cell + cell / 2;
     const fr = cell * 0.36 + Math.sin(pulse * 5) * cell * 0.04;
-    g.beginPath();
-    g.arc(fx, fy, fr, 0, Math.PI * 2);
-    g.fillStyle = pal.prize;
-    g.fill();
-    g.beginPath();
-    g.arc(fx - fr * 0.3, fy - fr * 0.32, fr * 0.28, 0, Math.PI * 2);
-    g.fillStyle = "rgba(255,255,255,.7)";
-    g.fill();
-    g.fillStyle = pal.glow;
-    g.fillRect(fx - 1.5, fy - fr - 4, 3, 5);
+    drawWrap(g, fx, fy, fr * 2.1, fr * 1.1, -0.4, pal.prize, pal.glow);
 
-    // snake: rounded segments, brightest at the head, with eyes
+    // the chain: a can per segment, the newest ones brightest
     for (let i = snake.length - 1; i >= 0; i--) {
       const s = snake[i];
       const k = 1 - i / Math.max(1, snake.length);
+      const cx = gx + s.x * cell + cell / 2;
+      const cy = gy + s.y * cell + cell / 2;
+      const base = over ? shade(pal.foe, -0.15 + k * 0.2) : shade(pal.hero, -0.3 + k * 0.42);
+      // the body reads as a connected line first, cans second
       const pad = cell * (i === 0 ? 0.06 : 0.13);
-      g.fillStyle = over
-        ? shade(pal.foe, -0.15 + k * 0.2)
-        : shade(pal.hero, -0.3 + k * 0.42);
+      g.fillStyle = base;
       roundRect(
         g,
         gx + s.x * cell + pad,
@@ -185,26 +181,22 @@ function mount(ctx: GameContext): GameInstance {
         cell * 0.34
       );
       g.fill();
+      drawCanTop(g, cx, cy, cell * 0.3, {
+        ...(i % 2 === 0 ? sk.cola : sk.energy),
+        body: over ? shade(pal.foe, 0.2) : shade(base, 0.35),
+      });
     }
+    // the head can gets a bright rim so you can find yourself at a glance
     const head = snake[0];
     const hx = gx + head.x * cell + cell / 2;
     const hy = gy + head.y * cell + cell / 2;
-    const ex = dir.x * cell * 0.16;
-    const ey = dir.y * cell * 0.16;
-    const px = -dir.y * cell * 0.18;
-    const py = dir.x * cell * 0.18;
-    for (const sgn of [1, -1]) {
-      g.beginPath();
-      g.arc(hx + ex + px * sgn, hy + ey + py * sgn, cell * 0.11, 0, Math.PI * 2);
-      g.fillStyle = "#fff";
-      g.fill();
-      g.beginPath();
-      g.arc(hx + ex * 1.6 + px * sgn, hy + ey * 1.6 + py * sgn, cell * 0.055, 0, Math.PI * 2);
-      g.fillStyle = "#101418";
-      g.fill();
-    }
+    g.strokeStyle = over ? pal.foe : pal.glow;
+    g.lineWidth = 2.5;
+    g.beginPath();
+    g.arc(hx, hy, cell * 0.34, 0, Math.PI * 2);
+    g.stroke();
 
-    if (over) endCard(g, t, W, H, "GAME OVER");
+    if (over) endCard(g, t, W, H, "BIT YOURSELF");
   });
   loop.start();
 

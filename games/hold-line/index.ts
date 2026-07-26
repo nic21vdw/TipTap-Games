@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawCan, drawRoom, drawBubbles, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "hold-line",
-  title: "Hold the Line",
-  rule: "Fill to the line, don't overshoot",
+  title: "The Pour",
+  rule: "Pour to the line, don't overflow",
   year: 2026,
-  description: "One press, one release. Nerves of glass.",
+  description: "One press, one release. Nerves of glass, glass of cola.",
   history:
-    "An original — the power gauge from golf and fighting games, isolated into its purest, meanest form. The tolerance band only shrinks.",
+    "An original — the power gauge from golf and fighting games, isolated into its purest, meanest form, then pointed at a glass. The tolerance band only shrinks.",
   tags: ["precision", "hold", "calm"],
   palette: {
-    hero: "#06d6a0",
-    foe: "#ef476f",
-    prize: "#ffd166",
-    deep: "#073b4c",
-    glow: "#118ab2",
+    hero: "#6d3b1c",
+    foe: "#d81f2a",
+    prize: "#e8a33d",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.3,
   luck: 0.05,
@@ -109,35 +110,54 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
 
     const bx = W / 2 - 44;
     const bw = 88;
     const by = H * 0.78;
     const bh = H * 0.56;
+    const sk = skins(pal);
 
-    // tube
+    // the glass
     g.fillStyle = t.surface;
     g.fillRect(bx, by - bh, bw, bh);
-    // tolerance band
+    // the band you are allowed to land in
     g.fillStyle = pal.prize + "55";
     g.fillRect(bx - 14, by - (target + tol) * bh, bw + 28, tol * 2 * bh);
-    // target line
+    // the line itself
     g.fillStyle = pal.prize;
     g.fillRect(bx - 14, by - target * bh - 2, bw + 28, 4);
-    // fill
+    // the cola
     g.fillStyle =
       result === "miss" ? pal.foe : result === "hit" ? pal.prize : pal.hero;
     g.fillRect(bx, by - fill * bh, bw, fill * bh);
+    // foam sitting on the surface, and carbonation climbing the glass
+    if (fill > 0.02) {
+      g.fillStyle = shade(pal.glow, 0.25);
+      g.fillRect(bx, by - fill * bh - 5, bw, 6);
+      drawBubbles(g, bx + bw / 2, by - (fill * bh) / 2, bw * 0.4, 9, pal.glow + "66", score);
+    }
+    // glass edges, drawn over the liquid so it reads as being inside
+    g.strokeStyle = shade(pal.glow, -0.25);
+    g.lineWidth = 3;
+    g.strokeRect(bx, by - bh, bw, bh);
+
+    // the can doing the pouring, tipping further the fuller it gets
+    const canY = by - bh - 34;
+    g.save();
+    g.translate(bx + bw / 2, canY);
+    g.rotate(holding ? 0.55 : 0.2);
+    drawCan(g, 0, 0, 34, 60, sk.cola, "cola");
+    g.restore();
+    if (holding && result === null) {
+      g.fillStyle = pal.hero;
+      g.fillRect(bx + bw / 2 - 4, canY + 18, 8, bh - fill * bh + 16);
+    }
 
     g.textAlign = "center";
 
     if (over) {
-      endCard(g, t, W, H, fill >= 1 ? "OVERFLOWED" : "MISSED IT");
+      endCard(g, t, W, H, fill >= 1 ? "ALL OVER THE DESK" : "SHORT POUR");
     }
     g.textAlign = "left";
   });

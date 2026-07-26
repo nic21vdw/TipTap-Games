@@ -1,21 +1,22 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, clamp, shade, roundRect } from "@/games/engine";
+import { drawCanTop, drawCrumb, drawRoom, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "drop-dodge",
-  title: "Drop Dodge",
-  rule: "Drag through the gaps",
+  title: "Crumb Field",
+  rule: "Drag the can through the gaps",
   year: 2008,
-  description: "Falling blocks. Tiny gaps. Go.",
+  description: "Falling granola. Tiny gaps. Go.",
   history:
-    "Homage to the first wave of dodgers on the 2008 App Store, back when steering with your phone felt like the future. Ours trades tilt for a thumb.",
+    "Homage to the first wave of dodgers on the 2008 App Store, back when steering with your phone felt like the future. Ours trades tilt for a thumb and a very messy desk.",
   tags: ["endurance", "drag", "chaos"],
   palette: {
-    hero: "#ffd166",
-    foe: "#e63946",
-    prize: "#06d6a0",
-    deep: "#1d3557",
-    glow: "#457b9d",
+    hero: "#1f6fd0",
+    foe: "#d81f2a",
+    prize: "#b07a3c",
+    deep: "#171a24",
+    glow: "#c9d3dc",
   },
   intensity: 0.75,
   luck: 0.2,
@@ -117,13 +118,10 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    const ground = g.createLinearGradient(0, 0, 0, H);
-    ground.addColorStop(0, shade(pal.deep, -0.15));
-    ground.addColorStop(1, shade(pal.deep, -0.55));
-    g.fillStyle = ground;
-    g.fillRect(0, 0, W, H);
+    drawRoom(g, W, H, pal.deep, pal.glow);
+    const sk = skins(pal);
 
-    // hazard bars: hazard stripes, a lit leading edge, a shadow beneath
+    // falling granola bars: oat body, a baked crust, crumbs shaking loose
     for (const b of blocks) {
       g.fillStyle = "rgba(0,0,0,.3)";
       roundRect(g, b.x + 2, b.y + 4, b.w, b.h, 8);
@@ -131,42 +129,35 @@ function mount(ctx: GameContext): GameInstance {
       g.save();
       roundRect(g, b.x, b.y, b.w, b.h, 8);
       g.clip();
-      g.fillStyle = pal.foe;
+      g.fillStyle = pal.prize;
       g.fillRect(b.x, b.y, b.w, b.h);
-      g.fillStyle = "rgba(0,0,0,.22)";
-      for (let s = -b.h; s < b.w; s += 22) {
-        g.beginPath();
-        g.moveTo(b.x + s, b.y + b.h);
-        g.lineTo(b.x + s + b.h, b.y);
-        g.lineTo(b.x + s + b.h + 10, b.y);
-        g.lineTo(b.x + s + 10, b.y + b.h);
-        g.closePath();
-        g.fill();
+      // pressed oats
+      g.fillStyle = shade(pal.prize, -0.22);
+      for (let s = 0; s < b.w; s += 14) {
+        g.fillRect(b.x + s + 3, b.y + 6, 8, 5);
+        g.fillRect(b.x + s + 8, b.y + b.h - 13, 7, 5);
       }
       g.restore();
-      g.fillStyle = pal.prize;
+      g.fillStyle = shade(pal.prize, 0.35);
       g.fillRect(b.x + 6, b.y + b.h - 4, b.w - 12, 3);
+      // crumbs trailing off the leading edge
+      for (let c = 0; c < 3; c++) {
+        drawCrumb(g, b.x + b.w * (0.2 + c * 0.3), b.y + b.h + 8, 3.5, shade(pal.prize, 0.3), c + b.w);
+      }
     }
 
-    // the ball: a glow, a body, and a highlight so it reads as a marble
+    // the can you are steering, seen from above, sliding across the desk
     const halo = g.createRadialGradient(px, py, R * 0.4, px, py, R * 2.4);
-    halo.addColorStop(0, (over ? pal.foe : pal.hero) + "88");
+    halo.addColorStop(0, (over ? pal.foe : pal.glow) + "88");
     halo.addColorStop(1, "rgba(0,0,0,0)");
     g.fillStyle = halo;
     g.beginPath();
     g.arc(px, py, R * 2.4, 0, Math.PI * 2);
     g.fill();
-    g.beginPath();
-    g.arc(px, py, R, 0, Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.fill();
-    g.beginPath();
-    g.arc(px - R * 0.32, py - R * 0.34, R * 0.34, 0, Math.PI * 2);
-    g.fillStyle = "rgba(255,255,255,.75)";
-    g.fill();
+    drawCanTop(g, px, py, R, over ? { ...sk.cola, body: pal.foe } : sk.cola);
 
     if (over) {
-      endCard(g, t, W, H, "CLIPPED");
+      endCard(g, t, W, H, "CRUMBED");
     }
   });
   loop.start();

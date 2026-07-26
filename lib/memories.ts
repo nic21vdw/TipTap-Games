@@ -150,7 +150,7 @@ export function slugBoosts(memories = allMemories()): Record<string, number> {
 }
 
 /**
- * "You liked Cash Out" also means "you like games that feel like Cash Out" —
+ * "You liked The Tab" also means "you like games that feel like The Tab" —
  * this expands a like into tag affinities the sampler can generalise from.
  */
 export function likeMemoryFor(
