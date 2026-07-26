@@ -8,6 +8,8 @@ export type SheetId =
   | "theme"
   | "search"
   | "settings"
+  | "games"
+  | "account"
   | null;
 
 interface UiState {
