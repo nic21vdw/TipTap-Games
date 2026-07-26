@@ -18,7 +18,7 @@ interface FeedState {
   activeIndex: number;
   /** Card the feed still has to scroll to; the Feed clears it once it has. */
   scrollToUid: number | null;
-  init: () => void;
+  init: (preferredSlug?: string | null) => void;
   setActive: (i: number) => void;
   ensureAhead: () => void;
   /** Splice a game in directly after the active card. */
@@ -121,9 +121,17 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   activeIndex: 0,
   scrollToUid: null,
 
-  init: () => {
+  init: (preferredSlug) => {
     if (get().cards.length > 0) return;
-    const slugs = draw(AHEAD + 1, [], []);
+    const preferred =
+      preferredSlug && Boolean(MODULES[preferredSlug]) ? preferredSlug : null;
+    const first = preferred ? [{ uid: 0, slug: preferred }] : [];
+    const slugs = preferred
+      ? [
+          preferred,
+          ...draw(AHEAD, first, [preferred]),
+        ]
+      : draw(AHEAD + 1, [], []);
     set({ cards: slugs.map((slug) => ({ uid: nextUid++, slug })) });
     markSeen(slugs.slice(0, 1));
   },

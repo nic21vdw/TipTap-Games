@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useFeedStore } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
 
 /**
@@ -14,6 +15,11 @@ import { useUiStore } from "@/store/useUiStore";
 export function goToCard(root: HTMLElement | null | undefined, index: number) {
   useUiStore.getState().exitPlay();
   if (!root || index < 0) return;
+  // Mount and start the destination immediately. IntersectionObserver remains
+  // the source of truth for native touch scrolling, but programmatic desktop
+  // navigation must not expose an unmounted poster while the smooth scroll is
+  // in flight (or get stranded there if an observer callback is delayed).
+  useFeedStore.getState().setActive(index);
   requestAnimationFrame(() =>
     requestAnimationFrame(() => {
       const target = root.querySelector<HTMLElement>(`[data-index="${index}"]`);

@@ -54,7 +54,8 @@ export function Feed() {
     import("@/games/custom").then(({ registerSpec }) => {
       import("@/lib/storage").then(({ loadCustomSpecs }) => {
         loadCustomSpecs().forEach(registerSpec);
-        useFeedStore.getState().init();
+        const previewSlug = new URLSearchParams(window.location.search).get("game");
+        useFeedStore.getState().init(previewSlug);
         setReady(true);
       });
     });
@@ -193,111 +194,6 @@ export function Feed() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  // Autoplay policy: the very first gesture anywhere on the page is what
-  // lets the soundtrack start. After that this never runs again.
-  useEffect(() => {
-    const go = () => unlockAudio();
-    const opts = { passive: true } as const;
-    window.addEventListener("pointerdown", go, opts);
-    window.addEventListener("touchstart", go, opts);
-    window.addEventListener("keydown", go);
-    return () => {
-      window.removeEventListener("pointerdown", go);
-      window.removeEventListener("touchstart", go);
-      window.removeEventListener("keydown", go);
-    };
-  }, []);
-
-  // One card, one song: landing on a card drops its track in on the beat.
-  useEffect(() => {
-    if (!ready || !activeSlug) return;
-    const m = getMeta(activeSlug);
-    useMusicStore.getState().cue({
-      slug: m.slug,
-      intensity: m.intensity,
-      nostalgia: m.nostalgia,
-      luck: m.luck,
-      tags: m.tags,
-    });
-  }, [ready, activeSlug]);
-
-  // Backgrounded tabs go quiet, and stay quiet until you come back.
-  useEffect(() => {
-    const onVis = () => (document.hidden ? suspendMusic() : resumeMusic());
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
-
-  // Autoplay policy: the very first gesture anywhere on the page is what
-  // lets the soundtrack start. After that this never runs again.
-  useEffect(() => {
-    const go = () => unlockAudio();
-    const opts = { passive: true } as const;
-    window.addEventListener("pointerdown", go, opts);
-    window.addEventListener("touchstart", go, opts);
-    window.addEventListener("keydown", go);
-    return () => {
-      window.removeEventListener("pointerdown", go);
-      window.removeEventListener("touchstart", go);
-      window.removeEventListener("keydown", go);
-    };
-  }, []);
-
-  // One card, one song: landing on a card drops its track in on the beat.
-  useEffect(() => {
-    if (!ready || !activeSlug) return;
-    const m = getMeta(activeSlug);
-    useMusicStore.getState().cue({
-      slug: m.slug,
-      intensity: m.intensity,
-      nostalgia: m.nostalgia,
-      luck: m.luck,
-      tags: m.tags,
-    });
-  }, [ready, activeSlug]);
-
-  // Backgrounded tabs go quiet, and stay quiet until you come back.
-  useEffect(() => {
-    const onVis = () => (document.hidden ? suspendMusic() : resumeMusic());
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
-
-  // Autoplay policy: the very first gesture anywhere on the page is what
-  // lets the soundtrack start. After that this never runs again.
-  useEffect(() => {
-    const go = () => unlockAudio();
-    const opts = { passive: true } as const;
-    window.addEventListener("pointerdown", go, opts);
-    window.addEventListener("touchstart", go, opts);
-    window.addEventListener("keydown", go);
-    return () => {
-      window.removeEventListener("pointerdown", go);
-      window.removeEventListener("touchstart", go);
-      window.removeEventListener("keydown", go);
-    };
-  }, []);
-
-  // One card, one song: landing on a card drops its track in on the beat.
-  useEffect(() => {
-    if (!ready || !activeSlug) return;
-    const m = getMeta(activeSlug);
-    useMusicStore.getState().cue({
-      slug: m.slug,
-      intensity: m.intensity,
-      nostalgia: m.nostalgia,
-      luck: m.luck,
-      tags: m.tags,
-    });
-  }, [ready, activeSlug]);
-
-  // Backgrounded tabs go quiet, and stay quiet until you come back.
-  useEffect(() => {
-    const onVis = () => (document.hidden ? suspendMusic() : resumeMusic());
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
-
   // A searched-for game scrolls itself into view, so picking it out of the
   // search sheet lands you on it instead of queueing it one swipe away.
   useEffect(() => {
@@ -313,44 +209,10 @@ export function Feed() {
     return () => cancelAnimationFrame(id);
   }, [ready, scrollToUid, cards.length]);
 
-  // Autoplay policy: the very first gesture anywhere on the page is what
-  // lets the soundtrack start. After that this never runs again.
-  useEffect(() => {
-    const go = () => unlockAudio();
-    const opts = { passive: true } as const;
-    window.addEventListener("pointerdown", go, opts);
-    window.addEventListener("touchstart", go, opts);
-    window.addEventListener("keydown", go);
-    return () => {
-      window.removeEventListener("pointerdown", go);
-      window.removeEventListener("touchstart", go);
-      window.removeEventListener("keydown", go);
-    };
-  }, []);
-
-  // One card, one song: landing on a card drops its track in on the beat.
-  useEffect(() => {
-    if (!ready || !activeSlug) return;
-    const m = getMeta(activeSlug);
-    useMusicStore.getState().cue({
-      slug: m.slug,
-      intensity: m.intensity,
-      nostalgia: m.nostalgia,
-      luck: m.luck,
-      tags: m.tags,
-    });
-  }, [ready, activeSlug]);
-
-  // Backgrounded tabs go quiet, and stay quiet until you come back.
-  useEffect(() => {
-    const onVis = () => (document.hidden ? suspendMusic() : resumeMusic());
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
-
   return (
     <div
       ref={containerRef}
+      data-feed-root
       className={`no-scrollbar h-[var(--app-h)] overscroll-none ${
         playing
           ? "overflow-hidden" // the game owns every gesture while you play
