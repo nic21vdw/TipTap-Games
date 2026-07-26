@@ -21,6 +21,10 @@ interface FeedState {
   ensureAhead: () => void;
   /** Splice a game in directly after the active card. */
   insertNext: (slug: string) => void;
+  /** Splice a placeholder card in after the active card; returns its uid. */
+  insertPending: (slug: string) => number;
+  /** Swap a card's slug in place (placeholder -> finished game). */
+  resolveCard: (uid: number, slug: string) => void;
   /** Rebuild everything after the active card using the current vector. */
   retune: () => void;
   /** Wipe the no-repeat ledger so the whole catalog is fresh again. */
@@ -133,6 +137,27 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     const next = [...cards];
     next.splice(activeIndex + 1, 0, { uid: nextUid++, slug });
     set({ cards: next });
+  },
+
+  insertPending: (slug: string) => {
+    const { cards, activeIndex } = get();
+    const uid = nextUid++;
+    const next = [...cards];
+    next.splice(activeIndex + 1, 0, { uid, slug });
+    set({ cards: next });
+    return uid;
+  },
+
+  resolveCard: (uid: number, slug: string) => {
+    const { cards, activeIndex } = get();
+    const idx = cards.findIndex((c) => c.uid === uid);
+    if (idx === -1) return;
+    set({
+      cards: cards.map((c) => (c.uid === uid ? { ...c, slug } : c)),
+    });
+    // If the finished game landed on the card the player is already on, record
+    // it in the ledger — setActive won't fire, so nothing else would.
+    if (idx === activeIndex) markSeen([slug]);
   },
 
   retune: () => {

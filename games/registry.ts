@@ -257,3 +257,22 @@ export function registerModule(mod: GameModule) {
   MODULES[mod.meta.slug] = mod;
   CATALOG.push(enrich(mod));
 }
+
+/**
+ * Registers a module a card can render but the algorithm must never draw —
+ * used for transient "building…" placeholder cards. It lands in MODULES only,
+ * never CATALOG, so the sampler can't see it; getMeta still resolves it via
+ * its getModule fallback.
+ */
+export function registerHiddenModule(mod: GameModule) {
+  if (MODULES[mod.meta.slug]) return;
+  MODULES[mod.meta.slug] = mod;
+}
+
+/** Removes a runtime module (e.g. a resolved placeholder) from the registry. */
+export function unregisterModule(slug: string) {
+  if (!MODULES[slug]) return;
+  delete MODULES[slug];
+  const i = CATALOG.findIndex((m) => m.slug === slug);
+  if (i >= 0) CATALOG.splice(i, 1);
+}
