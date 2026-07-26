@@ -27,7 +27,8 @@ const meta = {
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
-  const blockH = 26;
+  // sized off the screen so the stack climbs the full height of the phone
+  const blockH = Math.max(20, H * 0.038);
   let towerX = W * 0.25;
   let towerW = W * 0.5;
   let layers = 0; // score
@@ -97,9 +98,18 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
-    const baseY = H * 0.78;
+    const baseY = H * 0.965;
+    // skyline: the stack starts one block tall, so without something back
+    // there the top four fifths of the phone are a flat empty wash
+    g.fillStyle = shade(pal.deep, -0.05);
+    for (let i = 0; i < 9; i++) {
+      const bw = W * 0.13;
+      const bx = i * (W / 9) + (W / 9 - bw) / 2;
+      const bh = H * (0.3 + 0.55 * Math.abs(Math.sin(i * 2.3)));
+      g.fillRect(bx, baseY - bh, bw, bh);
+    }
     // stacked layers (draw the visible recent ones)
-    const visible = Math.min(layers, Math.floor((baseY - H * 0.3) / blockH));
+    const visible = Math.min(layers, Math.floor((baseY - blockH * 2) / blockH));
     for (let i = 0; i < visible; i++) {
       g.fillStyle = i === visible - 1 && flash > 0 ? pal.hero : t.surface;
       g.fillRect(towerX, baseY - (i + 1) * blockH, towerW, blockH - 2);

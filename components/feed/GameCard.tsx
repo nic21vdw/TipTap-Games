@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { GameHost, type RunResult } from "@/components/feed/GameHost";
 import { DeathScreen } from "@/components/feed/DeathScreen";
+import { RailButton } from "@/components/feed/RailButton";
+import { SoundRail } from "@/components/feed/SoundRail";
+import { goToCard, useFinePointer } from "@/components/feed/nav";
 import {
   HeartIcon,
   SendIcon,
@@ -13,9 +16,11 @@ import {
   TrophyIcon,
 } from "@/components/ui/icons";
 import { getMeta } from "@/games/registry";
+import type { FullGameMeta } from "@/games/types";
 import { haptic } from "@/lib/haptics";
 import { getBest, getHandle, likedSlugs, toggleLike } from "@/lib/storage";
 import { useAlgorithmStore } from "@/store/useAlgorithmStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useMusicStore } from "@/store/useMusicStore";
 import { useFeedStore, type FeedCard as FeedCardData } from "@/store/useFeedStore";
 import { useUiStore } from "@/store/useUiStore";
@@ -31,10 +36,13 @@ export function GameCard({ card, index }: Props) {
   const mounted = Math.abs(index - activeIndex) <= 1;
   const meta = getMeta(card.slug);
   const openSheet = useUiStore((s) => s.openSheet);
+  const fine = useFinePointer();
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [liked, setLiked] = useState(false);
+  // "guest" until mount: localStorage doesn't exist during the server render.
+  const [localHandle, setLocalHandle] = useState("guest");
   const [expanded, setExpanded] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
   const [copied, setCopied] = useState(false);
@@ -46,43 +54,62 @@ export function GameCard({ card, index }: Props) {
   const track = useMusicStore((s) => s.track);
   const soundLive = musicOn && musicUnlocked && track?.slug === card.slug;
 
+  const askToSave = useAuthStore((s) => s.askToSave);
+  const dismissPrompt = useAuthStore((s) => s.dismissPrompt);
+  const savePrompt = useAuthStore((s) => s.prompt);
+  const signedIn = useAuthStore((s) => s.status === "signedIn");
+  const playerHandle = useAuthStore((s) => s.player?.handle);
+
   const playingUid = useUiStore((s) => s.playingUid);
   const enterPlay = useUiStore((s) => s.enterPlay);
   const exitPlay = useUiStore((s) => s.exitPlay);
   const playing = playingUid === card.uid;
-  const lastTapRef = useRef(0);
-  const edgeRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeRef = useRef<Swipe | null>(null);
 
-  // double-tap the preview to take over
-  const onPreviewTap = (e: React.PointerEvent) => {
-    const now = e.timeStamp;
-    if (now - lastTapRef.current < 320) {
-      lastTapRef.current = 0;
-      enterPlay(card.uid);
-      haptic("hit");
-    } else {
-      lastTapRef.current = now;
-    }
+  // Scroll a card into view and you're playing immediately — no demo, no tap.
+  // The reflex has to fire the moment the game lands on screen.
+  useEffect(() => {
+    if (active) enterPlay(card.uid);
+  }, [active, card.uid, enterPlay]);
+
+  // If you swiped out but stayed on the card, a single tap drops you back in.
+  const resumePlay = () => {
+    enterPlay(card.uid);
+    haptic("hit");
   };
 
-  // a drag on the bottom strip — in any direction — hands control back
-  const onEdgeDown = (e: React.PointerEvent) => {
-    edgeRef.current = { x: e.clientX, y: e.clientY };
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  // Hand control back and land on the neighbouring card in one motion —
+  // downwards for the next game, upwards for the one you just left.
+  const leaveTo = (delta: number) => {
+    haptic("light");
+    goToCard(sectionRef.current?.parentElement, index + delta);
   };
-  const onEdgeMove = (e: React.PointerEvent) => {
-    const start = edgeRef.current;
-    if (!start) return;
-    const dx = e.clientX - start.x;
-    const dy = e.clientY - start.y;
-    if (Math.hypot(dx, dy) > 34) {
-      edgeRef.current = null;
-      exitPlay();
-      haptic("light");
-    }
+
+  // While playing, the game owns the surface — so the card watches the same
+  // pointer stream in the capture phase and claims anything that reads as a
+  // vertical flick. No game control is an upward drag, so the two never
+  // compete: taps, holds and sideways drags all fall through untouched.
+  const onPlayDown = (e: React.PointerEvent) => {
+    swipeRef.current = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      t: e.timeStamp,
+    };
   };
-  const onEdgeUp = () => {
-    edgeRef.current = null;
+  const onPlayMove = (e: React.PointerEvent) => {
+    const s = swipeRef.current;
+    if (!s || s.id !== e.pointerId) return;
+    const dx = e.clientX - s.x;
+    const dy = e.clientY - s.y;
+    const dir = detectSwipe(dx, dy, e.timeStamp - s.t);
+    if (dir === "none") return;
+    swipeRef.current = null;
+    if (dir === "sideways") return; // that gesture belongs to the game
+    leaveTo(dir === "up" ? 1 : -1);
+  };
+  const onPlayUp = () => {
+    swipeRef.current = null;
   };
 
   // leaving the card always drops you back to browsing
@@ -94,6 +121,7 @@ export function GameCard({ card, index }: Props) {
     if (mounted) {
       setBest(getBest(card.slug));
       setLiked(likedSlugs().has(card.slug));
+      setLocalHandle(getHandle());
     }
   }, [mounted, card.slug]);
 
@@ -106,6 +134,9 @@ export function GameCard({ card, index }: Props) {
   const handleRunEnd = (r: RunResult) => {
     setResult(r);
     if (r.isBest) setBest(r.score);
+    // Guest play comes first: the only moment we ever mention an account is
+    // one where the player has just earned something worth keeping.
+    if (r.score > 0 && (r.isBest || r.topTen)) askToSave();
     haptic(r.isBest ? "hit" : "fail");
   };
 
@@ -162,8 +193,12 @@ export function GameCard({ card, index }: Props) {
     <section
       ref={sectionRef}
       data-index={index}
-      className="relative h-dvh w-full snap-start snap-always overflow-hidden"
+      className="relative h-[var(--app-h)] w-full snap-start snap-always overflow-hidden"
       style={{ background: "var(--bg)" }}
+      onPointerDownCapture={playing ? onPlayDown : undefined}
+      onPointerMoveCapture={playing ? onPlayMove : undefined}
+      onPointerUpCapture={playing ? onPlayUp : undefined}
+      onPointerCancelCapture={playing ? onPlayUp : undefined}
     >
       {mounted ? (
         <GameHost
@@ -174,47 +209,39 @@ export function GameCard({ card, index }: Props) {
           onRunEnd={handleRunEnd}
         />
       ) : (
-        <div className="h-full w-full" />
+        <CardPoster meta={meta} />
       )}
 
-      {/* Browsing: the canvas is inert and this layer catches the double-tap
-          that hands control over. Swipes pass straight through to the feed. */}
+      {/* Browsing: the canvas is inert and a tap hands control back over.
+          Swipes pass straight through to the feed. */}
       {!playing && (
         <div
           className="absolute inset-0 z-10"
-          onPointerDown={onPreviewTap}
+          onPointerDown={resumePlay}
           style={{ touchAction: "pan-y" }}
         />
       )}
 
-      {/* Playing: the strip along the bottom — where you'd swipe for the next
-          card anyway — swipes you back out to the feed. */}
+      {/* Playing: a hint only. The gesture itself is caught on the whole card,
+          so there is no strip to find and nothing here to swallow a tap. */}
       {playing && (
-        <div
-          // above the caption and rail, or they swallow the swipe
-          className="absolute inset-x-0 bottom-0 z-40 h-24"
-          onPointerDown={onEdgeDown}
-          onPointerMove={onEdgeMove}
-          onPointerUp={onEdgeUp}
-          onPointerCancel={onEdgeUp}
-          style={{ touchAction: "none" }}
-        >
-          <div className="pointer-events-none flex h-full flex-col items-center justify-end gap-1 pb-3">
-            <div
-              className="h-1 w-10 rounded-full"
-              style={{ background: "rgba(255,255,255,.7)" }}
-            />
-            <span
-              className="text-[10px] font-bold uppercase tracking-wider"
-              style={{ color: "rgba(255,255,255,.8)" }}
-            >
-              swipe here to leave
-            </span>
-          </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex flex-col items-center gap-1 pb-3">
+          <div
+            className="h-1 w-10 rounded-full"
+            style={{ background: "rgba(255,255,255,.7)" }}
+          />
+          <span
+            className="text-[10px] font-bold uppercase tracking-wider"
+            style={{ color: "rgba(255,255,255,.8)" }}
+          >
+            {fine
+              ? "scroll or ↑ ↓ to move · esc to stop"
+              : "swipe up or down to move on"}
+          </span>
         </div>
       )}
 
-      {/* browsing: "this is a demo, tap in to actually play" */}
+      {/* paused after swiping out but staying on the card — one tap resumes */}
       {!playing && active && (
         <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-1">
           <div
@@ -226,13 +253,13 @@ export function GameCard({ card, index }: Props) {
               fontFamily: "var(--font-display)",
             }}
           >
-            Double tap to play
+            {fine ? "Click to play" : "Tap to play"}
           </div>
           <span
             className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
             style={{ color: "rgba(255,255,255,.8)" }}
           >
-            demo running
+            paused
           </span>
         </div>
       )}
@@ -249,7 +276,7 @@ export function GameCard({ card, index }: Props) {
       />
 
       {/* score HUD */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(env(safe-area-inset-top)+14px)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(var(--safe-top)+14px)]">
         <div
           className="text-4xl font-extrabold tabular-nums"
           style={{
@@ -266,13 +293,13 @@ export function GameCard({ card, index }: Props) {
           </span>
         </div>
         <div className="text-xs font-semibold" style={{ color: "rgba(255,255,255,.78)" }}>
-          {playing ? `best ${Math.max(best, score)}` : "demo score"}
+          {playing ? `best ${Math.max(best, score)}` : "paused"}
         </div>
       </div>
 
       {/* caption — Reels/TikTok style: title, era, expandable history */}
       <div
-        className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]"
+        className="absolute bottom-0 left-0 z-30 max-w-[76%] p-4 pb-[calc(var(--safe-bottom)+16px)]"
         style={{ touchAction: "pan-y" }}
       >
         {/* now playing: the track is generated, so it gets a name too */}
@@ -368,19 +395,23 @@ export function GameCard({ card, index }: Props) {
         <RailButton label="Theme" onClick={() => openSheet("theme")}>
           <DropletIcon size={26} />
         </RailButton>
-        <RailButton
-          label={musicOn ? "Sound" : "Muted"}
-          onClick={toggleMusic}
-          tint={musicOn ? undefined : "rgba(255,255,255,.55)"}
-        >
-          {musicOn ? <SoundOnIcon size={26} /> : <SoundOffIcon size={26} />}
-        </RailButton>
+        <SoundRail />
         <RailButton label={copied ? "Copied" : "Share"} onClick={share}>
           <SendIcon size={26} />
         </RailButton>
-        <div className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.8)" }}>
-          @{typeof window === "undefined" ? "guest" : getHandle()}
-        </div>
+        <button
+          onClick={() => openSheet("account")}
+          aria-label={signedIn ? "Your account" : "Save your progress"}
+          className="pressable text-[10px] font-semibold"
+          style={{ color: "rgba(255,255,255,.8)" }}
+        >
+          @{playerHandle ?? localHandle}
+          {!signedIn && (
+            <span className="ml-1 font-bold" style={{ color: "var(--accent)" }}>
+              save
+            </span>
+          )}
+        </button>
       </div>
 
       {/* the iOS-style game-over sheet — only during real play, never the demo */}
@@ -391,10 +422,91 @@ export function GameCard({ card, index }: Props) {
           best={best}
           onPlayAgain={playAgain}
           onLeave={leaveToFeed}
+          onSignIn={
+            savePrompt
+              ? () => {
+                  dismissPrompt();
+                  setResult(null);
+                  openSheet("account");
+                }
+              : undefined
+          }
         />
       )}
     </section>
   );
+}
+
+/**
+ * Stands in for a card whose game isn't mounted. Only the active card and its
+ * two neighbours run a game, so scrolling several cards at once — forwards, or
+ * back through games you've already played — would otherwise fly over empty
+ * rectangles. The poster wears the game's own palette, so the card still reads
+ * as itself the moment it passes.
+ */
+function CardPoster({ meta }: { meta: FullGameMeta }) {
+  return (
+    <div
+      className="flex h-full w-full items-center justify-center"
+      style={{
+        background: `radial-gradient(130% 90% at 50% 32%, ${meta.palette.deep}, var(--bg))`,
+      }}
+    >
+      {/* the chrome stays white on a scrim, never themed, so it reads over a
+          pale palette as well as a dark one */}
+      <div
+        className="mx-8 flex max-w-[70%] flex-col items-center px-5 py-4 text-center"
+        style={{ background: "rgba(12,18,28,.72)", borderRadius: "var(--radius)" }}
+      >
+        <span
+          className="mb-2 block h-1 w-8 rounded-full"
+          style={{ background: meta.palette.glow }}
+        />
+        <div
+          className="text-2xl font-extrabold leading-tight"
+          style={{ fontFamily: "var(--font-display)", color: "#fff" }}
+        >
+          {meta.title}
+        </div>
+        <div
+          className="mt-1.5 text-[11px] font-bold uppercase tracking-wider"
+          style={{ color: "rgba(255,255,255,.72)" }}
+        >
+          {meta.rule}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface Swipe {
+  id: number;
+  x: number;
+  y: number;
+  t: number;
+}
+
+// Deliberately cheap to satisfy: a flick of ~a finger's width is enough, and a
+// slow drag still counts once it's clearly gone somewhere. The verticality
+// check is what keeps it off the games — a sideways drag bails out for good the
+// moment it commits, so aiming and steering never trip an exit.
+const FLICK_PX = 40; // quick flick
+const FLICK_MS = 550;
+const DRAG_PX = 90; // unhurried drag
+const AXIS_RATIO = 1.2;
+
+function detectSwipe(
+  dx: number,
+  dy: number,
+  dt: number
+): "up" | "down" | "sideways" | "none" {
+  const ax = Math.abs(dx);
+  const ay = Math.abs(dy);
+  if (ax > 24 && ax > ay * AXIS_RATIO) return "sideways";
+  if (ay < ax * AXIS_RATIO) return "none";
+  if (ay >= DRAG_PX || (ay >= FLICK_PX && dt <= FLICK_MS))
+    return dy < 0 ? "up" : "down";
+  return "none";
 }
 
 /** Three bars bouncing out of phase. Purely decorative. */
@@ -416,31 +528,3 @@ function EqBars() {
   );
 }
 
-function RailButton({
-  label,
-  onClick,
-  tint,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  tint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="pressable flex flex-col items-center gap-1"
-      aria-label={label}
-      style={{ color: tint ?? "inherit" }}
-    >
-      {children}
-      <span
-        className="text-[10px] font-semibold"
-        style={{ color: "#fff" }}
-      >
-        {label}
-      </span>
-    </button>
-  );
-}

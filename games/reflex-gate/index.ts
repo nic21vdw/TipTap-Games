@@ -97,31 +97,31 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = ground;
     g.fillRect(0, 0, W, H);
 
-    const trackY = H * 0.5;
-    const trackX = W * 0.12;
-    const trackW = W * 0.76;
-    const barH = 18;
-
-    // track
-    g.fillStyle = t.surface;
-    g.fillRect(trackX, trackY - barH / 2, trackW, barH);
-    // green zone
+    // The gate is a full-height column and the marker a full-height sweeper:
+    // the timing window is the same one, but it reads at a glance from
+    // anywhere on the screen instead of hiding in a strip in the middle.
+    const zoneX = (zoneC - zoneW / 2) * W;
+    const zoneP = zoneW * W;
     g.fillStyle = flash > 0 ? pal.hero : pal.prize;
-    g.fillRect(
-      trackX + (zoneC - zoneW / 2) * trackW,
-      trackY - barH / 2 - 6,
-      zoneW * trackW,
-      barH + 12
-    );
-    // marker
-    g.fillStyle = over ? pal.foe : t.ink;
-    g.fillRect(trackX + pos * trackW - 4, trackY - barH / 2 - 18, 8, barH + 36);
+    g.globalAlpha = 0.26;
+    g.fillRect(zoneX, 0, zoneP, H);
+    g.globalAlpha = 1;
+    g.fillRect(zoneX, 0, 3, H);
+    g.fillRect(zoneX + zoneP - 3, 0, 3, H);
 
-    // streak dots
+    // the rail the sweeper runs on, still the anchor line for the eye
+    const trackY = H * 0.5;
+    g.fillStyle = t.surface;
+    g.fillRect(0, trackY - 1, W, 2);
+
+    g.fillStyle = over ? pal.foe : t.ink;
+    g.fillRect(pos * W - 2, 0, 4, H);
+    g.fillRect(pos * W - 11, trackY - 11, 22, 22);
+
     g.fillStyle = t.inkDim;
     g.font = `600 16px ${t.fontBody}`;
     g.textAlign = "center";
-    g.fillText(`speed x${(speed / 0.6).toFixed(1)}`, W / 2, trackY + 64);
+    g.fillText(`speed x${(speed / 0.6).toFixed(1)}`, W / 2, H * 0.5 + 64);
 
     if (over) {
       endCard(g, t, W, H, "MISSED");

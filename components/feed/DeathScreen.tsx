@@ -11,12 +11,14 @@ interface Props {
   best: number;
   onPlayAgain: () => void;
   onLeave: () => void;
+  /** Guest play comes first — this only shows up on a record worth keeping. */
+  onSignIn?: () => void;
 }
 
 // The full-screen game-over moment. A frosted sheet springs up over the frozen
 // game, counts the score up, and — on a record — throws a little confetti. It
 // owns every gesture while it is up: you either go again or swipe out.
-export function DeathScreen({ result, meta, best, onPlayAgain, onLeave }: Props) {
+export function DeathScreen({ result, meta, best, onPlayAgain, onLeave, onSignIn }: Props) {
   const reduce = usePrefersReducedMotion();
   const headline = result.reason ?? "GAME OVER";
   const newBest = result.isBest && result.score > 0;
@@ -216,6 +218,15 @@ export function DeathScreen({ result, meta, best, onPlayAgain, onLeave }: Props)
         >
           Back to feed
         </button>
+        {onSignIn && (
+          <button
+            onClick={onSignIn}
+            className="pressable mt-3 text-xs font-bold"
+            style={{ color: "var(--accent)" }}
+          >
+            Keep this score — sign in
+          </button>
+        )}
       </div>
     </div>
   );

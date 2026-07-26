@@ -91,7 +91,7 @@ function mount(ctx: GameContext): GameInstance {
 
   reset();
 
-  const laneY = (i: number) => H * 0.72 - (i - cam) * rowH;
+  const laneY = (i: number) => H * 0.9 - (i - cam) * rowH;
 
   let auto = false;
   let autoCd = 0;
