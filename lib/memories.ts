@@ -7,7 +7,6 @@ import {
   type AlgorithmVector,
 } from "@/lib/algorithm";
 import type { GameTag } from "@/games/types";
-import { scopedKey } from "@/lib/accounts";
 
 export type MemorySource = "query" | "like" | "behavior";
 export type MemoryAxis =
@@ -35,15 +34,11 @@ export interface Memory {
   boost?: number; // signed score bump for that slug
 }
 
-// Memories are per account: your reasons are yours, and switching accounts
-// switches the whole explanation of why the feed looks like it does.
-function key(): string {
-  return scopedKey("memories");
-}
+const KEY = "ttg:memories";
 
 function safeGet(): Memory[] {
   try {
-    const raw = localStorage.getItem(key());
+    const raw = localStorage.getItem(KEY);
     return raw ? (JSON.parse(raw) as Memory[]) : [];
   } catch {
     return [];
@@ -52,7 +47,7 @@ function safeGet(): Memory[] {
 
 function safeSet(list: Memory[]) {
   try {
-    localStorage.setItem(key(), JSON.stringify(list));
+    localStorage.setItem(KEY, JSON.stringify(list));
   } catch {
     // private mode — memories are in-session only
   }
@@ -60,19 +55,49 @@ function safeSet(list: Memory[]) {
 
 let cache: Memory[] | null = null;
 
-/** Called on sign-in/out: the next read pulls the new account's memories. */
-export function resetMemoryCache() {
-  cache = null;
-}
-
 export function allMemories(): Memory[] {
   if (cache === null) cache = typeof window === "undefined" ? [] : safeGet();
   return cache;
 }
 
+const listeners = new Set<() => void>();
+
+/** Fires after any local edit to the memory list. Returns an unsubscribe. */
+export function onMemoriesChange(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
 function commit(list: Memory[]) {
   cache = list;
   safeSet(list);
+  for (const fn of listeners) fn();
+}
+
+/**
+ * Installs the account's memory list on sign-in. Memories are edits the
+ * player made by hand, so the newest row for a given axis/tag/game wins and
+ * the rest are dropped — the same rule addMemory uses. Silent by design: a
+ * pull is not an edit to push back.
+ */
+export function adoptMemories(incoming: Memory[]) {
+  const merged = [...incoming, ...allMemories()].sort(
+    (a, b) => b.createdAt - a.createdAt
+  );
+  const kept: Memory[] = [];
+  for (const m of merged) {
+    const dupe = kept.some(
+      (k) =>
+        k.id === m.id ||
+        (m.axis && k.axis === m.axis) ||
+        (m.tag && k.tag === m.tag && k.mode === m.mode) ||
+        (m.slug && k.slug === m.slug) ||
+        (m.kid !== undefined && k.kid !== undefined)
+    );
+    if (!dupe) kept.push(m);
+  }
+  cache = kept;
+  safeSet(kept);
 }
 
 function newId(): string {

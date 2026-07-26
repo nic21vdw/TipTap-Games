@@ -1,21 +1,12 @@
 // Client-side persistence layer. Everything the Supabase schema models
-// (players, scores, signals, prefs) works locally first, so the app is fully
-// playable with zero backend. Swap the internals for Supabase calls when
-// NEXT_PUBLIC_SUPABASE_URL is configured — the call sites don't change.
+// (profiles, scores, signals, prefs) works locally first, so the app is fully
+// playable with zero backend, and every read stays synchronous — a card that
+// lands never waits on a network round trip to know your best.
 //
-// Scores, signals, likes and the algorithm vector are *per account*: they hang
-// off `ttg:u:<accountId>:*`, so switching accounts switches your whole feed
-// history. The theme and the music settings stay device-wide, because those
-// belong to the phone, not the player.
-
-import {
-  addXp,
-  currentAccount,
-  currentAccountId,
-  listAccounts,
-  scopedKey,
-  scopedKeyFor,
-} from "@/lib/accounts";
+// When NEXT_PUBLIC_SUPABASE_URL is configured, lib/cloud.ts subscribes to the
+// change feed below and mirrors these writes to Postgres in the background,
+// then merges the cloud's copy back in on sign-in. localStorage stays the
+// read path either way; the cloud is a replica, not a dependency.
 
 export interface LeaderboardEntry {
   handle: string;
@@ -30,9 +21,15 @@ export interface GameSignals {
   replays: number;
 }
 
-/** Device-wide keys. Everything else is scoped to the signed-in account. */
-const DEVICE_KEY = {
+const KEY = {
+  handle: "ttg:handle",
+  bests: "ttg:bests",
+  signals: "ttg:signals",
+  algo: "ttg:algo",
   theme: "ttg:theme",
+  likes: "ttg:likes",
+  custom: "ttg:customGames",
+  seen: "ttg:seen",
   music: "ttg:music",
 };
 
@@ -53,16 +50,45 @@ const safe = {
   },
 };
 
+// ---- change feed (lib/cloud.ts is the only subscriber today) ----
+
+export type StorageSlice = "bests" | "signals" | "likes" | "custom" | "prefs";
+
+const listeners = new Set<(slice: StorageSlice) => void>();
+
+/** Fires after any local write. Returns an unsubscribe. */
+export function onStorageChange(fn: (slice: StorageSlice) => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+function emit(slice: StorageSlice) {
+  for (const fn of listeners) fn(slice);
+}
+
 export function getHandle(): string {
-  return currentAccount().handle;
+  let h = safe.get(KEY.handle);
+  if (!h) {
+    h = `guest-${1000 + Math.floor(Math.random() * 9000)}`;
+    safe.set(KEY.handle, h);
+  }
+  return h;
+}
+
+/** Adopts the handle the account owns, so the rail and board agree. */
+export function setHandle(handle: string) {
+  safe.set(KEY.handle, handle);
+}
+
+export function isGuestHandle(): boolean {
+  return getHandle().startsWith("guest-");
 }
 
 // ---- personal bests ----
 
-function readBests(accountId?: string): Record<string, number> {
-  const key = accountId ? scopedKeyFor(accountId, "bests") : scopedKey("bests");
+function readBests(): Record<string, number> {
   try {
-    return JSON.parse(safe.get(key) ?? "{}");
+    return JSON.parse(safe.get(KEY.bests) ?? "{}");
   } catch {
     return {};
   }
@@ -72,13 +98,26 @@ export function getBest(slug: string): number {
   return readBests()[slug] ?? 0;
 }
 
-export function bestsFor(accountId: string): Record<string, number> {
-  return readBests(accountId);
+export function allBests(): Record<string, number> {
+  return readBests();
 }
 
-/** XP per finished run: showing up counts, beating yourself counts more. */
-function xpForRun(isBest: boolean, topTen: boolean): number {
-  return 5 + (isBest ? 10 : 0) + (topTen ? 15 : 0);
+/**
+ * Folds the cloud's bests in, keeping whichever side is higher. Used on
+ * sign-in, so a guest's unsynced runs survive and another device's runs
+ * arrive. Deliberately silent: a merge is not a new local write to push back.
+ */
+export function mergeBests(incoming: Record<string, number>) {
+  const bests = readBests();
+  let changed = false;
+  for (const [slug, score] of Object.entries(incoming)) {
+    if (score > (bests[slug] ?? 0)) {
+      bests[slug] = score;
+      changed = true;
+    }
+  }
+  if (changed) safe.set(KEY.bests, JSON.stringify(bests));
+  return changed;
 }
 
 /** Records a finished run. Returns rank info vs the seeded leaderboard. */
@@ -88,7 +127,8 @@ export function submitRun(slug: string, score: number) {
   const isBest = score > prevBest;
   if (isBest) {
     bests[slug] = score;
-    safe.set(scopedKey("bests"), JSON.stringify(bests));
+    safe.set(KEY.bests, JSON.stringify(bests));
+    emit("bests");
   }
   const seeds = seededScores(slug);
   const above = seeds.filter((s) => s.score > score).length;
@@ -97,17 +137,14 @@ export function submitRun(slug: string, score: number) {
     seeds.length === 0
       ? 100
       : Math.round(((seeds.length - above) / seeds.length) * 100);
-  const topTen = rank <= 10;
-  addXp(xpForRun(isBest, topTen));
-  return { isBest, prevBest, rank, percentile, topTen };
+  return { isBest, prevBest, rank, percentile, topTen: rank <= 10 };
 }
 
 // ---- implicit signals (feeds the algorithm) ----
 
-function readSignals(accountId?: string): Record<string, GameSignals> {
-  const key = accountId ? scopedKeyFor(accountId, "signals") : scopedKey("signals");
+function readSignals(): Record<string, GameSignals> {
   try {
-    return JSON.parse(safe.get(key) ?? "{}");
+    return JSON.parse(safe.get(KEY.signals) ?? "{}");
   } catch {
     return {};
   }
@@ -128,47 +165,36 @@ export function bumpSignals(slug: string, delta: Partial<GameSignals>) {
     fastSwipes: s.fastSwipes + (delta.fastSwipes ?? 0),
     replays: s.replays + (delta.replays ?? 0),
   };
-  safe.set(scopedKey("signals"), JSON.stringify(all));
+  safe.set(KEY.signals, JSON.stringify(all));
+  emit("signals");
 }
 
 export function allSignals(): Record<string, GameSignals> {
   return readSignals();
 }
 
-/** Headline numbers for a profile card — works for any account on the device. */
-export function statsFor(accountId: string): {
-  runs: number;
-  minutes: number;
-  gamesPlayed: number;
-  bestScore: number;
-  bestSlug: string | null;
-} {
-  const signals = readSignals(accountId);
-  const bests = readBests(accountId);
-  const runs = Object.values(signals).reduce((n, s) => n + s.runs, 0);
-  const dwell = Object.values(signals).reduce((n, s) => n + s.dwellMs, 0);
-  let bestScore = 0;
-  let bestSlug: string | null = null;
-  for (const [slug, score] of Object.entries(bests)) {
-    if (score > bestScore) {
-      bestScore = score;
-      bestSlug = slug;
-    }
+/** Cloud signals are cumulative counters, so a merge takes the larger side. */
+export function mergeSignals(incoming: Record<string, GameSignals>) {
+  const all = readSignals();
+  for (const [slug, s] of Object.entries(incoming)) {
+    const mine = all[slug] ?? { dwellMs: 0, runs: 0, fastSwipes: 0, replays: 0 };
+    all[slug] = {
+      dwellMs: Math.max(mine.dwellMs, s.dwellMs),
+      runs: Math.max(mine.runs, s.runs),
+      fastSwipes: Math.max(mine.fastSwipes, s.fastSwipes),
+      replays: Math.max(mine.replays, s.replays),
+    };
   }
-  return {
-    runs,
-    minutes: Math.round(dwell / 60000),
-    gamesPlayed: Object.keys(bests).length,
-    bestScore,
-    bestSlug,
-  };
+  safe.set(KEY.signals, JSON.stringify(all));
 }
+
+// ---- generic JSON prefs (algorithm vector, theme) ----
 
 // ---- likes (explicit algorithm signal + rail UI state) ----
 
 export function likedSlugs(): Set<string> {
   try {
-    return new Set(JSON.parse(safe.get(scopedKey("likes")) ?? "[]"));
+    return new Set(JSON.parse(safe.get(KEY.likes) ?? "[]"));
   } catch {
     return new Set();
   }
@@ -179,16 +205,115 @@ export function toggleLike(slug: string): boolean {
   const nowLiked = !set.has(slug);
   if (nowLiked) set.add(slug);
   else set.delete(slug);
-  safe.set(scopedKey("likes"), JSON.stringify([...set]));
+  safe.set(KEY.likes, JSON.stringify([...set]));
+  emit("likes");
   return nowLiked;
 }
 
-// ---- generic JSON prefs (algorithm vector per account, theme per device) ----
+/** Union, not replace: a like made as a guest is still a like. */
+export function mergeLikes(incoming: string[]) {
+  const set = likedSlugs();
+  for (const slug of incoming) set.add(slug);
+  safe.set(KEY.likes, JSON.stringify([...set]));
+}
+
+// ---- seen games (the no-repeat ledger) ----
+// Every game the feed has actually shown you. The sampler treats this as a
+// hard exclusion, so scrolling never serves the same card twice. Liked games
+// are the one exception — see useFeedStore.
+
+export function seenSlugs(): Set<string> {
+  try {
+    return new Set(JSON.parse(safe.get(KEY.seen) ?? "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+/** Generated games are disposable; hand-built ones are never forgotten, so
+ *  the catalog can't quietly come back around once the ledger fills up. */
+const SEEN_BUDGET = 2000;
+
+export function markSeen(slugs: string[]) {
+  if (slugs.length === 0) return;
+  const set = seenSlugs();
+  const before = set.size;
+  slugs.forEach((s) => set.add(s));
+  if (set.size === before) return;
+  let list = [...set];
+  if (list.length > SEEN_BUDGET) {
+    const generated = (s: string) =>
+      s.startsWith("mix-") || s.startsWith("custom-");
+    const drop = list.length - SEEN_BUDGET;
+    let dropped = 0;
+    list = list.filter((s) => {
+      if (dropped < drop && generated(s)) {
+        dropped++;
+        return false;
+      }
+      return true;
+    });
+  }
+  safe.set(KEY.seen, JSON.stringify(list));
+}
+
+export function clearSeen() {
+  safe.set(KEY.seen, "[]");
+}
+
+// ---- player-generated games (specs only; engines stay ours) ----
+
+export interface CustomGameSpec {
+  slug: string;
+  base: string; // slug of the engine it runs on
+  title: string;
+  rule: string;
+  description: string;
+  history: string;
+  accent: string; // hex; recolours the base engine
+  tags: string[];
+  intensity: number;
+  luck: number;
+  nostalgia: number;
+}
+
+export function loadCustomSpecs(): CustomGameSpec[] {
+  try {
+    return JSON.parse(safe.get(KEY.custom) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+/** Generated games accumulate forever otherwise, so keep the newest
+ *  SPEC_BUDGET plus every one the player liked (those must stay playable). */
+const SPEC_BUDGET = 150;
+
+function applySpecBudget(all: CustomGameSpec[]): CustomGameSpec[] {
+  if (all.length <= SPEC_BUDGET) return all;
+  const liked = likedSlugs();
+  const recent = new Set(all.slice(-SPEC_BUDGET).map((s) => s.slug));
+  return all.filter((s) => recent.has(s.slug) || liked.has(s.slug));
+}
+
+export function saveCustomSpec(spec: CustomGameSpec) {
+  const all = loadCustomSpecs().filter((s) => s.slug !== spec.slug);
+  all.push(spec);
+  safe.set(KEY.custom, JSON.stringify(applySpecBudget(all)));
+  emit("custom");
+}
+
+/** Games you generated on another device, keyed by slug. */
+export function mergeCustomSpecs(incoming: CustomGameSpec[]) {
+  const mine = loadCustomSpecs();
+  const bySlug = new Map(incoming.map((s) => [s.slug, s]));
+  for (const s of mine) bySlug.set(s.slug, s);
+  safe.set(KEY.custom, JSON.stringify(applySpecBudget([...bySlug.values()])));
+}
 
 export function loadJson<T>(key: "algo" | "theme" | "music", fallback: T): T {
-  const storageKey = key === "algo" ? scopedKey("algo") : DEVICE_KEY[key];
   try {
-    const raw = safe.get(storageKey);
+    const raw = safe.get(KEY[key]);
     return raw ? { ...fallback, ...JSON.parse(raw) } : fallback;
   } catch {
     return fallback;
@@ -196,18 +321,21 @@ export function loadJson<T>(key: "algo" | "theme" | "music", fallback: T): T {
 }
 
 export function saveJson(key: "algo" | "theme" | "music", value: unknown) {
-  const storageKey = key === "algo" ? scopedKey("algo") : DEVICE_KEY[key];
-  safe.set(storageKey, JSON.stringify(value));
+  safe.set(KEY[key], JSON.stringify(value));
+  emit("prefs");
+}
+
+/** Applies a pulled pref without echoing it straight back to the cloud. */
+export function adoptJson(key: "algo" | "theme", value: unknown) {
+  safe.set(KEY[key], JSON.stringify(value));
 }
 
 // ---- seeded leaderboards (deterministic per game, plausible scores) ----
 
-// The first eight are the bot accounts in lib/accounts.ts, so a name on the
-// leaderboard is a profile you can open and message.
 const SEED_HANDLES = [
   "pixelpete", "swipequeen", "thumbwizard", "nervebank", "combo_carl",
-  "latenightlena", "frame_perfect", "onemorego", "greenzone", "bustproof",
-  "feedrider", "chip_stack", "dodgemom", "tap_god_77", "snackbreak",
+  "latenightlena", "greenzone", "bustproof", "tap_god_77", "onemorego",
+  "feedrider", "chip_stack", "dodgemom", "frame_perfect", "snackbreak",
 ];
 
 function hash(str: string): number {
@@ -261,18 +389,10 @@ export function seededScores(slug: string): LeaderboardEntry[] {
   return entries.sort((a, b) => b.score - a.score);
 }
 
-/**
- * Top N with every account on this device merged in. Two players sharing a
- * phone see each other on the board, each under their own handle.
- */
+/** Top N with the player's best merged in. */
 export function leaderboard(slug: string, n = 10): LeaderboardEntry[] {
   const rows = [...seededScores(slug)];
-  const meId = currentAccountId();
-  for (const account of listAccounts()) {
-    if (account.kind === "bot") continue;
-    const best = readBests(account.id)[slug] ?? 0;
-    if (best > 0)
-      rows.push({ handle: account.handle, score: best, you: account.id === meId });
-  }
+  const best = getBest(slug);
+  if (best > 0) rows.push({ handle: getHandle(), score: best, you: true });
   return rows.sort((a, b) => b.score - a.score).slice(0, n);
 }

@@ -83,6 +83,17 @@ export function SearchIcon(p: IconProps) {
   );
 }
 
+export function GridIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+    </Svg>
+  );
+}
+
 export function SparkleIcon(p: IconProps) {
   return (
     <Svg {...p}>
@@ -92,10 +103,78 @@ export function SparkleIcon(p: IconProps) {
   );
 }
 
+export function GearIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M19.4 14.6a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1Z" />
+    </Svg>
+  );
+}
+
+export function UserIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+    </Svg>
+  );
+}
+
+export function CloudIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.4A3.8 3.8 0 0 1 17.5 18H7Z" />
+    </Svg>
+  );
+}
+
+/** Google's mark, drawn in its own colours — the one place we don't tint. */
+export function GoogleMark({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M45.1 24.5c0-1.6-.1-2.8-.4-4H24v7.3h12.1c-.2 2-1.6 5-4.5 7l6.9 5.3c4.1-3.8 6.6-9.4 6.6-15.6Z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.3c-1.9 1.3-4.4 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9.1l-7.1 5.5C8.1 41.1 15.4 46 24 46Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M11.5 28.5A13.5 13.5 0 0 1 10.8 24c0-1.6.3-3.1.7-4.5l-7.1-5.5A22 22 0 0 0 2 24c0 3.5.8 6.9 2.4 10l7.1-5.5Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M24 10.2c4.1 0 6.9 1.8 8.5 3.3l6.1-6C34.9 4 29.9 2 24 2 15.4 2 8.1 6.9 4.4 14l7.1 5.5c1.8-5.3 6.7-9.3 12.5-9.3Z"
+      />
+    </svg>
+  );
+}
+
 export function ChevronUpIcon(p: IconProps) {
   return (
     <Svg {...p}>
       <path d="m6 15 6-6 6 6" />
+    </Svg>
+  );
+}
+
+export function DesktopIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="2.5" y="4" width="19" height="12.5" rx="2" />
+      <path d="M9 20.5h6M12 16.5v4" />
+    </Svg>
+  );
+}
+
+export function PhoneIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2.8" />
+      <path d="M10.5 5.5h3" />
     </Svg>
   );
 }
@@ -114,84 +193,6 @@ export function SoundOffIcon(p: IconProps) {
     <Svg {...p}>
       <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4v-5Z" />
       <path d="m16 10 4 4M20 10l-4 4" />
-    </Svg>
-  );
-}
-
-export function PlusIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="M12 5v14M5 12h14" />
-    </Svg>
-  );
-}
-
-export function MessageIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="M20.5 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.7A8 8 0 1 1 20.5 12Z" />
-    </Svg>
-  );
-}
-
-export function UserIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <circle cx="12" cy="8.5" r="4" />
-      <path d="M4.5 20.2a7.6 7.6 0 0 1 15 0" />
-    </Svg>
-  );
-}
-
-export function UploadIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="M12 16V4M8 7.5 12 3.5l4 4" />
-      <path d="M4.5 15v3.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V15" />
-    </Svg>
-  );
-}
-
-export function DownloadIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="M12 3.5v12M8 12l4 4 4-4" />
-      <path d="M4.5 16v2.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V16" />
-    </Svg>
-  );
-}
-
-export function ChevronLeftIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="m14.5 5-7 7 7 7" />
-    </Svg>
-  );
-}
-
-export function LogOutIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="M15 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2" />
-      <path d="M10.5 12h9.5M17 9l3 3-3 3" />
-    </Svg>
-  );
-}
-
-export function TrashIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5" />
-      <path d="M6.5 6.5 7.4 19a2 2 0 0 0 2 1.9h5.2a2 2 0 0 0 2-1.9l.9-12.5" />
-    </Svg>
-  );
-}
-
-export function GamepadIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="M7.5 7h9a5 5 0 0 1 4.9 5.9l-.6 3.3A2.6 2.6 0 0 1 16.5 17l-1.6-2h-5.8L7.5 17a2.6 2.6 0 0 1-4.3-.8l-.6-3.3A5 5 0 0 1 7.5 7Z" />
-      <path d="M7.5 11v2.2M6.4 12.1h2.2M15.5 11.2h.01M17.6 13.2h.01" />
     </Svg>
   );
 }

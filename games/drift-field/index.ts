@@ -153,7 +153,7 @@ function mount(ctx: GameContext): GameInstance {
     vx = vy = 0;
     if (lives <= 0) {
       over = true;
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "LOST IN SPACE");
     }
   };
 

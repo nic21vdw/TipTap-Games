@@ -26,14 +26,16 @@ const meta = {
 } satisfies GameModule["meta"];
 
 const COLS = 7;
-const ROWS = 9;
 const NCOL = 4; // colour roles: accent, accentAlt, success, danger
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
-  const cell = Math.min((W * 0.92) / COLS, (H * 0.62) / ROWS);
-  const gx = W / 2 - (cell * COLS) / 2;
-  const gy = H * 0.16;
+  // Full-width square cells and a row count taken from the screen, so the
+  // board reaches both ends of the phone instead of floating in a band.
+  const cell = W / COLS;
+  const ROWS = Math.max(9, Math.floor(H / cell));
+  const gx = 0;
+  const gy = (H - cell * ROWS) / 2;
   let grid: (number | null)[][] = [];
   let score = 0;
   let over = false;
@@ -118,7 +120,7 @@ function mount(ctx: GameContext): GameInstance {
     collapse();
     if (!anyMoves()) {
       over = true;
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "NO MOVES LEFT");
     }
   };
   ctx.canvas.addEventListener("pointerdown", onDown);

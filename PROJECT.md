@@ -10,38 +10,44 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | # | Requirement | Status |
 |---|-------------|--------|
 | 1 | Vertical snap feed, 1 swipe = 1 card (touch/wheel/trackpad) | ✅ |
-| 2 | 6+ genuinely different games | ✅ 9 shipped |
+| 2 | 6+ genuinely different games | ✅ 19 shipped, incl. two in 3D |
 | 3 | Auto start >60% visible, hard stop on leave, zero zombie rAF | ✅ verified: `__rafActive === 1` after 12 swipes |
-| 4 | Guest play first, login only at a win moment | ✅ guest → claimable account, progress carries over / ⬜ OAuth (needs Supabase creds) |
-| 5 | Persisted scores | ✅ localStorage, per account / ⬜ Postgres (schema ready) |
-| 6 | Per-game leaderboard + own rank | ✅ seeded + local best merged |
+| 4 | Guest play first, login only at a win moment | ✅ guest + Google OAuth, prompted only on a best/top-ten |
+| 5 | Persisted scores | ✅ localStorage always; Postgres when Supabase env vars exist |
+| 6 | Per-game leaderboard + own rank | ✅ live board when signed in, seeded fallback otherwise |
 | 7 | Endless feed, no bottom | ✅ |
 | 8 | Algorithm tuner changes the queue within 1 swipe | ✅ verified live |
 | 9 | 3+ live-swappable themes | ✅ 4, no remount mid-run |
 | 10 | Deployed public URL | ⬜ connect repo to Vercel (no creds in build env) |
 | 11 | A soundtrack under the whole feed, one song per game | ✅ synthesised live, verified in Chromium |
-| 12 | Accounts: sign up, sign in, several per device, profiles + XP | ✅ verified in Chromium |
-| 13 | Publish your own game — studio, prompt, or uploaded file | ✅ credited to your handle, playable by every account |
-| 14 | Message other accounts, send a game in a DM | ✅ real cross-account threads; bot accounts reply, labelled |
 
 ## Hard rules
 
 - Games are plain canvas/DOM + rAF. No engines. `mount` returns instantly,
-  `destroy` leaves zero listeners/timers/loops.
+  `destroy` leaves zero listeners/timers/loops. 3D is allowed on the same
+  terms — `games/hardwater` and `games/basement-defense` project their own
+  world and paint back-to-front, so they still ship zero dependencies.
 - Games draw only with theme tokens from `ctx.getTheme()` — no hard-coded
   colours in `/games`.
 - Original titles, art, palettes only. Mechanics are homages; names, art
   and trade dress are never borrowed.
 - Casino = arcade-casino: virtual chips, free reset, no purchase
   affordance anywhere.
+- Scrolling goes both ways. A card is never dropped from the list once
+  it's been shown, so scrolling back lands on the game you just left, not a
+  fresh draw — and that has to hold while a game owns the surface too. On a
+  desktop the wheel, arrow keys, Enter and Esc drive the same navigation the
+  swipe gestures do (`components/feed/nav.ts`).
+- The feed never repeats. A game you've scrolled past is struck off the
+  ledger (`ttg:seen`) for good; when the catalog runs out the feed mints
+  new games (`games/variants.ts`) instead of recycling. Liking a game is
+  the one thing that buys it a comeback, and never within 14 cards.
+- The web build is a shop window for an App Store app. Anything
+  viewport-shaped reads `--app-h` / `--safe-top` / `--safe-bottom`, never
+  `dvh` or `env(safe-area-*)` directly — that seam is what lets the iPhone
+  preview simulate a screen.
 - Music is synthesised in the browser, never streamed or bundled. No audio
   file ever enters the repo, so there is nothing to license or attribute.
-- A player-made game is a *spec*, never code: it names one of our engines and
-  restyles it. An uploaded file can be ugly; it can never execute anything.
-- Bot accounts are labelled "bot" on every surface they appear on. Nothing in
-  the app pretends a generated reply came from a person.
-- Accounts are device-local. The sign-up copy says so plainly, asks for no
-  email, and tells you not to reuse a password that matters.
 - A track always starts on the drop. No intros, no builds, no fade-ins:
   landing on a card lands you on the loudest bar of the song.
 - iOS-feel motion everywhere: sheet transitions use
@@ -51,55 +57,41 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 ## Key files
 
 - `games/types.ts` — the game contract; `games/registry.ts` — catalog
-- `lib/algorithm.ts` — scoring + weighted-random sampling
-- `lib/storage.ts` — persistence seam (localStorage now, Supabase later)
-- `lib/accounts.ts` — identity: guests, sign up/in, XP, follows, scoped keys
-- `lib/library.ts` — published player games: publish, import/export, validate
-- `lib/social.ts` — DM threads, game attachments, the labelled bot replies
-- `components/sheets/CreateSheet.tsx` — describe it / build it / upload it
+- `lib/algorithm.ts` — scoring + weighted sampling without replacement
+- `games/variants.ts` — mints fresh games once the catalog is exhausted
+- `lib/storage.ts` — the synchronous local layer everything reads from
+- `lib/cloud.ts` — background replica: mirrors local writes to Postgres,
+  merges the account's copy back on sign-in, redeems run tickets
+- `lib/supabase/config.ts` — the one check for "does this build have a
+  backend?"; every cloud call site degrades to a no-op when it's false
 - `components/feed/GameHost.tsx` — lifecycle owner
 - `lib/music.ts` — Tip Tap Radio: the generative soundtrack engine
 - `store/useMusicStore.ts` — mute / volume / now-playing state
 - `components/sheets/AlgorithmSheet.tsx` — the demo centrepiece
-- `supabase/schema.sql` — ready-to-apply Postgres schema
+- `supabase/schema.sql` — tables, RLS policies, leaderboard functions
+- `app/api/runs/*` — the only writers to `scores`, service-role and
+  ticket-validated
+- `components/shell/DevicePreview.tsx` — desktop ⇄ iPhone preview shell
 
 ## Demo script (2 min)
 
-1. Open the URL on a phone. A game is already running — say nothing for 3s.
+1. Open the URL on a phone. A game is already live and playable — no demo,
+   no tap to start.
 2. Play, swipe, play, swipe. "No menus, no loading, no tutorial." Every
    swipe drops a different song — none of them exist as a file.
 3. Open the tuner. Drag nostalgia up — point at Next up reordering live.
 4. Swipe: the promised game arrives. Switch to 8-Bit mid-run.
 5. Close on the leaderboard.
 
-## Accounts, publishing, messages
-
-The feed is guest-first: you are signed in as *someone* from the first frame,
-and that guest can be claimed at any point — the scores, likes, memories and
-games from before the sign-up move onto the new account. Several accounts
-share a device, each with its own bests, algorithm memories, feed queue and
-inbox; the leaderboard merges them so two people on one phone compete for
-real. Every run pays XP into a level.
-
-A published game is a spec over one of our engines: pick a mechanic, name it,
-colour it, tag it, place it on the algorithm's axes. Three ways in — describe
-it to the generator, build it by hand in the studio, or upload a `.json` file
-someone exported. It lands on the feed with the author's avatar in the rail,
-and the author can unpublish it again.
-
-DMs are real threads between accounts on the device: send from one, switch
-accounts, and it's in the inbox unread. Any card in the feed can ride along
-in a message, and the receiver taps it to queue it as their next card. The
-seeded leaderboard handles are bot accounts that reply on their own — badged
-"bot" wherever they appear.
-
 ## Next up (roadmap)
 
-Expiring "story" games · comment-modifies-the-game ·
-RPS / defuse-bomb / minesweeper / racing mechanics · OAuth + cross-device
-sync once Supabase env vars exist (the schema already models accounts,
-follows, player games and messages) · music that reacts to the run (filter
-opens with your combo, track drops out on a fail).
+Expiring "story" games · like/comment-modifies-the-game/share ·
+profile XP per run · vibe-coded games via a `+` button ·
+RPS / defuse-bomb / minesweeper / racing mechanics · OAuth + guest merge
+once Supabase env vars exist · friends-only leaderboards on top of the
+`profiles` table · Cloudflare Pages deploy (needs `@opennextjs/cloudflare`
++ wrangler) · music that reacts to the run (filter opens with your combo,
+track drops out on a fail).
 
 ## Tip Tap Radio
 

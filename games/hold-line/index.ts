@@ -75,7 +75,7 @@ function mount(ctx: GameContext): GameInstance {
       result = "miss";
       resultT = 0.9;
       over = true;
-      ctx.onRunEnd(score);
+      ctx.onRunEnd(score, "MISSED IT");
     }
   };
   ctx.canvas.addEventListener("pointerdown", onDown);
@@ -100,7 +100,7 @@ function mount(ctx: GameContext): GameInstance {
           ctx.haptic("fail");
           result = "miss";
           over = true;
-          ctx.onRunEnd(score);
+          ctx.onRunEnd(score, "OVERFLOWED");
         }
       }
       if (result === "hit") {
@@ -117,8 +117,8 @@ function mount(ctx: GameContext): GameInstance {
 
     const bx = W / 2 - 44;
     const bw = 88;
-    const by = H * 0.78;
-    const bh = H * 0.56;
+    const by = H * 0.95;
+    const bh = H * 0.9;
 
     // tube
     g.fillStyle = t.surface;

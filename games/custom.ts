@@ -3,16 +3,8 @@
 // recolours it, and repositions it in the algorithm's feature space.
 import type { GameModule } from "@/games/types";
 import type { GameTag } from "@/games/types";
-import { MODULES, CATALOG, registerModule, unregisterModule } from "@/games/registry";
-import type { CustomGameSpec } from "@/lib/library";
-
-const DEFAULT_SPEC_PALETTE = {
-  hero: "#0095f6",
-  foe: "#ff4d6d",
-  prize: "#ffb703",
-  deep: "#9db8d2",
-  glow: "#8ecae6",
-};
+import { MODULES, CATALOG, registerModule } from "@/games/registry";
+import type { CustomGameSpec } from "@/lib/storage";
 
 const VALID_TAGS = new Set<string>([
   "reflex", "precision", "memory", "endurance", "luck",
@@ -37,21 +29,12 @@ export function specToModule(spec: CustomGameSpec): GameModule | null {
     intensity: clamp01(spec.intensity),
     luck: clamp01(spec.luck),
     nostalgia: clamp01(spec.nostalgia),
-    // The colour the author picked has to actually show: it takes over the
-    // hero and the glow, while the base keeps the colours that carry meaning
-    // (what kills you, what you're chasing) so the game stays readable.
-    palette: {
-      ...(base.meta.palette ?? DEFAULT_SPEC_PALETTE),
-      hero: spec.accent,
-      glow: spec.accent,
-    },
   };
   return {
     meta,
     mount: (ctx) =>
       base.mount({
         ...ctx,
-        pal: { ...ctx.pal, hero: spec.accent, glow: spec.accent },
         getTheme: () => ({ ...ctx.getTheme(), accent: spec.accent }),
       }),
   };
@@ -64,9 +47,4 @@ export function registerSpec(spec: CustomGameSpec): boolean {
   if (!mod) return false;
   registerModule(mod);
   return CATALOG.some((m) => m.slug === spec.slug);
-}
-
-/** Pulls a player's game back out of the catalog when they unpublish it. */
-export function unregisterSpec(slug: string) {
-  unregisterModule(slug);
 }
