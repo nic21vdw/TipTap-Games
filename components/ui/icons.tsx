@@ -207,17 +207,6 @@ export function SoundOffIcon(p: IconProps) {
   );
 }
 
-export function GridIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <rect x="4" y="4" width="7" height="7" rx="1.5" />
-      <rect x="13" y="4" width="7" height="7" rx="1.5" />
-      <rect x="4" y="13" width="7" height="7" rx="1.5" />
-      <rect x="13" y="13" width="7" height="7" rx="1.5" />
-    </Svg>
-  );
-}
-
 // One glyph per GameTag — used to give every game a representative icon
 // in the browse-all-games sheet, without resorting to emoji.
 

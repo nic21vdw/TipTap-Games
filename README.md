@@ -5,29 +5,34 @@ mini game. No menus, no loading, no tutorials — the game is already running
 when the card lands, and **you control the algorithm** that decides what
 comes next.
 
-## Run it
+## Run it locally
 
 ```bash
-pnpm install
-pnpm dev        # http://localhost:3000 — open devtools mobile view, 390x844
+npm install
+npm run dev
 ```
 
-## Deploy to Vercel (2 minutes)
+Open [http://localhost:3002](http://localhost:3002). On a desktop-sized
+browser, use the switch to move between the full desktop layout and a framed
+iPhone preview. You can also open either mode directly:
 
-1. Go to [vercel.com/new](https://vercel.com/new) and import `TipTap-Games`.
-2. Accept every default — Next.js is auto-detected, no build settings needed.
-3. Deploy.
+- [Desktop mode](http://localhost:3002/?view=desktop)
+- [iPhone mode](http://localhost:3002/?view=iphone)
 
-**Set the production branch.** `main` is an empty bootstrap commit, so a
-production deploy from it renders nothing. Either merge the open pull
-request first, or in **Settings → Git → Production Branch** point it at
-`claude/hackathon-project-selection-6q3llv`. Vercel also builds a preview
-URL for every branch and PR automatically, so a working link appears as
-soon as the import finishes either way.
+For a production-equivalent local preview:
 
-**Optional — real AI game generation.** Add `DEEPSEEK_API_KEY` under
-**Settings → Environment Variables**. Without it, `/api/generate` falls
-back to a local designer, so the feature works in the demo regardless.
+```bash
+npm run build
+npm start
+```
+
+The app remains a normal Next.js application in both modes. The iPhone mode
+only changes the preview viewport and safe-area metrics; it does not fork,
+disable, or replace any game functionality.
+
+**Optional — real AI game generation.** Add `DEEPSEEK_API_KEY` to
+`.env.local`. Without it, `/api/generate` falls back to a local designer, so
+the feature still works.
 
 ## Accounts and cloud saves (Supabase)
 
@@ -42,7 +47,7 @@ leaderboards, with no code change — see `.env.example` for every variable.
    functions the app reads.
 2. **Turn on Google.** Authentication → Providers → Google. Follow the
    Supabase instructions to create the OAuth client, then add
-   `https://<your-domain>/auth/callback` — and `http://localhost:3000/auth/callback`
+   `https://<your-domain>/auth/callback` — and `http://localhost:3002/auth/callback`
    for local work — to Authentication → URL Configuration → Redirect URLs.
 3. **Set the env vars** (`.env.local` locally, Settings → Environment
    Variables on Vercel):
@@ -91,8 +96,8 @@ carry yet.
 
 ## Desktop vs iPhone preview
 
-The product is an iPhone app; the web build is its shop window. Open the
-Vercel URL on a laptop and a switch in the corner flips between two views:
+Open the Next.js app on a laptop and a switch in the corner flips between
+two views:
 
 - **Desktop** — the app filling the browser window (the old behaviour).
 - **iPhone** — the app running inside a to-scale iPhone, with a device
@@ -100,7 +105,7 @@ Vercel URL on a laptop and a switch in the corner flips between two views:
   insets, and the frame auto-scaling to fit short windows.
 
 The choice is remembered, and `?view=desktop` / `?view=iphone` links
-straight to either one — handy for App Store screenshots and demo links.
+straight to either one — handy for screenshots and demo links.
 On a phone-sized browser none of this exists: you get the app, full bleed.
 
 Implementation lives in `components/shell/DevicePreview.tsx`. The framed
@@ -112,17 +117,9 @@ against.
 
 ## What's inside
 
-- **18 games**, all plain `<canvas>` + rAF, each an original take on a classic
-  mechanic: Reflex Gate, Tap Rush, Word Trap, Hold the Line, Flash Recall,
-  Drop Dodge, One Lane, Pop Chain, Nokia Mode, One Gap, Black Keys, Split,
-  Drop Tower, Cross Traffic, Drift Field, Nic's Basement (a 3D lane defense
-  in Nic's basement — build junk on a receding grid before the horde of
-  Nic-faced zombies reaches the stairs), Hardwater (3D ice fishing — walk
-  the ice, set the hook, crank the fight), Five Nights at Nic's Basement
-  (sit in the chair, spend the battery, survive six hours while three
-  copies of Nic come down the stairs, through the laundry and up the floor
-  drain), and Cash Out (arcade-casino: virtual chips only, nothing to buy,
-  free reset).
+- **100+ games**, all plain `<canvas>` + rAF, ranging from quick reflex and
+  puzzle mechanics to Nic's Basement, Hardwater, Five Nights at Nic's
+  Basement, and Cash Out.
 - **The algorithm tuner** (`⚙` pill or the Tune button): 4 sliders
   (calm↔frantic, skill↔chance, modern↔2008, more-of-this↔surprise-me),
   tag demand/block chips, 4 presets, and a live **Next up** strip that
