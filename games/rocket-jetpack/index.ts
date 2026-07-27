@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "rocket-jetpack",
@@ -237,14 +238,20 @@ function mount(ctx: GameContext): GameInstance {
       g.globalAlpha = 1;
     }
 
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(playerX, player.y, PLAYER_R, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = "rgba(255,255,255,.4)";
-    g.beginPath();
-    g.arc(playerX + 3, player.y - 4, PLAYER_R * 0.35, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: playerX,
+      y: player.y,
+      r: PLAYER_R,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      lean: clamp(player.vy * 0.002, -0.3, 0.3),
+      gape: over ? 0.8 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     g.textAlign = "center";
     g.fillStyle = t.ink;
