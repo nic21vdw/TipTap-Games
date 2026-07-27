@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "snow-carve",
@@ -231,10 +232,20 @@ function mount(ctx: GameContext): GameInstance {
     g.save();
     g.translate(px, py);
     if (airborne) g.rotate(spinCounter * Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(0, 0, 14, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: 0,
+      y: 0,
+      r: 14,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: airborne ? 0.5 : 0,
+      scowl: over ? 1 : 0,
+    });
+    // the board stays under him
     g.fillStyle = shade(pal.hero, -0.3);
     g.fillRect(-18, 8, 36, 6);
     g.restore();

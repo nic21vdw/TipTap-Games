@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "temple-dash",
@@ -265,10 +266,21 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = pal.hero;
     roundRect(g, pp.x - 16, pp.y - 46 * squash - jumpArc, 32, 46 * squash, 10);
     g.fill();
-    g.beginPath();
-    g.arc(pp.x, pp.y - 46 * squash - jumpArc - 12, 12, 0, Math.PI * 2);
-    g.fillStyle = shade(pal.hero, 0.2);
-    g.fill();
+    drawNicHead(g, {
+      x: pp.x,
+      y: pp.y - 46 * squash - jumpArc - 12,
+      r: 13,
+      skin: shade(pal.hero, 0.2),
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      // ducking a beam scrunches him down, the jump tips him back
+      lean: jumping ? -0.18 : 0,
+      gape: sliding || jumping ? 0.4 : 0,
+      scowl: 0.4,
+    });
 
     g.fillStyle = t.ink;
     g.font = `700 15px ${t.fontDisplay}`;

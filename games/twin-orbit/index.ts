@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, clamp, rand, shade } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "twin-orbit",
@@ -205,11 +206,21 @@ function mount(ctx: GameContext): GameInstance {
     g.arc(center.x, center.y, 4, 0, Math.PI * 2);
     g.fill();
 
-    g.fillStyle = over ? pal.foe : pal.hero;
+    // both orbiting bodies are him, staring each other down across the centre
     for (const orb of [orb1, orb2]) {
-      g.beginPath();
-      g.arc(orb.x, orb.y, orbR, 0, Math.PI * 2);
-      g.fill();
+      drawNicHead(g, {
+        x: orb.x,
+        y: orb.y,
+        r: orbR,
+        skin: over ? pal.foe : pal.hero,
+        hair: shade(pal.deep, -0.4),
+        eye: theme.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: theme.ink,
+        gape: over ? 0.9 : 0,
+        scowl: over ? 1 : 0,
+      });
     }
 
     if (over) endCard(g, theme, W, H, "COLLISION");
