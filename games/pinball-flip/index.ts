@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "pinball-flip",
@@ -184,10 +185,18 @@ function mount(ctx: GameContext): GameInstance {
     g.restore();
 
     if (ball.active) {
-      g.fillStyle = "#fff";
-      g.beginPath();
-      g.arc(ball.x, ball.y, 8, 0, Math.PI * 2);
-      g.fill();
+      drawNicHead(g, {
+        x: ball.x,
+        y: ball.y,
+        r: 9,
+        skin: pal.glow,
+        hair: shade(pal.deep, -0.4),
+        eye: theme.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: theme.ink,
+        gape: 0.4,
+      });
     } else if (!over) {
       g.fillStyle = theme.surface;
       g.fillRect(W * 0.92, H * 0.4, 10, H * 0.4);

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "break-pool",
@@ -314,14 +315,17 @@ function mount(ctx: GameContext): GameInstance {
 
     for (const b of balls) {
       if (b.potted) continue;
-      g.beginPath();
-      g.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      g.fillStyle = b.color;
-      g.fill();
-      g.beginPath();
-      g.arc(b.x - b.r * 0.3, b.y - b.r * 0.32, b.r * 0.3, 0, Math.PI * 2);
-      g.fillStyle = "rgba(255,255,255,.5)";
-      g.fill();
+      drawNicHead(g, {
+        x: b.x,
+        y: b.y,
+        r: b.r,
+        skin: b.color,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+      });
     }
 
     if (aiming) {
