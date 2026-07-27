@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "ice-slide",
@@ -176,10 +177,19 @@ function mount(ctx: GameContext): GameInstance {
         }
       }
 
-    g.fillStyle = pal.hero;
-    g.beginPath();
-    g.arc(ox + px * cell + cell / 2, oy + py * cell + cell / 2, cell * 0.3, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: ox + px * cell + cell / 2,
+      y: oy + py * cell + cell / 2,
+      r: cell * 0.32,
+      skin: pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, theme, W, H, "INTO THE ICE");
   });

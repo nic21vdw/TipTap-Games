@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "hill-drive",
@@ -221,8 +222,20 @@ function mount(ctx: GameContext): GameInstance {
     g.arc(-14, 8, 8, 0, Math.PI * 2);
     g.arc(14, 8, 8, 0, Math.PI * 2);
     g.fill();
-    g.fillStyle = pal.glow;
-    g.fillRect(6, -16, 10, 8);
+    // driver in the cab, riding out whatever the hill does
+    drawNicHead(g, {
+      x: 8,
+      y: -17,
+      r: 9,
+      skin: pal.glow,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      scowl: over ? 1 : 0.3,
+      gape: over ? 0.9 : 0,
+    });
     g.restore();
 
     // fuel bar

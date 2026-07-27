@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "ghost-race",
@@ -179,10 +180,19 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     const pos = carPos();
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(pos.x, pos.y, 9, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: pos.x,
+      y: pos.y,
+      r: 9,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      scowl: 0.5,
+      gape: over ? 0.9 : 0,
+    });
 
     g.fillStyle = t.ink;
     g.font = `700 14px ${t.fontBody}`;

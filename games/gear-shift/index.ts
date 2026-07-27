@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, roundRect, shade, clamp, rand } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "gear-shift",
@@ -179,10 +180,19 @@ function mount(ctx: GameContext): GameInstance {
 
     // player car
     const playerX = startX + (finishX - startX) * playerProgress;
-    g.fillStyle = over ? shade(pal.hero, -0.2) : pal.hero;
-    g.beginPath();
-    g.arc(playerX, trackY + trackH + 14, 10, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: playerX,
+      y: trackY + trackH + 14,
+      r: 10,
+      skin: over ? shade(pal.hero, -0.2) : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      scowl: 0.6,
+      gape: over ? 0.9 : 0,
+    });
 
     // RPM bar
     const barX = W * 0.14;
