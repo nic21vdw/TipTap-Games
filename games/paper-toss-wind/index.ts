@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "paper-toss-wind",
@@ -233,14 +234,20 @@ function mount(ctx: GameContext): GameInstance {
     g.fillText("WIND", wx, wy + 22);
 
     // ball
-    g.beginPath();
-    g.arc(ball.x, ball.y, 12, 0, Math.PI * 2);
-    g.fillStyle = pal.hero;
-    g.fill();
-    g.fillStyle = "rgba(0,0,0,.15)";
-    g.beginPath();
-    g.arc(ball.x - 3, ball.y - 3, 4, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: ball.x,
+      y: ball.y,
+      r: 12,
+      skin: pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      // he is the thing being thrown, and he has opinions about it
+      gape: 0.5,
+      scowl: 0.6,
+    });
 
     // hud
     g.fillStyle = t.ink;

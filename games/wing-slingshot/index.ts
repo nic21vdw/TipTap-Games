@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "wing-slingshot",
@@ -268,10 +269,18 @@ function mount(ctx: GameContext): GameInstance {
     g.lineTo(pouch.x, pouch.y);
     g.stroke();
     if (!proj.active) {
-      g.beginPath();
-      g.arc(pouch.x, pouch.y, 10, 0, Math.PI * 2);
-      g.fillStyle = pal.hero;
-      g.fill();
+      drawNicHead(g, {
+        x: pouch.x,
+        y: pouch.y,
+        r: 11,
+        skin: pal.hero,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        scowl: 0.7,
+      });
     }
 
     // blocks

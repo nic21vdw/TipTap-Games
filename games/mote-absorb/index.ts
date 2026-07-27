@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "mote-absorb",
@@ -184,10 +185,19 @@ function mount(ctx: GameContext): GameInstance {
       g.globalAlpha = 1;
     }
 
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(player.x, player.y, Math.max(3, player.r), 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: player.x,
+      y: player.y,
+      r: Math.max(3, player.r),
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0.25,
+      scowl: over ? 1 : 0,
+    });
     g.fillStyle = pal.glow;
     g.globalAlpha = 0.5;
     g.beginPath();
