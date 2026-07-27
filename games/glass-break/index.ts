@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "glass-break",
@@ -257,13 +258,23 @@ function mount(ctx: GameContext): GameInstance {
       g.fill();
     }
 
-    // player
+    // player — shoulders below, him above
     g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(playerX, nearY + 14, 12, 0, Math.PI * 2);
-    g.fill();
     roundRect(g, playerX - 16, nearY + 22, 32, 18, 6);
     g.fill();
+    drawNicHead(g, {
+      x: playerX,
+      y: nearY + 13,
+      r: 13,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.8 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     // lives HUD
     for (let i = 0; i < START_LIVES; i++) {

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, roundRect, shade, clamp } from "@/games/engine";
+import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "horde-run",
@@ -229,11 +230,22 @@ function mount(ctx: GameContext): GameInstance {
       g.fill();
     }
 
-    // player
-    g.fillStyle = over ? shade(pal.hero, -0.3) : pal.hero;
-    g.beginPath();
-    g.arc(playerX, drawY, playerR, 0, Math.PI * 2);
-    g.fill();
+    // player — one Nic out front of the horde chasing him
+    drawNicHead(g, {
+      x: playerX,
+      y: drawY,
+      r: playerR,
+      skin: over ? shade(pal.hero, -0.3) : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      // glancing back at what is gaining on him
+      gaze: -0.7,
+      gape: hitFlash > 0 || over ? 0.8 : 0.15,
+      scowl: over ? 1 : 0.4,
+    });
 
     if (hitFlash > 0) {
       g.fillStyle = `rgba(255,0,0,${0.25 * hitFlash})`;
