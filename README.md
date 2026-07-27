@@ -5,6 +5,20 @@ mini game. No menus, no loading, no tutorials — the game is already running
 when the card lands, and **you control the algorithm** that decides what
 comes next.
 
+## Play it now
+
+**[tip-tap-games-roan.vercel.app](https://tip-tap-games-roan.vercel.app)** —
+nothing to install, nothing to sign in to. A game is already running when the
+page lands. Open it on a phone for the real thing, or on a laptop and use the
+switch in the corner for a to-scale iPhone frame:
+
+- [Desktop](https://tip-tap-games-roan.vercel.app/?view=desktop)
+- [iPhone](https://tip-tap-games-roan.vercel.app/?view=iphone)
+
+Swipe (or scroll, or ↑ ↓) for the next card. The `⚙` pill opens the
+algorithm tuner — move a slider and the **Next up** strip reorders before
+your next swipe.
+
 ## Run it locally
 
 ```bash
@@ -152,3 +166,7 @@ everything past the current card before your next swipe.
 - Vibe-code games: a `+` button that generates a brand-new game into the feed
 - More mechanics: rock-paper-scissors vs the feed, defuse-the-bomb,
   minesweeper-like, racing, sports
+
+## License
+
+MIT — see [LICENSE](LICENSE).
