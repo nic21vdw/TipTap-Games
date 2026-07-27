@@ -94,7 +94,10 @@ export function GameCard({ card, index }: Props) {
   // pointer stream in the capture phase and claims anything that reads as a
   // vertical flick. No game control is an upward drag, so the two never
   // compete: taps, holds and sideways drags all fall through untouched.
+  // Touch and pen only: on desktop the wheel is the one way through the feed,
+  // so a mouse drag stays with the game it started on.
   const onPlayDown = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") return;
     swipeRef.current = {
       id: e.pointerId,
       x: e.clientX,
