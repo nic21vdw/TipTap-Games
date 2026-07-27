@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "stack-fall",
@@ -309,6 +310,18 @@ function mount(ctx: GameContext): GameInstance {
         g.fillStyle = piece.def.color;
         roundRect(g, ox + ax * cell + 1, oy + ay * cell + 1, cell - 2, cell - 2, cell * 0.18);
         g.fill();
+        // every block in the falling piece is a little him
+        drawNicHead(g, {
+          x: ox + ax * cell + cell / 2,
+          y: oy + ay * cell + cell / 2,
+          r: cell * 0.3,
+          skin: piece.def.color,
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+        });
       }
     }
 

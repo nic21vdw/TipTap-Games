@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "merge-tile",
@@ -231,6 +232,22 @@ function mount(ctx: GameContext): GameInstance {
         g.fillStyle = tileColor(v);
         roundRect(g, cx - s / 2, cy - s / 2, s, s, 8);
         g.fill();
+
+        // he sits under the number rather than fighting it for the tile
+        g.save();
+        g.globalAlpha = 0.32;
+        drawNicHead(g, {
+          x: cx,
+          y: cy,
+          r: s * 0.36,
+          skin: shade(tileColor(v), -0.3),
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+        });
+        g.restore();
 
         g.fillStyle = v <= 4 ? t.ink : "#ffffff";
         g.font = `800 ${Math.floor(tileSize * (v < 100 ? 0.42 : v < 1000 ? 0.34 : 0.27))}px ${t.fontDisplay}`;
