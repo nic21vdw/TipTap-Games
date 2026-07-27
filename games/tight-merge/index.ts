@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "tight-merge",
@@ -228,6 +229,21 @@ function mount(ctx: GameContext): GameInstance {
         g.fillStyle = shade(base, -0.35 + Math.min(0.55, tier * 0.07));
         roundRect(g, x + 3, y + 3, cell - 6, cell - 6, 10);
         g.fill();
+        // under the number, same as Merge Tile
+        g.save();
+        g.globalAlpha = 0.3;
+        drawNicHead(g, {
+          x: x + cell / 2,
+          y: y + cell / 2,
+          r: cell * 0.32,
+          skin: shade(base, -0.6),
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+        });
+        g.restore();
         g.textAlign = "center";
         g.fillStyle = tier >= SEQ.length - 3 ? "#1a1a1a" : "#0d1117";
         const fs = v >= 1000 ? cell * 0.24 : cell * 0.32;

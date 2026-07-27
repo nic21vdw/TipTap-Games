@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, clamp, roundRect } from "@/games/engine";
+import { clamp, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import { drawCanTop, skins } from "@/games/nic-art";
 import {
   createFx,
@@ -349,6 +350,19 @@ function mount(ctx: GameContext): GameInstance {
       g.fill();
       g.fillStyle = hexA("#ffffff", 0.25);
       g.fillRect(curX + 3, movY + 1.5, towerW - 6, 2);
+      // the slab swinging overhead has him riding it
+      drawNicHead(g, {
+        x: curX + towerW / 2,
+        y: movY + blockH / 2,
+        r: Math.min(towerW * 0.2, blockH * 0.42),
+        skin: col,
+        hair: shade(pal.deep, -0.4),
+        eye: th.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: th.ink,
+        gape: 0.3,
+      });
       lids(curX, movY, towerW, stack.length);
     }
 
