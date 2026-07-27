@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "rage-climb",
@@ -259,10 +260,20 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = pal.hero;
     roundRect(g, cx - 16, cy - 14, 32, 22, 8);
     g.fill();
-    g.beginPath();
-    g.arc(cx, cy - 20, 9, 0, Math.PI * 2);
-    g.fillStyle = shade(pal.hero, 0.3);
-    g.fill();
+    drawNicHead(g, {
+      x: cx,
+      y: cy - 20,
+      r: 10,
+      skin: shade(pal.hero, 0.3),
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      // the whole point of the game is that he is furious
+      scowl: 1,
+      gape: 0.4,
+    });
 
     // time bar
     const barW = W * 0.7;
