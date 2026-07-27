@@ -43,6 +43,34 @@ export const VALID_TAGS = [
 
 const TAG_SET = new Set<string>(VALID_TAGS);
 
+export const TITLE_ADJ = [
+  "Neon", "Void", "Turbo", "Ghost", "Hyper", "Static", "Midnight", "Crimson",
+  "Zero", "Iron", "Lucid", "Feral", "Glass", "Solar", "Panic", "Velvet",
+  "Chrome", "Cobalt", "Rogue", "Quiet", "Savage", "Paper", "Wired", "Frost",
+] as const;
+
+export const TITLE_NOUN = [
+  "Rush", "Drift", "Circuit", "Pulse", "Lane", "Vault", "Signal", "Cascade",
+  "Reflex", "Gauntlet", "Fracture", "Ladder", "Streak", "Switch", "Tempo",
+  "Margin", "Relay", "Spiral", "Break", "Chase", "Tide", "Hazard",
+] as const;
+
+/**
+ * The one place a two-word game name is built. Both indices come off the
+ * seed unsigned: a signed shift here reads negative for every seed with the
+ * high bit set, and `WORDS[-4]` is how the literal "undefined" ended up in
+ * saved titles.
+ */
+export function titleFromSeed(seed: number): string {
+  const s = seed >>> 0;
+  const adj = TITLE_ADJ[s % TITLE_ADJ.length];
+  const noun = TITLE_NOUN[(s >>> 5) % TITLE_NOUN.length];
+  return `Nic's ${adj} ${noun}`;
+}
+
+/** A name that leaked a JS non-value is not a name — rebuild it instead. */
+const BROKEN_NAME = /\b(undefined|null|NaN)\b/i;
+
 /** A base is usable only if it is allow-listed AND actually in the catalog. */
 export function isGeneratorBase(slug: unknown): slug is string {
   return (
@@ -111,7 +139,14 @@ export function normalizeSpec(
   seed = ""
 ): CustomGameSpec {
   const input = (raw ?? {}) as Partial<CustomGameSpec>;
-  let title = text(input.title, 24).replace(/^["'`]|["'`]$/g, "") || "Wildcard";
+  const given = text(input.title, 24).replace(/^["'`]|["'`]$/g, "");
+  // A spec that was saved by an earlier build carries whatever name that
+  // build produced, so a malformed one is repaired here rather than trusted.
+  // Seeding off the slug keeps the repair stable across sessions.
+  let title =
+    given && !BROKEN_NAME.test(given)
+      ? given
+      : titleFromSeed(hash(text(input.slug, 64) || given || seed || "wildcard"));
   // Every game in the feed carries Nic's name — add it if it's missing.
   if (!/\bnic/i.test(title)) {
     title = `Nic's ${title}`.slice(0, 24);
