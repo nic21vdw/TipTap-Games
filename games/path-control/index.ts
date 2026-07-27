@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "path-control",
@@ -302,13 +303,25 @@ function mount(ctx: GameContext): GameInstance {
       g.save();
       g.translate(c.pos.x, c.pos.y);
       g.rotate(c.angle);
-      g.fillStyle = c === selected ? pal.glow : c.color;
+      g.fillStyle = shade(pal.deep, -0.2);
       g.beginPath();
-      g.moveTo(12, 0);
-      g.lineTo(-8, 7);
-      g.lineTo(-8, -7);
+      g.moveTo(13, 0);
+      g.lineTo(-9, 8);
+      g.lineTo(-9, -8);
       g.closePath();
       g.fill();
+      g.rotate(-c.angle);
+      drawNicHead(g, {
+        x: 0,
+        y: 0,
+        r: 6,
+        skin: c === selected ? pal.glow : c.color,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+      });
       g.restore();
     }
 
