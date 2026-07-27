@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, roundRect, shade, clamp } from "@/games/engine";
+import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "tempo-hop",
@@ -221,14 +222,20 @@ function mount(ctx: GameContext): GameInstance {
     const jumpP2 = jumping ? jumpT / jumpDur : 0;
     const jumpOffset2 = jumping ? jumpHeight * 4 * jumpP2 * (1 - jumpP2) : 0;
     const py = groundY - playerR - jumpOffset2;
-    g.fillStyle = over ? shade(pal.hero, -0.3) : pal.hero;
-    g.beginPath();
-    g.arc(playerX, py, playerR, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = shade(pal.deep, -0.6);
-    g.beginPath();
-    g.arc(playerX + playerR * 0.3, py - playerR * 0.2, playerR * 0.22, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: playerX,
+      y: py,
+      r: playerR,
+      skin: over ? shade(pal.hero, -0.3) : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      lean: -jumpOffset2 * 0.006,
+      gape: jumping ? 0.35 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     // combo readout
     g.textAlign = "center";
