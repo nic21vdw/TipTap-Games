@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "tank-arena",
@@ -296,11 +297,21 @@ function mount(ctx: GameContext): GameInstance {
       g.fill();
     }
 
+    // the things closing in on you are all him
     for (const e of enemies) {
-      g.beginPath();
-      g.arc(e.x, e.y, e.r, 0, Math.PI * 2);
-      g.fillStyle = shade(pal.foe, e.hp > 1 ? 0.1 : -0.1);
-      g.fill();
+      drawNicHead(g, {
+        x: e.x,
+        y: e.y,
+        r: e.r,
+        skin: shade(pal.foe, e.hp > 1 ? 0.1 : -0.1),
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        scowl: 1,
+        gape: e.hp > 1 ? 0.4 : 0,
+      });
     }
 
     // tank body
