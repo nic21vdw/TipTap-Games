@@ -29,8 +29,10 @@ export function goToCard(root: HTMLElement | null | undefined, index: number) {
 }
 
 /**
- * True when the primary input is a mouse or trackpad. The gestures are the
- * same either way; only the wording of the on-screen hints changes.
+ * True when the primary input is a mouse or trackpad. Used for the wording of
+ * the on-screen hints. It is not what gates the swipe: a touchscreen laptop
+ * reports a fine pointer and still has to answer to a thumb, so the gesture
+ * itself keys off the pointerType of the event that starts it.
  */
 export function useFinePointer() {
   const [fine, setFine] = useState(false);
