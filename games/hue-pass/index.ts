@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "hue-pass",
@@ -151,13 +152,19 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     // ball shows its current color
-    g.beginPath();
-    g.arc(W / 2, ballY, 11, 0, Math.PI * 2);
-    g.fillStyle = over ? shade(pal.foe, -0.1) : COLORS[ballColor];
-    g.fill();
-    g.strokeStyle = shade(t.surface, 0.2);
-    g.lineWidth = 2;
-    g.stroke();
+    drawNicHead(g, {
+      x: W / 2,
+      y: ballY,
+      r: 12,
+      skin: over ? shade(pal.foe, -0.1) : COLORS[ballColor],
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, t, W, H, "WRONG HUE");
   });
