@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, clamp, rand, shade } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "copter-thrust",
@@ -179,10 +180,19 @@ function mount(ctx: GameContext): GameInstance {
     g.closePath();
     g.fill();
 
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(x, craftY, craftR, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: x,
+      y: craftY,
+      r: craftR,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      gape: over ? 0.85 : 0,
+      scowl: over ? 1 : 0,
+    });
     if (flashT > 0) {
       g.strokeStyle = pal.prize;
       g.globalAlpha = flashT / 0.25;
