@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "impossible-path",
@@ -244,10 +245,17 @@ function mount(ctx: GameContext): GameInstance {
         g.fill();
 
         if (isStart) {
-          g.fillStyle = pal.hero;
-          g.beginPath();
-          g.arc(x0 + cell / 2, y0 + cell / 2, cell * 0.14, 0, Math.PI * 2);
-          g.fill();
+          drawNicHead(g, {
+            x: x0 + cell / 2,
+            y: y0 + cell / 2,
+            r: cell * 0.22,
+            skin: pal.hero,
+            hair: shade(pal.deep, -0.4),
+            eye: t.ink,
+            pupil: shade(pal.deep, -0.65),
+            dark: shade(pal.deep, -0.65),
+            tooth: t.ink,
+          });
           continue;
         }
         if (isGoal) {

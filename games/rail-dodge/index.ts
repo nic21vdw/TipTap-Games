@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "rail-dodge",
@@ -241,14 +242,20 @@ function mount(ctx: GameContext): GameInstance {
 
     // player ball
     const px = cx + playerOffset;
-    g.beginPath();
-    g.arc(px, playerY, BALL_R, 0, Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.fill();
-    g.beginPath();
-    g.arc(px - BALL_R * 0.3, playerY - BALL_R * 0.3, BALL_R * 0.35, 0, Math.PI * 2);
-    g.fillStyle = "rgba(255,255,255,.7)";
-    g.fill();
+    drawNicHead(g, {
+      x: px,
+      y: playerY,
+      r: BALL_R,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      lean: playerOffset * 0.004,
+      gape: over ? 0.85 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, t, W, H, "OFF THE RAIL");
   });

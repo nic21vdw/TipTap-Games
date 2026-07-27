@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "shaft-descent",
@@ -234,10 +235,19 @@ function mount(ctx: GameContext): GameInstance {
       g.fillRect(s.x - 2, s.y - 10, 4, 14);
     }
 
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(px, H * 0.36, 13, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: px,
+      y: H * 0.36,
+      r: 13,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0.2,
+      scowl: over ? 1 : 0,
+    });
     g.fillStyle = pal.glow;
     g.globalAlpha = 0.5;
     g.beginPath();
