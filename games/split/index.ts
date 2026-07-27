@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, clamp, roundRect } from "@/games/engine";
+import { makeLoop, clamp, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -343,16 +344,21 @@ function mount(ctx: GameContext): GameInstance {
     g.fill();
     g.fillStyle = hexA("#000000", 0.18);
     for (let k = -12; k < 14; k += 9) g.fillRect(k, -16, 3, 28);
-    // head
-    g.fillStyle = "#f3c9a0";
-    g.beginPath();
-    g.arc(2, -26, 11, 0, Math.PI * 2);
-    g.fill();
-    // beard + hat, because a lumberjack needs both
-    g.fillStyle = mix(pal.hero, "#000000", 0.35);
-    g.beginPath();
-    g.arc(4, -22, 8, -0.2, Math.PI - 0.5);
-    g.fill();
+    // head — the lumberjack is him
+    drawNicHead(g, {
+      x: 2,
+      y: -27,
+      r: 12,
+      skin: "#f3c9a0",
+      hair: shade(pal.deep, -0.4),
+      eye: th.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: th.ink,
+      gape: clamp(swing / 0.16, 0, 1) * 0.55,
+      scowl: over && !ranOut ? 1 : 0,
+    });
+    // the hat stays, because a lumberjack needs one
     g.fillStyle = pal.foe;
     roundRect(g, -9, -38, 22, 8, 3);
     g.fill();

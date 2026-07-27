@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "pipe-flow",
@@ -344,16 +345,25 @@ function mount(ctx: GameContext): GameInstance {
     // dots
     for (const d of dots) {
       const p = cellCenter(d.r, d.c);
+      const dotCol = PALETTE[d.color % PALETTE.length];
+      const joined = connected.has(d.color);
       g.beginPath();
       g.arc(p.x, p.y, cellPx * 0.3, 0, Math.PI * 2);
-      g.fillStyle = PALETTE[d.color % PALETTE.length];
+      g.fillStyle = dotCol;
       g.fill();
-      if (connected.has(d.color)) {
-        g.beginPath();
-        g.arc(p.x, p.y, cellPx * 0.14, 0, Math.PI * 2);
-        g.fillStyle = "rgba(255,255,255,.55)";
-        g.fill();
-      }
+      // both ends of every line are him, and he grins once they meet
+      drawNicHead(g, {
+        x: p.x,
+        y: p.y,
+        r: cellPx * 0.24,
+        skin: shade(dotCol, joined ? 0.45 : 0.1),
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gape: joined ? 0.6 : 0,
+      });
     }
 
     // HUD: level + mistakes
