@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawDrink, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "blade-throw",
@@ -37,6 +38,7 @@ const norm = (a: number) => {
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
+  const fridge = skins(pal);
 
   const logX = W / 2;
   const logY = H * 0.4;
@@ -189,10 +191,8 @@ function mount(ctx: GameContext): GameInstance {
       const a = (fruitSlot / SLOTS) * TWO_PI + rotation;
       const fx = logX + Math.cos(a) * logR * 0.8;
       const fy = logY + Math.sin(a) * logR * 0.8;
-      g.beginPath();
-      g.arc(fx, fy, 6, 0, TWO_PI);
-      g.fillStyle = pal.prize;
-      g.fill();
+      // the thing worth hitting is a can
+      drawDrink(g, fx, fy, 11, fridge.energy, "energy", a);
     }
 
     // flying blade

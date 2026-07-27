@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, clamp, rand, roundRect, shade } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "ball-stream",
@@ -249,12 +250,21 @@ function mount(ctx: GameContext): GameInstance {
       g.textAlign = "left";
     }
 
+    // every ball in the stream is another one of him
     for (const b of balls) {
       if (!b.live) continue;
-      g.beginPath();
-      g.arc(b.x, b.y, ballR, 0, Math.PI * 2);
-      g.fillStyle = pal.prize;
-      g.fill();
+      drawNicHead(g, {
+        x: b.x,
+        y: b.y,
+        r: ballR * 1.15,
+        skin: pal.prize,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gape: 0.3,
+      });
     }
 
     if (aiming && !over) {

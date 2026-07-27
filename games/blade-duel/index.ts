@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "blade-duel",
@@ -194,10 +195,22 @@ function mount(ctx: GameContext): GameInstance {
     // fighters: simple silhouettes
     const drawFighter = (x: number, color: string, facingLeft: boolean) => {
       g.fillStyle = color;
-      g.beginPath();
-      g.arc(x, baseY - 62, 13, 0, Math.PI * 2);
-      g.fill();
       g.fillRect(x - 10, baseY - 50, 20, 40);
+      // both duellists are him, which is the only fair fight
+      drawNicHead(g, {
+        x,
+        y: baseY - 62,
+        r: 13,
+        skin: color,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gaze: facingLeft ? -0.8 : 0.8,
+        scowl: 1,
+      });
+      g.fillStyle = color;
       g.fillRect(x - 5, baseY - 10, 9, 26);
       g.fillRect(x + 3, baseY - 10, 9, 26);
       // blade arm
