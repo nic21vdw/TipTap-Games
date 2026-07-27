@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, pick, clamp, roundRect } from "@/games/engine";
+import { makeLoop, pick, clamp, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -276,6 +277,23 @@ function mount(ctx: GameContext): GameInstance {
     g.stroke();
 
     halo(g, 0, 10, cw * 0.5, ink, 0.28);
+    // he is behind every label, wearing the ink that is probably lying
+    g.save();
+    g.globalAlpha = 0.2;
+    drawNicHead(g, {
+      x: 0,
+      y: 4,
+      r: ch * 0.36,
+      skin: ink,
+      hair: shade(pal.deep, -0.4),
+      eye: th.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: th.ink,
+      gape: verdict ? (verdict.right ? 0.6 : 0.25) : 0,
+      scowl: verdict && !verdict.right ? 1 : 0,
+    });
+    g.restore();
     g.textAlign = "center";
     // the word, rendered in the (probably lying) ink colour
     const size = Math.min(54, (cw * 0.82) / (word.length * 0.6));

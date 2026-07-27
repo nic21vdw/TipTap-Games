@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, roundRect, shade, clamp, pick } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "word-duel",
@@ -202,6 +203,19 @@ function mount(ctx: GameContext): GameInstance {
       g.fillStyle = isPicked ? pal.prize : shade(pal.hero, -0.15);
       roundRect(g, x, y, size, size, 10);
       g.fill();
+      // every letter you spell with sits on his face
+      drawNicHead(g, {
+        x: x + size / 2,
+        y: y + size / 2,
+        r: size * 0.34,
+        skin: shade(isPicked ? pal.prize : pal.hero, isPicked ? -0.3 : 0.25),
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gape: isPicked ? 0.55 : 0,
+      });
       g.fillStyle = isPicked ? shade(pal.deep, -0.2) : "#fff";
       g.font = `800 ${Math.floor(size * 0.42)}px ${t.fontDisplay}`;
       g.fillText(tiles[i].ch, x + size / 2, y + size * 0.65);

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "hardwater",
@@ -765,6 +766,22 @@ function mount(ctx: GameContext): GameInstance {
       // head + toque
       box3(nicX, y + 1.86, nicZ, 0.62, 0.55, 0.55, shade(pal.hero, 0.42));
       box3(nicX, y + 2.36, nicZ, 0.68, 0.3, 0.6, pal.foe);
+      // the face on the front of that head, so the walker reads as him
+      const hp = project(nicX, y + 2.12, nicZ - 0.3);
+      if (hp.z > 0.35) {
+        drawNicHead(g, {
+          x: hp.x,
+          y: hp.y,
+          r: (0.33 * FOCAL) / hp.z,
+          skin: shade(pal.hero, 0.42),
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+          gape: phase === "fight" ? 0.7 : 0,
+        });
+      }
       // headphones, because he's always got them on
       box3(nicX - 0.36, y + 2.02, nicZ, 0.14, 0.28, 0.34, DARK);
       box3(nicX + 0.36, y + 2.02, nicZ, 0.14, 0.28, 0.34, DARK);
