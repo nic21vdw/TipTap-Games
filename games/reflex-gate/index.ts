@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand, clamp, roundRect } from "@/games/engine";
+import { clamp, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -277,10 +278,19 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = over ? pal.foe : "#ffffff";
     roundRect(g, px - 3.5, trackY - barH / 2 - 20, 7, barH + 40, 3.5);
     g.fill();
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(px, trackY, 9, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: px,
+      y: trackY,
+      r: 10,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: th.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: th.ink,
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
     g.fillStyle = "#ffffff";
     g.beginPath();
     g.arc(px, trackY, 4, 0, Math.PI * 2);
