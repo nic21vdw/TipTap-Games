@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "tap-fortune",
@@ -122,10 +123,23 @@ function mount(ctx: GameContext): GameInstance {
     g.beginPath();
     g.arc(cx, cy, R * (1 + pulse * 0.08), 0, Math.PI * 2);
     g.fill();
+    // the button you hammer all game is his face
+    drawNicHead(g, {
+      x: cx,
+      y: cy,
+      r: R * 0.74 * (1 + pulse * 0.08),
+      skin: shade(pal.prize, 0.15),
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      gape: pulse * 0.8,
+    });
     g.fillStyle = "#fff";
     g.font = "800 15px system-ui";
     g.textAlign = "center";
-    g.fillText("TAP", cx, cy + 5);
+    g.fillText("TAP", cx, cy + R + 20);
 
     for (const p of pops) {
       g.globalAlpha = clamp(p.t / 0.7, 0, 1);

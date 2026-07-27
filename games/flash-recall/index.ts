@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, clamp, roundRect } from "@/games/engine";
+import { makeLoop, clamp, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   drawBackdrop,
@@ -270,12 +271,20 @@ function mount(ctx: GameContext): GameInstance {
       g.lineWidth = 2;
       roundRect(g, x + 1, y + 1 - lift * 2, s - 2, s - 2, 15);
       g.stroke();
-      // a lit pad gets a bright core
-      if (lift > 0.05) {
-        g.fillStyle = hexA("#ffffff", lift * 0.35);
-        roundRect(g, x + s * 0.2, y + s * 0.2 - lift * 2, s * 0.6, s * 0.6, 12);
-        g.fill();
-      }
+      // every slot on the shelf is him, and a lit one lights up
+      drawNicHead(g, {
+        x: x + s / 2,
+        y: y + s / 2 - lift * 2,
+        r: s * 0.3,
+        skin: mix(col, "#ffffff", 0.22 + lift * 0.55),
+        hair: shade(pal.deep, -0.4),
+        eye: th.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: th.ink,
+        gape: lift * 0.7,
+        scowl: bad,
+      });
     }
 
     // ---- progress: one dot per step in the sequence
