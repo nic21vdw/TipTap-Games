@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand, clamp, roundRect } from "@/games/engine";
+import { clamp, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -285,14 +286,19 @@ function mount(ctx: GameContext): GameInstance {
     g.save();
     g.translate(px, py);
     g.scale(1 + squash, 1 - squash);
-    g.beginPath();
-    g.arc(0, 0, R, 0, Math.PI * 2);
-    const ball = g.createRadialGradient(-R * 0.35, -R * 0.4, R * 0.1, 0, 0, R);
-    ball.addColorStop(0, "#ffffff");
-    ball.addColorStop(0.4, over ? pal.foe : pal.hero);
-    ball.addColorStop(1, mix(over ? pal.foe : pal.hero, "#000000", 0.35));
-    g.fillStyle = ball;
-    g.fill();
+    drawNicHead(g, {
+      x: 0,
+      y: 0,
+      r: R,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: th.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: th.ink,
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
     g.restore();
 
     // ---- HUD
