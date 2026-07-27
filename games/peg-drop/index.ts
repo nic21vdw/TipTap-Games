@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, rand, roundRect, shade, clamp } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "peg-drop",
@@ -247,14 +248,18 @@ function mount(ctx: GameContext): GameInstance {
 
     // balls
     for (const b of balls) {
-      g.beginPath();
-      g.arc(b.x, b.y, BALL_R, 0, Math.PI * 2);
-      g.fillStyle = b.mult > 1 ? pal.prize : pal.hero;
-      g.fill();
-      g.beginPath();
-      g.arc(b.x - BALL_R * 0.3, b.y - BALL_R * 0.3, BALL_R * 0.35, 0, Math.PI * 2);
-      g.fillStyle = "rgba(255,255,255,.6)";
-      g.fill();
+      drawNicHead(g, {
+        x: b.x,
+        y: b.y,
+        r: BALL_R,
+        skin: b.mult > 1 ? pal.prize : pal.hero,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gape: 0.3,
+      });
     }
 
     // chute / aim indicator

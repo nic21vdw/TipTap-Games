@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "asteroid-drift",
@@ -190,14 +191,28 @@ function mount(ctx: GameContext): GameInstance {
     g.save();
     g.translate(ship.x, ship.y);
     g.rotate(ship.angle);
-    g.fillStyle = over ? pal.foe : pal.hero;
+    // the hull still points where you are thrusting, but the pilot is him
+    g.fillStyle = shade(pal.deep, -0.2);
     g.beginPath();
-    g.moveTo(14, 0);
-    g.lineTo(-10, 9);
-    g.lineTo(-6, 0);
-    g.lineTo(-10, -9);
+    g.moveTo(16, 0);
+    g.lineTo(-11, 10);
+    g.lineTo(-7, 0);
+    g.lineTo(-11, -10);
     g.closePath();
     g.fill();
+    drawNicHead(g, {
+      x: 0,
+      y: 0,
+      r: 8,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
     g.restore();
 
     if (over) endCard(g, theme, W, H, "COLLISION");

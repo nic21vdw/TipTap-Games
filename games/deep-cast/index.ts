@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "deep-cast",
@@ -273,10 +274,19 @@ function mount(ctx: GameContext): GameInstance {
     g.moveTo(hookX, surfaceY);
     g.lineTo(hookX, hookY);
     g.stroke();
-    g.beginPath();
-    g.arc(hookX, hookY, W * 0.018, 0, Math.PI * 2);
-    g.fillStyle = pal.hero;
-    g.fill();
+    drawNicHead(g, {
+      x: hookX,
+      y: hookY,
+      r: W * 0.022,
+      skin: pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      // down there in the cold, looking for something to bite
+      scowl: 0.4,
+    });
 
     // depth gauge
     const gaugeH = floorY - surfaceY;

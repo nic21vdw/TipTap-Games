@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, roundRect, shade, pick } from "@/games/engine";
+import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "grid-sweep",
@@ -277,10 +278,20 @@ function mount(ctx: GameContext): GameInstance {
           roundRect(g, px + 1, py + 1, cell - 2, cell - 2, 4);
           g.fill();
           if (over && c.mine && !c.flagged) {
-            g.beginPath();
-            g.arc(px + cell / 2, py + cell / 2, cell * 0.2, 0, Math.PI * 2);
-            g.fillStyle = shade(pal.foe, -0.1);
-            g.fill();
+            // the mine you did not want to find is him
+            drawNicHead(g, {
+              x: px + cell / 2,
+              y: py + cell / 2,
+              r: cell * 0.26,
+              skin: shade(pal.foe, -0.1),
+              hair: shade(pal.deep, -0.4),
+              eye: t.ink,
+              pupil: shade(pal.deep, -0.65),
+              dark: shade(pal.deep, -0.65),
+              tooth: t.ink,
+              gape: 0.8,
+              scowl: 1,
+            });
           }
           if (c.flagged) {
             g.beginPath();

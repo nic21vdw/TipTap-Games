@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "snip-swing",
@@ -215,14 +216,19 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     // ball
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(pos.x, pos.y, BALL_R, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = "rgba(255,255,255,.4)";
-    g.beginPath();
-    g.arc(pos.x - BALL_R * 0.3, pos.y - BALL_R * 0.3, BALL_R * 0.32, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: pos.x,
+      y: pos.y,
+      r: BALL_R,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0.2,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, t, W, H, failMsg);
   });

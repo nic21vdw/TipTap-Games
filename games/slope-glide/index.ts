@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "slope-glide",
@@ -222,16 +223,19 @@ function mount(ctx: GameContext): GameInstance {
     g.save();
     g.translate(playerScreenX, py);
     g.rotate(rollAngle);
-    g.beginPath();
-    g.arc(0, 0, BALL_R, 0, Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.fill();
-    g.strokeStyle = shade(pal.hero, -0.4);
-    g.lineWidth = 2;
-    g.beginPath();
-    g.moveTo(-BALL_R * 0.6, 0);
-    g.lineTo(BALL_R * 0.6, 0);
-    g.stroke();
+    drawNicHead(g, {
+      x: 0,
+      y: 0,
+      r: BALL_R,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
     g.restore();
 
     if (airborne) {

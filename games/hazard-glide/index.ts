@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, clamp, rand, roundRect, shade } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "hazard-glide",
@@ -185,14 +186,27 @@ function mount(ctx: GameContext): GameInstance {
     // craft
     const blinking = invulnT > 0 && Math.floor(invulnT * 10) % 2 === 0;
     if (!blinking) {
-      g.fillStyle = over ? pal.foe : pal.hero;
+      g.fillStyle = shade(pal.deep, -0.15);
       g.beginPath();
-      g.moveTo(craftX + craftR, y);
-      g.lineTo(craftX - craftR, y - craftR * 0.8);
+      g.moveTo(craftX + craftR * 1.15, y);
+      g.lineTo(craftX - craftR, y - craftR * 0.85);
       g.lineTo(craftX - craftR * 0.4, y);
-      g.lineTo(craftX - craftR, y + craftR * 0.8);
+      g.lineTo(craftX - craftR, y + craftR * 0.85);
       g.closePath();
       g.fill();
+      drawNicHead(g, {
+        x: craftX,
+        y,
+        r: craftR * 0.62,
+        skin: over ? pal.foe : pal.hero,
+        hair: shade(pal.deep, -0.4),
+        eye: theme.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: theme.ink,
+        gape: over ? 0.9 : 0,
+        scowl: over ? 1 : 0.3,
+      });
     }
 
     // health pips

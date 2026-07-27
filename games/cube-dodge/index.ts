@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "cube-dodge",
@@ -36,6 +37,7 @@ function mount(ctx: GameContext): GameInstance {
   const laneX = (lane: number) => (W / (LANES + 1)) * (lane + 1);
 
   let playerX = laneX(2);
+  let lastX = playerX;
   let targetX = playerX;
   let cubes: Cube[] = [];
   let score = 0;
@@ -167,13 +169,25 @@ function mount(ctx: GameContext): GameInstance {
       g.fill();
     }
 
-    // player
+    // player — he leans the way he is sliding, and the shades stay on
     const py = H * 0.88;
-    g.fillStyle = over ? pal.foe : pal.hero;
-    roundRect(g, playerX - 20, py - 14, 40, 28, 8);
-    g.fill();
+    drawNicHead(g, {
+      x: playerX,
+      y: py,
+      r: 17,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.35),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.6),
+      dark: shade(pal.deep, -0.6),
+      tooth: t.ink,
+      lean: clamp((playerX - lastX) * 0.02, -0.35, 0.35),
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
+    lastX = playerX;
     g.fillStyle = pal.glow;
-    g.fillRect(playerX - 20, py + 16, 40, 4);
+    g.fillRect(playerX - 20, py + 22, 40, 4);
 
     if (over) endCard(g, t, W, H, "CRASHED");
   });

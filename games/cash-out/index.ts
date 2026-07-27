@@ -1,7 +1,8 @@
 // Arcade-casino, deliberately: virtual chips only, no purchases, no top-ups,
 // nothing to buy anywhere. Chips exist for the leaderboard and for nerve.
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, clamp, roundRect } from "@/games/engine";
+import { makeLoop, clamp, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   drawBackdrop,
@@ -259,12 +260,22 @@ function mount(ctx: GameContext): GameInstance {
       }
       g.stroke();
 
-      // the head of the curve
+      // the head of the curve is his head, and it knows when it busts
       halo(g, last.x, last.y, 30, col, 0.6);
-      g.fillStyle = phase === "busted" ? pal.foe : "#ffffff";
-      g.beginPath();
-      g.arc(last.x, last.y, phase === "busted" ? 8 : 6, 0, Math.PI * 2);
-      g.fill();
+      drawNicHead(g, {
+        x: last.x,
+        y: last.y,
+        r: phase === "busted" ? 13 : 11,
+        skin: phase === "busted" ? pal.foe : "#ffffff",
+        hair: shade(pal.deep, -0.4),
+        eye: th.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: th.ink,
+        gape: phase === "busted" ? 0.85 : phase === "rising" ? 0.25 : 0,
+        scowl: phase === "busted" ? 1 : 0,
+        lean: phase === "rising" ? -0.15 : 0,
+      });
     }
 
     // ---- the number

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, clamp, rand, shade } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "balloon-rise",
@@ -163,14 +164,19 @@ function mount(ctx: GameContext): GameInstance {
     g.moveTo(x, bobY + r);
     g.lineTo(x, bobY + r + 20);
     g.stroke();
-    g.beginPath();
-    g.arc(x, bobY, r, 0, Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.fill();
-    g.beginPath();
-    g.arc(x - r * 0.3, bobY - r * 0.35, r * 0.3, 0, Math.PI * 2);
-    g.fillStyle = "rgba(255,255,255,.5)";
-    g.fill();
+    drawNicHead(g, {
+      x: x,
+      y: bobY,
+      r: r,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      gape: over ? 0.85 : 0,
+      scowl: over ? 1 : 0,
+    });
     g.fillStyle = shade(pal.hero, -0.3);
     g.beginPath();
     g.moveTo(x - 4, bobY + r);

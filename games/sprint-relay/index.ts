@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "sprint-relay",
@@ -196,10 +197,21 @@ function mount(ctx: GameContext): GameInstance {
       const bob = Math.abs(Math.sin(legPhase + i)) * 4;
       const wobbling = i === 0 && stumbleT > 0;
       g.fillStyle = i === 0 ? (wobbling ? pal.foe : pal.hero) : shade(pal.glow, -0.1);
-      g.beginPath();
-      g.arc(rx, ry - bob, 9, 0, Math.PI * 2);
-      g.fill();
       g.fillRect(rx - 5, ry - bob + 6, 10, 14);
+      // every runner in every lane is him
+      drawNicHead(g, {
+        x: rx,
+        y: ry - bob,
+        r: 9,
+        skin: i === 0 ? (wobbling ? pal.foe : pal.hero) : shade(pal.glow, -0.1),
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gape: 0.4,
+        scowl: wobbling ? 1 : 0.3,
+      });
       g.fillStyle = t.inkDim;
       g.font = `600 10px ${t.fontBody}`;
       g.textAlign = "center";

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, pick, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "sphere-chain",
@@ -453,15 +454,19 @@ function mount(ctx: GameContext): GameInstance {
     g.stroke();
     g.globalAlpha = 1;
 
+    // one helper draws the whole chain, so the whole chain is him
     const drawBall = (x: number, y: number, r: number, color: string) => {
-      g.beginPath();
-      g.arc(x, y, r, 0, Math.PI * 2);
-      g.fillStyle = color;
-      g.fill();
-      g.beginPath();
-      g.arc(x - r * 0.32, y - r * 0.34, r * 0.3, 0, Math.PI * 2);
-      g.fillStyle = "rgba(255,255,255,.55)";
-      g.fill();
+      drawNicHead(g, {
+        x,
+        y,
+        r,
+        skin: color,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+      });
     };
 
     // tail first so the front of the chain overlaps correctly

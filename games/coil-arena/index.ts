@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "coil-arena",
@@ -389,19 +390,36 @@ function mount(ctx: GameContext): GameInstance {
       g.stroke();
     };
 
+    // every coil in the arena is headed by him, yours included
     for (const b of bots) {
       drawTrail(b.trail, shade(pal.foe, b.hue), HEAD_R);
-      g.beginPath();
-      g.arc(b.x, b.y, HEAD_R, 0, Math.PI * 2);
-      g.fillStyle = shade(pal.foe, b.hue + 0.2);
-      g.fill();
+      drawNicHead(g, {
+        x: b.x,
+        y: b.y,
+        r: HEAD_R,
+        skin: shade(pal.foe, b.hue + 0.2),
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        scowl: 1,
+      });
     }
 
     drawTrail(pTrail, over ? shade(pal.foe, -0.1) : pal.hero, HEAD_R);
-    g.beginPath();
-    g.arc(px, py, HEAD_R + 1.5, 0, Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.glow;
-    g.fill();
+    drawNicHead(g, {
+      x: px,
+      y: py,
+      r: HEAD_R + 1.5,
+      skin: over ? pal.foe : pal.glow,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0,
+    });
 
     if (over) endCard(g, t, W, H, "TANGLED UP");
   });

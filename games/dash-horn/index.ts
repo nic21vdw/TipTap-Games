@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "dash-horn",
@@ -288,8 +289,21 @@ function mount(ctx: GameContext): GameInstance {
       g.stroke();
     }
     g.fillStyle = over ? shade(pal.hero, -0.3) : pal.hero;
-    roundRect(g, heroX, heroY, heroW, heroH, 12);
+    roundRect(g, heroX, heroY + heroH * 0.3, heroW, heroH * 0.7, 12);
     g.fill();
+    drawNicHead(g, {
+      x: heroX + heroW / 2,
+      y: heroY + heroH * 0.26,
+      r: heroW * 0.46,
+      skin: over ? shade(pal.hero, -0.3) : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      scowl: 0.8,
+      gape: over ? 0.9 : 0.2,
+    });
     // horns
     g.fillStyle = pal.glow;
     g.beginPath();

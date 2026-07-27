@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "spread-sim",
@@ -277,6 +278,22 @@ function mount(ctx: GameContext): GameInstance {
       g.fillStyle = fill;
       roundRect(g, x, y, w, h, 5);
       g.fill();
+      // what spreads is him; what the cure takes back is him scowling
+      if (cell.claimed || cell.isCure) {
+        drawNicHead(g, {
+          x: x + w / 2,
+          y: y + h / 2,
+          r: Math.min(w, h) * 0.34,
+          skin: shade(fill, cell.isCure ? -0.35 : 0.3),
+          hair: shade(pal.deep, -0.4),
+          eye: theme.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: theme.ink,
+          gape: cell.isCure ? 0.7 : boostT > 0 ? 0.5 : 0,
+          scowl: cell.isCure ? 1 : 0,
+        });
+      }
     }
 
     g.textAlign = "center";

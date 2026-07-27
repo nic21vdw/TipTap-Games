@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "brick-paddle",
@@ -244,10 +245,20 @@ function mount(ctx: GameContext): GameInstance {
     g.fill();
 
     // ball
-    g.beginPath();
-    g.arc(ball.x, ball.y, ballR, 0, Math.PI * 2);
-    g.fillStyle = pal.glow;
-    g.fill();
+    drawNicHead(g, {
+      x: ball.x,
+      y: ball.y,
+      r: ballR * 1.1,
+      skin: pal.glow,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      // he is the ball, so he looks where he is heading
+      gaze: Math.max(-1, Math.min(1, ball.vx * 0.004)),
+      gape: 0.3,
+    });
     g.beginPath();
     g.arc(ball.x - ballR * 0.3, ball.y - ballR * 0.3, ballR * 0.35, 0, Math.PI * 2);
     g.fillStyle = "rgba(255,255,255,.7)";

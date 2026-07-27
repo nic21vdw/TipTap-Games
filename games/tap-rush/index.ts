@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand, clamp } from "@/games/engine";
+import { clamp, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -279,6 +280,20 @@ function mount(ctx: GameContext): GameInstance {
       g.beginPath();
       g.arc(tg.x, tg.y, r * 0.78, 0, Math.PI * 2);
       g.fill();
+      // what you are racing to tap is him
+      if (!isBomb)
+        drawNicHead(g, {
+          x: tg.x,
+          y: tg.y,
+          r: r * 0.7,
+          skin: body,
+          hair: shade(pal.deep, -0.4),
+          eye: th.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: th.ink,
+          gape: 0.3,
+        });
 
       if (isBomb) {
         // a hard X — unmistakable, even mid-panic

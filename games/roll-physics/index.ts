@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "roll-physics",
@@ -153,10 +154,19 @@ function mount(ctx: GameContext): GameInstance {
     g.arc(goal.x, goal.y, 9, 0, Math.PI * 2);
     g.fill();
 
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(bx, by, 12, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: bx,
+      y: by,
+      r: 12,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: theme.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: theme.ink,
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, theme, W, H, "GAME OVER");
   });

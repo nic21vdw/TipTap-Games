@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "limb-flail",
@@ -206,10 +207,20 @@ function mount(ctx: GameContext): GameInstance {
     g.lineTo(cx + lean, shoulderY);
     g.stroke();
     // head
-    g.fillStyle = over ? pal.foe : pal.glow;
-    g.beginPath();
-    g.arc(cx + lean * 1.15, shoulderY - 14, 12, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: cx + lean * 1.15,
+      y: shoulderY - 14,
+      r: 12,
+      skin: over ? pal.foe : pal.glow,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      lean: torsoAngle * 0.6,
+      gape: over ? 0.9 : 0.35,
+      scowl: over ? 1 : 0.4,
+    });
 
     // distance marker
     g.fillStyle = t.ink;

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "bubble-pop-shooter",
@@ -362,23 +363,36 @@ function mount(ctx: GameContext): GameInstance {
         if (color === null) continue;
         const { x, y } = cellCenter(r, c);
         if (y > H) continue;
-        g.beginPath();
-        g.arc(x, y, radius, 0, Math.PI * 2);
-        g.fillStyle = COLORS[color];
-        g.fill();
-        g.beginPath();
-        g.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.32, 0, Math.PI * 2);
-        g.fillStyle = "rgba(255,255,255,.4)";
-        g.fill();
+        // the wall coming down at you is a wall of him
+        drawNicHead(g, {
+          x,
+          y,
+          r: radius,
+          skin: COLORS[color],
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+          scowl: 0.5,
+        });
       }
     }
 
     // flying bubble
     if (fly) {
-      g.beginPath();
-      g.arc(fly.x, fly.y, radius, 0, Math.PI * 2);
-      g.fillStyle = COLORS[fly.color];
-      g.fill();
+      drawNicHead(g, {
+        x: fly.x,
+        y: fly.y,
+        r: radius,
+        skin: COLORS[fly.color],
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gape: 0.5,
+      });
     }
 
     // launcher + aim line

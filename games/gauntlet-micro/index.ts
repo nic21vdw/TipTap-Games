@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "gauntlet-micro",
@@ -246,10 +247,18 @@ function mount(ctx: GameContext): GameInstance {
       const cy = H * 0.52;
 
       if (challenge === "tap") {
-        g.beginPath();
-        g.arc(cx, cy, 60 + Math.sin(pulse.t * 10) * 4, 0, Math.PI * 2);
-        g.fillStyle = pal.hero;
-        g.fill();
+        drawNicHead(g, {
+          x: cx,
+          y: cy,
+          r: 60 + Math.sin(pulse.t * 10) * 4,
+          skin: pal.hero,
+          hair: shade(pal.deep, -0.4),
+          eye: theme.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: theme.ink,
+          gape: 0.3,
+        });
         g.textAlign = "center";
         g.fillStyle = "#101418";
         g.font = `900 30px ${theme.fontDisplay}`;

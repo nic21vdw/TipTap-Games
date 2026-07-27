@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand, shade, clamp } from "@/games/engine";
+import { clamp, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -428,13 +429,20 @@ function mount(ctx: GameContext): GameInstance {
         g.fill();
       } else {
         // body
+        drawNicHead(g, {
+          x: 0,
+          y: 0,
+          r: R * 1.1,
+          skin: over ? shade(pal.hero, -0.3) : pal.hero,
+          hair: shade(pal.deep, -0.4),
+          eye: th.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: th.ink,
+          gape: over ? 0.9 : 0,
+          scowl: over ? 1 : 0,
+        });
         g.beginPath();
-        g.ellipse(0, 0, R * 1.25, R, 0, 0, Math.PI * 2);
-        g.fillStyle = over ? shade(pal.hero, -0.3) : pal.hero;
-        g.fill();
-        g.strokeStyle = "rgba(0,0,0,.28)";
-        g.lineWidth = 2;
-        g.stroke();
         // belly
         g.beginPath();
         g.ellipse(-2, 4, R * 0.72, R * 0.5, 0, 0, Math.PI * 2);

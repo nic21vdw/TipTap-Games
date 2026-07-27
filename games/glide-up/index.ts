@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "glide-up",
@@ -228,14 +229,19 @@ function mount(ctx: GameContext): GameInstance {
     }
     g.globalAlpha = 1;
 
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(ball.x, ball.y - camTop, BALL_R, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = "rgba(255,255,255,.5)";
-    g.beginPath();
-    g.arc(ball.x - BALL_R * 0.3, ball.y - camTop - BALL_R * 0.3, BALL_R * 0.35, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: ball.x,
+      y: ball.y - camTop,
+      r: BALL_R,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.8 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     g.textAlign = "center";
     g.fillStyle = t.ink;

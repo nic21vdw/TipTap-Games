@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "spiral-fall",
@@ -165,14 +166,19 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     // ball
-    g.beginPath();
-    g.arc(W / 2, ballY, 10, 0, Math.PI * 2);
-    g.fillStyle = over ? shade(pal.hero, -0.25) : pal.hero;
-    g.fill();
-    g.beginPath();
-    g.arc(W / 2 - 3, ballY - 3, 3, 0, Math.PI * 2);
-    g.fillStyle = pal.glow;
-    g.fill();
+    drawNicHead(g, {
+      x: W / 2,
+      y: ballY,
+      r: 11,
+      skin: over ? shade(pal.hero, -0.25) : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0.2,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, t, W, H, "CLIPPED");
   });

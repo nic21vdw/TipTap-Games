@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "tower-line",
@@ -365,10 +366,20 @@ function mount(ctx: GameContext): GameInstance {
     for (const en of enemies) {
       const p = pointAt(en.dist);
       const r = Math.min(TW, TH) * 0.26;
-      g.fillStyle = pal.foe;
-      g.beginPath();
-      g.arc(p.x, p.y, r, 0, Math.PI * 2);
-      g.fill();
+      // the creeps walking your line are him
+      drawNicHead(g, {
+        x: p.x,
+        y: p.y,
+        r,
+        skin: pal.foe,
+        hair: shade(pal.deep, -0.4),
+        eye: theme.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: theme.ink,
+        scowl: 1,
+        gape: 0.3,
+      });
       const hpw = r * 1.8;
       g.fillStyle = "rgba(0,0,0,.35)";
       g.fillRect(p.x - hpw / 2, p.y - r - 8, hpw, 4);

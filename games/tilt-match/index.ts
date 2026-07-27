@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "tilt-match",
@@ -170,6 +171,19 @@ function mount(ctx: GameContext): GameInstance {
         g.fillStyle = v >= 0 ? colors[v] : "rgba(255,255,255,.05)";
         roundRect(g, x + 3, y + 3, cell - 6, cell - 6, 8);
         g.fill();
+        // a filled tile is one of him sliding around the tray
+        if (v >= 0)
+          drawNicHead(g, {
+            x: x + cell / 2,
+            y: y + cell / 2,
+            r: cell * 0.3,
+            skin: colors[v],
+            hair: shade(pal.deep, -0.4),
+            eye: theme.ink,
+            pupil: shade(pal.deep, -0.65),
+            dark: shade(pal.deep, -0.65),
+            tooth: theme.ink,
+          });
       }
 
     g.fillStyle = theme.ink;

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "lane-guard",
@@ -216,11 +217,20 @@ function mount(ctx: GameContext): GameInstance {
     // foes
     for (const f of foes) {
       const fy = laneY + (f.row % 2 === 0 ? -1 : 1) * Math.min(6, f.row);
-      g.fillStyle = pal.foe;
-      g.beginPath();
-      g.arc(f.x, fy, 11, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "rgba(0,0,0,.25)";
+      // the line coming down the lane at you is all him
+      drawNicHead(g, {
+        x: f.x,
+        y: fy,
+        r: 11,
+        skin: pal.foe,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        scowl: 1,
+      });
+      g.fillStyle = "rgba(0,0,0,0)";
       g.beginPath();
       g.arc(f.x + 3, fy - 2, 3, 0, Math.PI * 2);
       g.fill();

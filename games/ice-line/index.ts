@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, rand, pick, clamp, shade, roundRect } from "@/games/engine";
+import { clamp, endCard, makeLoop, pick, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "ice-line",
@@ -874,16 +875,20 @@ function mount(ctx: GameContext): GameInstance {
     g.quadraticCurveTo(-8 - sw * 0.4, 8, -4, 5);
     g.closePath();
     g.fill();
-    // face
-    g.fillStyle = shade(pal.prize, 0.28);
-    g.beginPath();
-    g.arc(0, -6, 7.4, 0, Math.PI * 2);
-    g.fill();
-    // eye + a puff of beard
-    g.fillStyle = t.ink;
-    g.beginPath();
-    g.arc(3.6, -7, 1.2, 0, Math.PI * 2);
-    g.fill();
+    // face — the same head the rest of the feed uses, scarf and all
+    drawNicHead(g, {
+      x: 0,
+      y: -6,
+      r: 7.8,
+      skin: shade(pal.prize, 0.28),
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gaze: face,
+      gape: armRaise > 0.5 ? 0.6 : 0,
+    });
     g.fillStyle = shade(pal.glow, 0.7);
     g.beginPath();
     g.arc(1.5, -1.5, 4.6, 0, Math.PI);

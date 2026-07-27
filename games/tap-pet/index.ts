@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "tap-pet",
@@ -144,33 +145,24 @@ function mount(ctx: GameContext): GameInstance {
       ? shade(pal.foe, -0.05 + Math.sin(clock * 14) * 0.08)
       : shade(pal.hero, flashFail > 0 ? -0.3 : 0);
 
+    // the pet you are poking is him, squashing with the same breath cycle
     g.save();
     g.translate(cx, cy);
     g.scale(1, ry / baseR);
-    g.beginPath();
-    g.arc(0, 0, rx, 0, Math.PI * 2);
-    g.fillStyle = bodyColor;
-    g.fill();
+    drawNicHead(g, {
+      x: 0,
+      y: 0,
+      r: rx,
+      skin: bodyColor,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: pokeActive ? 0.7 : 0.15,
+      scowl: pokeActive ? 1 : 0,
+    });
     g.restore();
-
-    // eyes
-    const eyeY = cy - ry * 0.12;
-    const eyeDX = rx * 0.32;
-    const eyeR = pokeActive ? baseR * 0.045 : baseR * 0.07;
-    for (const s of [-1, 1]) {
-      g.beginPath();
-      g.arc(cx + s * eyeDX, eyeY, eyeR, 0, Math.PI * 2);
-      g.fillStyle = "#101418";
-      g.fill();
-    }
-    if (!pokeActive) {
-      // little smile
-      g.beginPath();
-      g.arc(cx, eyeY + ry * 0.32, rx * 0.22, 0.15 * Math.PI, 0.85 * Math.PI);
-      g.strokeStyle = "#101418";
-      g.lineWidth = 2.5;
-      g.stroke();
-    }
 
     // warning tell during a flare
     if (pokeActive) {

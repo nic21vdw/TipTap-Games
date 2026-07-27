@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, clamp, roundRect } from "@/games/engine";
+import { clamp, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -305,6 +306,19 @@ function mount(ctx: GameContext): GameInstance {
         g.clip();
         g.fillStyle = pal.foe;
         g.fillRect(x - w / 2, o.y - h / 2, w, h);
+        // whoever is driving the thing in your way is him
+        drawNicHead(g, {
+          x,
+          y: o.y,
+          r: Math.min(w, h) * 0.34,
+          skin: shade(pal.foe, 0.25),
+          hair: shade(pal.deep, -0.4),
+          eye: th.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: th.ink,
+          scowl: 1,
+        });
         g.fillStyle = "rgba(0,0,0,.25)";
         for (let s = -h; s < w; s += 18) {
           g.beginPath();

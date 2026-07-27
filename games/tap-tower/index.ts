@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "tap-tower",
@@ -208,11 +209,27 @@ function mount(ctx: GameContext): GameInstance {
         : shade(pal.hero, -0.1 - (i % 2) * 0.08);
       roundRect(g, r.x, r.y, r.w, r.h, 6);
       g.fill();
-      g.fillStyle = shade(pal.deep, -0.3);
       const winCount = 4;
+      const headR = Math.min(r.h * 0.34, r.w * 0.075);
       for (let wI = 0; wI < winCount; wI++) {
         const wx = r.x + r.w * (0.12 + (wI * 0.76) / (winCount - 1));
-        g.fillRect(wx - 3, r.y + r.h * 0.3, 6, r.h * 0.4);
+        g.fillStyle = shade(pal.deep, -0.3);
+        roundRect(g, wx - headR * 1.1, r.y + r.h * 0.22, headR * 2.2, r.h * 0.56, 3);
+        g.fill();
+        // every tenant paying you is him
+        drawNicHead(g, {
+          x: wx,
+          y: r.y + r.h * 0.5,
+          r: headR,
+          skin: isSparkle ? pal.prize : shade(pal.hero, 0.4),
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+          gaze: ((wI % 2) - 0.5) * 1.4,
+          gape: isSparkle ? 0.55 : 0,
+        });
       }
       if (isSparkle) {
         g.fillStyle = pal.glow;

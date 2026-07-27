@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, pick, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "rig-build",
@@ -209,6 +210,18 @@ function mount(ctx: GameContext): GameInstance {
       g.fillStyle = pal.hero;
       roundRect(g, cx - 34, cy - 14, 68, 28, 8);
       g.fill();
+      // he is the one strapped into whatever you bolt together
+      drawNicHead(g, {
+        x: cx,
+        y: cy - 22,
+        r: 13,
+        skin: shade(pal.prize, 0.1),
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+      });
       const mountPos: Record<Mount, [number, number]> = {
         front: [cx + 34, cy],
         top: [cx, cy - 14],
@@ -248,6 +261,21 @@ function mount(ctx: GameContext): GameInstance {
       g.fillStyle = over ? pal.foe : pal.hero;
       roundRect(g, -20, -12, 40, 22, 6);
       g.fill();
+      // and he rides it all the way down the hill
+      drawNicHead(g, {
+        x: 0,
+        y: -20,
+        r: 11,
+        skin: shade(pal.prize, 0.1),
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gape: over ? 0.85 : Math.min(0.7, Math.abs(carVx) / 200),
+        scowl: over ? 1 : 0,
+        lean: -carAngle * 0.4,
+      });
       g.fillStyle = shade(pal.hero, -0.4);
       for (const wx of [-14, 14]) {
         g.save();

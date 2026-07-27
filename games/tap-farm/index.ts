@@ -1,4 +1,5 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
+import { drawDrink, skins } from "@/games/nic-art";
 import { makeLoop, rand, roundRect, shade } from "@/games/engine";
 
 const meta = {
@@ -52,6 +53,7 @@ const TIERS: CropTier[] = [
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
+  const fridge = skins(pal);
   const pad = W * 0.04;
   const cellW = (W - pad * 2) / COLS;
   const cellH = (H * 0.72 - pad) / ROWS;
@@ -200,9 +202,11 @@ function mount(ctx: GameContext): GameInstance {
         g.fill();
       } else if (p.stage === 2) {
         const wobble = Math.sin(clock * 3.3 + i) * 1.5;
+        // a ripe crop is a can, ready to pick
+        drawDrink(g, ccx, ccy + wobble, cellH * 0.3, p.tier === 1 ? fridge.cola : fridge.energy, p.tier === 1 ? "cola" : "energy");
         g.fillStyle = tierColor;
         g.beginPath();
-        g.arc(ccx, ccy + wobble, cellH * 0.22, 0, Math.PI * 2);
+        g.arc(ccx, ccy + wobble, 0, 0, Math.PI * 2);
         g.fill();
         g.fillStyle = "rgba(255,255,255,.35)";
         g.beginPath();

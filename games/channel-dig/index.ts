@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "channel-dig",
@@ -247,6 +248,17 @@ function mount(ctx: GameContext): GameInstance {
         }
         g.fillRect(cx + 0.5, cy + 0.5, cell - 1, cell - 1);
         if (water[r][c]) {
+          drawNicHead(g, {
+            x: cx + cell / 2,
+            y: cy + cell / 2,
+            r: cell * 0.4,
+            skin: pal.hero,
+            hair: shade(pal.deep, -0.4),
+            eye: t.ink,
+            pupil: shade(pal.deep, -0.65),
+            dark: shade(pal.deep, -0.65),
+            tooth: t.ink,
+          });
           g.fillStyle = pal.hero;
           g.beginPath();
           g.arc(cx + cell / 2, cy + cell / 2, cell * 0.38, 0, Math.PI * 2);

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, roundRect, shade, clamp } from "@/games/engine";
+import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "drift-loop",
@@ -222,6 +223,20 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = shade(pal.deep, -0.3);
     g.fillRect(6, -8, 5, 5);
     g.fillRect(6, 3, 5, 5);
+    // the driver, counter-rotated so he stays upright through the drift
+    g.rotate(-heading);
+    drawNicHead(g, {
+      x: 0,
+      y: 0,
+      r: 7,
+      skin: boostTimer > 0 ? pal.glow : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      scowl: 0.6,
+    });
     g.restore();
 
     // boost meter

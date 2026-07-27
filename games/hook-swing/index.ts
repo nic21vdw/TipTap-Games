@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "hook-swing",
@@ -232,14 +233,19 @@ function mount(ctx: GameContext): GameInstance {
       g.stroke();
     }
 
-    g.beginPath();
-    g.arc(psx, p.y, 13, 0, Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.fill();
-    g.beginPath();
-    g.arc(psx - 4, p.y - 4, 4, 0, Math.PI * 2);
-    g.fillStyle = "rgba(255,255,255,.75)";
-    g.fill();
+    drawNicHead(g, {
+      x: psx,
+      y: p.y,
+      r: 13,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.8 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, t, W, H, failReason);
   });

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { endCard, makeLoop, roundRect, shade, rand, clamp } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "bounce-hop",
@@ -211,14 +212,19 @@ function mount(ctx: GameContext): GameInstance {
     g.save();
     g.translate(anchorX, ball.y);
     g.scale(1 - stretch * 0.3, 1 + stretch * 0.3);
-    g.beginPath();
-    g.arc(0, 0, RADIUS, 0, Math.PI * 2);
-    g.fillStyle = over ? shade(pal.foe, 0.1) : pal.hero;
-    g.fill();
-    g.beginPath();
-    g.arc(-RADIUS * 0.3, -RADIUS * 0.35, RADIUS * 0.3, 0, Math.PI * 2);
-    g.fillStyle = "rgba(255,255,255,.55)";
-    g.fill();
+    drawNicHead(g, {
+      x: 0,
+      y: 0,
+      r: RADIUS,
+      skin: over ? shade(pal.foe, 0.1) : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.8 : 0,
+      scowl: over ? 1 : 0,
+    });
     g.restore();
 
     if (over) endCard(g, t, W, H, "FELL SHORT");

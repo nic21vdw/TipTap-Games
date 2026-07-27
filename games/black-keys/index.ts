@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, clamp, roundRect } from "@/games/engine";
+import { clamp, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -274,6 +275,19 @@ function mount(ctx: GameContext): GameInstance {
       g.fillStyle = face;
       roundRect(g, x, y, w, h, 12);
       g.fill();
+      // every key you have to hit is him
+      drawNicHead(g, {
+        x: x + w / 2,
+        y: y + h / 2,
+        r: Math.min(w, h) * 0.3,
+        skin: mix(pal.hero, "#ffffff", onLine ? 0.45 : 0.2),
+        hair: shade(pal.deep, -0.4),
+        eye: th.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: th.ink,
+        gape: onLine ? 0.5 : 0,
+      });
       g.strokeStyle = hexA(onLine ? pal.prize : pal.glow, onLine ? 0.9 : 0.4);
       g.lineWidth = onLine ? 2.5 : 1.5;
       roundRect(g, x + 1, y + 1, w - 2, h - 2, 11);

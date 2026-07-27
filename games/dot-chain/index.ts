@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "dot-chain",
@@ -229,10 +230,20 @@ function mount(ctx: GameContext): GameInstance {
         const y = by + r * cell + cell / 2;
         const col = COLORS[board[idx(r, c)]];
         const selected = inChain(r, c);
+        drawNicHead(g, {
+          x,
+          y,
+          r: cell * (selected ? 0.4 : 0.34),
+          skin: selected ? shade(col, 0.25) : col,
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+          gape: selected ? 0.6 : 0,
+        });
         g.beginPath();
         g.arc(x, y, cell * (selected ? 0.4 : 0.34), 0, Math.PI * 2);
-        g.fillStyle = selected ? shade(col, 0.25) : col;
-        g.fill();
         if (selected) {
           g.lineWidth = 3;
           g.strokeStyle = "rgba(255,255,255,.65)";

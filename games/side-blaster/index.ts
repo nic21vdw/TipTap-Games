@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "side-blaster",
@@ -253,10 +254,21 @@ function mount(ctx: GameContext): GameInstance {
     // enemies: chunky blocks
     for (const e of enemies) {
       const s = px(e.s);
-      g.fillStyle = pal.foe;
-      g.fillRect(px(e.x - s / 2), px(e.y - s / 2), s, s);
       g.fillStyle = shade(pal.foe, -0.35);
       g.fillRect(px(e.x - s / 2), px(e.y + s / 2 - CELL), s, CELL);
+      // the wave coming at you is him
+      drawNicHead(g, {
+        x: px(e.x),
+        y: px(e.y),
+        r: s * 0.5,
+        skin: pal.foe,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        scowl: 1,
+      });
     }
 
     // shots

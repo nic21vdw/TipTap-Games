@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "patience-deck",
@@ -315,9 +316,18 @@ function mount(ctx: GameContext): GameInstance {
       g.strokeStyle = shade(pal.hero, -0.15);
       g.lineWidth = 1;
       g.stroke();
-      g.fillStyle = "rgba(255,255,255,.08)";
-      for (let i = 0; i < 3; i++)
-        g.fillRect(x + 4, y + 6 + i * (cardH - 12) / 3, cardW - 8, 2);
+      // the back of every card in the deck is his face
+      drawNicHead(g, {
+        x: x + cardW / 2,
+        y: y + cardH / 2,
+        r: Math.min(cardW * 0.32, cardH * 0.28),
+        skin: shade(pal.hero, -0.15),
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+      });
       return;
     }
     g.fillStyle = t.surface;
@@ -326,6 +336,21 @@ function mount(ctx: GameContext): GameInstance {
     g.lineWidth = 1;
     g.stroke();
     const color = isRed(card.suit) ? pal.foe : pal.hero;
+    // and he watches you from the face of it too
+    g.save();
+    g.globalAlpha = 0.16;
+    drawNicHead(g, {
+      x: x + cardW / 2,
+      y: y + cardH / 2,
+      r: Math.min(cardW * 0.3, cardH * 0.26),
+      skin: color,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+    });
+    g.restore();
     g.fillStyle = color;
     g.font = `800 ${Math.round(cardW * 0.34)}px ${t.fontDisplay}`;
     g.textAlign = "left";

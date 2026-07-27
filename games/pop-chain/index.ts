@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, roundRect } from "@/games/engine";
+import { makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   drawBackdrop,
@@ -326,10 +327,18 @@ function mount(ctx: GameContext): GameInstance {
         g.fillStyle = face;
         roundRect(g, x + wob, y, s, s, 7);
         g.fill();
-        // a gloss cap so the tiles read as gems, not squares
-        g.fillStyle = hexA("#ffffff", 0.28);
-        roundRect(g, x + s * 0.16 + wob, y + s * 0.12, s * 0.68, s * 0.28, 5);
-        g.fill();
+        // the chain you are popping is a chain of him
+        drawNicHead(g, {
+          x: x + wob + s / 2,
+          y: y + s / 2,
+          r: s * 0.34,
+          skin: colour,
+          hair: shade(pal.deep, -0.4),
+          eye: th.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: th.ink,
+        });
       }
     }
 

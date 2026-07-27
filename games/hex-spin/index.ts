@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "hex-spin",
@@ -200,11 +201,19 @@ function mount(ctx: GameContext): GameInstance {
     g.arc(cx, cy, orbitR, 0, Math.PI * 2);
     g.stroke();
 
-    // center hub
-    g.fillStyle = pal.prize;
-    g.beginPath();
-    g.arc(cx, cy, 6, 0, Math.PI * 2);
-    g.fill();
+    // center hub — he is what the whole thing spins around
+    drawNicHead(g, {
+      x: cx,
+      y: cy,
+      r: 9,
+      skin: pal.prize,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gaze: Math.cos(angle),
+    });
 
     // wedge
     const wx = cx + Math.cos(angle) * orbitR;

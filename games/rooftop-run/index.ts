@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "rooftop-run",
@@ -194,13 +195,20 @@ function mount(ctx: GameContext): GameInstance {
     // hero
     const hx = runX;
     const hy = baseline - heroR - heroY;
-    g.fillStyle = over ? pal.foe : pal.hero;
-    roundRect(g, hx - heroR, hy - heroR, heroR * 2, heroR * 2, heroR * 0.4);
-    g.fill();
-    g.fillStyle = "rgba(255,255,255,.6)";
-    g.beginPath();
-    g.arc(hx - heroR * 0.3, hy - heroR * 0.4, heroR * 0.25, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: hx,
+      y: hy,
+      r: heroR,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      lean: heroY > 0 ? -0.2 : 0,
+      gape: over ? 0.8 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, t, W, H, "GAME OVER");
   });

@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "combo-punch",
@@ -140,11 +141,27 @@ function mount(ctx: GameContext): GameInstance {
 
     // hero
     const punchOut = punchT > 0 ? 14 : 0;
+    // body stays a slab; the head on top is the part that has to be him
     g.fillStyle = over ? pal.foe : pal.hero;
-    roundRect(g, heroX - 16, groundY - 38, 32, 38, 8);
+    roundRect(g, heroX - 14, groundY - 24, 28, 24, 7);
     g.fill();
+    drawNicHead(g, {
+      x: heroX,
+      y: groundY - 34,
+      r: 14,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      // he throws his weight behind the punch
+      lean: punchT > 0 ? 0.22 : 0,
+      gape: punchT > 0 ? 0.7 : 0,
+      scowl: 1,
+    });
     g.fillStyle = pal.glow;
-    g.fillRect(heroX + 14, groundY - 26, 18 + punchOut, 8);
+    g.fillRect(heroX + 14, groundY - 20, 18 + punchOut, 8);
 
     if (comboFlash > 0) {
       g.fillStyle = `rgba(255,255,255,${comboFlash * 2})`;

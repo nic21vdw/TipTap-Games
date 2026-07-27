@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "wall-hop",
@@ -157,13 +158,19 @@ function mount(ctx: GameContext): GameInstance {
     }
 
     const px = side === -1 ? leftX + 14 : rightX - 14;
-    g.fillStyle = over ? pal.foe : pal.hero;
-    roundRect(g, px - 12, playerY - 12, 24, 24, 6);
-    g.fill();
-    g.fillStyle = pal.glow;
-    g.beginPath();
-    g.arc(px, playerY - 4, 4, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: px,
+      y: playerY,
+      r: 13,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.8 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     g.fillStyle = t.ink;
     g.font = `700 14px ${t.fontBody}`;

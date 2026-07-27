@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "territory-claim",
@@ -251,17 +252,34 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = pal.glow;
     for (const c of trail) g.fillRect(c.cx * cell + cell * 0.25, c.cy * cell + cell * 0.25, cell * 0.5, cell * 0.5);
 
+    // rivals and the claimant alike — the whole board is him against himself
     for (const rv of rivals) {
-      g.beginPath();
-      g.arc(rv.x, rv.y, 9, 0, Math.PI * 2);
-      g.fillStyle = pal.foe;
-      g.fill();
+      drawNicHead(g, {
+        x: rv.x,
+        y: rv.y,
+        r: 9,
+        skin: pal.foe,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        scowl: 1,
+      });
     }
 
-    g.beginPath();
-    g.arc(px, py, 8, 0, Math.PI * 2);
-    g.fillStyle = pal.prize;
-    g.fill();
+    drawNicHead(g, {
+      x: px,
+      y: py,
+      r: 9,
+      skin: pal.prize,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0,
+    });
 
     if (over) endCard(g, t, W, H, "TERRITORY LOST");
   });

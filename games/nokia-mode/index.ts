@@ -1,5 +1,7 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, roundRect, clamp } from "@/games/engine";
+import { clamp, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
+import { drawDrink, skins } from "@/games/nic-art";
 import {
   createFx,
   createCombo,
@@ -48,6 +50,7 @@ interface P {
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
+  const fridge = skins(pal);
   const fx = createFx();
   const combo = createCombo(3, 4);
 
@@ -259,16 +262,8 @@ function mount(ctx: GameContext): GameInstance {
     const age = clock - foodBorn;
     const fr = cell * 0.34 * clamp(age * 6, 0.3, 1) + Math.sin(clock * 5) * cell * 0.04;
     halo(g, fx0, fy0, cell * 1.3, pal.prize, 0.4 + pulse(clock, 1.1) * 0.2);
-    g.beginPath();
-    g.arc(fx0, fy0, fr, 0, Math.PI * 2);
-    g.fillStyle = pal.prize;
-    g.fill();
-    g.beginPath();
-    g.arc(fx0 - fr * 0.3, fy0 - fr * 0.32, fr * 0.28, 0, Math.PI * 2);
-    g.fillStyle = "rgba(255,255,255,.75)";
-    g.fill();
-    g.fillStyle = pal.glow;
-    g.fillRect(fx0 - 1.5, fy0 - fr - 4, 3, 5);
+    // what the snake is chasing is a can
+    drawDrink(g, fx0, fy0, fr * 1.5, fridge.energy, "energy");
 
     // ---- snake: interpolated between steps, brightest at the head
     const pos = (i: number) => {
@@ -298,28 +293,22 @@ function mount(ctx: GameContext): GameInstance {
       }
     }
 
-    // eyes on the head, pointing where it is going
+    // the snake is headed by him, looking where it is going
     const head = pos(0);
-    const ex = dir.x * cell * 0.16;
-    const ey = dir.y * cell * 0.16;
-    const ox = -dir.y * cell * 0.18;
-    const oy = dir.x * cell * 0.18;
-    for (const sgn of [1, -1]) {
-      g.beginPath();
-      g.arc(head.x + ex + ox * sgn, head.y + ey + oy * sgn, cell * 0.11, 0, Math.PI * 2);
-      g.fillStyle = "#fff";
-      g.fill();
-      g.beginPath();
-      g.arc(
-        head.x + ex * 1.6 + ox * sgn,
-        head.y + ey * 1.6 + oy * sgn,
-        cell * 0.055,
-        0,
-        Math.PI * 2
-      );
-      g.fillStyle = "#101418";
-      g.fill();
-    }
+    drawNicHead(g, {
+      x: head.x,
+      y: head.y,
+      r: cell * 0.42,
+      skin: pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: th.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: th.ink,
+      gaze: dir.x !== 0 ? dir.x : 0,
+      lean: dir.y * 0.25,
+      gape: 0.25,
+    });
 
     // ---- HUD
     drawCombo(g, combo, W / 2, H * 0.19, pal.prize, th.fontDisplay, clock);

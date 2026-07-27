@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand, clamp, roundRect } from "@/games/engine";
+import { makeLoop, rand, clamp, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -309,6 +310,21 @@ function mount(ctx: GameContext): GameInstance {
     g.lineTo(bx + bw, by);
     g.closePath();
     g.fill();
+
+    // he is down in the glass and the pour is coming for him
+    drawNicHead(g, {
+      x: bx + bw / 2,
+      y: by - bw * 0.44,
+      r: bw * 0.34,
+      skin: shade(liquidCol, -0.45),
+      hair: shade(pal.deep, -0.4),
+      eye: th.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: th.ink,
+      gape: result === "miss" ? 0.9 : fill * 0.5,
+      scowl: result === "miss" ? 1 : 0,
+    });
 
     // rising bubbles while the pump runs
     if (holding) {

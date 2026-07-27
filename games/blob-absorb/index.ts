@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { clamp, endCard, makeLoop, rand } from "@/games/engine";
+import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "blob-absorb",
@@ -285,14 +286,20 @@ function mount(ctx: GameContext): GameInstance {
       g.fill();
     }
 
-    g.beginPath();
-    g.arc(player.x, player.y, player.r, 0, Math.PI * 2);
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.fill();
-    g.beginPath();
-    g.arc(player.x - player.r * 0.3, player.y - player.r * 0.32, player.r * 0.28, 0, Math.PI * 2);
-    g.fillStyle = "rgba(255,255,255,.55)";
-    g.fill();
+    drawNicHead(g, {
+      x: player.x,
+      y: player.y,
+      r: player.r,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      // he eats his way up the food chain, so the jaw stays busy
+      gape: over ? 0.9 : 0.3,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, t, W, H, "ABSORBED");
   });
