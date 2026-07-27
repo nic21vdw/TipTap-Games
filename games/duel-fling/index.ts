@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "duel-fling",
@@ -170,10 +171,20 @@ function mount(ctx: GameContext): GameInstance {
 
     const drawFighter = (x: number, hp: number, color: string) => {
       g.fillStyle = color;
-      g.beginPath();
-      g.arc(x, groundY - 55, 14, 0, Math.PI * 2);
-      g.fill();
       g.fillRect(x - 10, groundY - 42, 20, 32);
+      // both flingers are him
+      drawNicHead(g, {
+        x,
+        y: groundY - 55,
+        r: 14,
+        skin: color,
+        hair: shade(pal.deep, -0.4),
+        eye: theme.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: theme.ink,
+        scowl: 1,
+      });
       for (let i = 0; i < 3; i++) {
         g.fillStyle = i < hp ? pal.prize : "rgba(255,255,255,.15)";
         g.fillRect(x - 18 + i * 14, groundY - 70, 10, 6);
