@@ -1,5 +1,7 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade, clamp, rand } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
+import { drawDrink, skins } from "@/games/nic-art";
 
 const meta = {
   slug: "collect-hunt",
@@ -60,6 +62,7 @@ function rollRarity(): Rarity {
 
 function mount(ctx: GameContext): GameInstance {
   const { g, width: W, height: H, pal } = ctx;
+  const fridge = skins(pal);
 
   let player = { x: 0, y: 0 };
   let creatures: Creature[] = [];
@@ -256,16 +259,16 @@ function mount(ctx: GameContext): GameInstance {
         g.arc(sp.x, sp.y + bob, info.size + 6, 0, Math.PI * 2);
         g.stroke();
       }
-      g.fillStyle = color;
-      g.beginPath();
-      g.arc(sp.x, sp.y + bob, info.size, 0, Math.PI * 2);
-      g.fill();
+      // the haul is the fridge: commons are the cola, anything rarer is the
+      // energy can, so rarity reads off the silhouette before the colour does
+      const can = c.rarity === "common" ? "cola" : "energy";
       if (c.rarity === "rare") {
-        g.fillStyle = "rgba(255,255,255,.7)";
-        g.beginPath();
-        g.arc(sp.x - info.size * 0.3, sp.y + bob - info.size * 0.3, info.size * 0.3, 0, Math.PI * 2);
-        g.fill();
+        g.save();
+        g.shadowColor = color;
+        g.shadowBlur = info.size * 1.2;
       }
+      drawDrink(g, sp.x, sp.y + bob, info.size * 1.25, fridge[can], can);
+      if (c.rarity === "rare") g.restore();
     }
 
     // catch radius ring around player
@@ -275,16 +278,19 @@ function mount(ctx: GameContext): GameInstance {
     g.arc(W / 2, H / 2, CATCH_RADIUS, 0, Math.PI * 2);
     g.stroke();
 
-    // player
-    g.fillStyle = pal.hero;
-    g.beginPath();
-    g.arc(W / 2, H / 2, 13, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = shade(pal.deep, -0.3);
-    g.beginPath();
-    g.arc(W / 2 - 4, H / 2 - 2, 2.2, 0, Math.PI * 2);
-    g.arc(W / 2 + 4, H / 2 - 2, 2.2, 0, Math.PI * 2);
-    g.fill();
+    // player — the man himself, walking the field for cans
+    drawNicHead(g, {
+      x: W / 2,
+      y: H / 2,
+      r: 14,
+      skin: pal.hero,
+      hair: shade(pal.deep, -0.3),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.5),
+      dark: shade(pal.deep, -0.55),
+      tooth: t.ink,
+      gaze: Math.sin(performance.now() / 900),
+    });
 
     for (const p of particles) {
       g.globalAlpha = clamp(1 - p.t, 0, 1);
