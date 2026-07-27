@@ -10,6 +10,7 @@ import type { AlgorithmVector } from "@/lib/algorithm";
 import { scoreGame } from "@/lib/algorithm";
 import { CATALOG, MODULES, getMeta } from "@/games/registry";
 import { registerSpec } from "@/games/custom";
+import { titleFromSeed } from "@/lib/specs";
 import { saveCustomSpec, type CustomGameSpec } from "@/lib/storage";
 
 /** Engines that read the accent token hard enough that a recolour reads new. */
@@ -29,18 +30,6 @@ const BASES = [
   "cross-traffic",
   "drift-field",
   "black-keys",
-];
-
-const ADJ = [
-  "Neon", "Void", "Turbo", "Ghost", "Hyper", "Static", "Midnight", "Crimson",
-  "Zero", "Iron", "Lucid", "Feral", "Glass", "Solar", "Panic", "Velvet",
-  "Chrome", "Cobalt", "Rogue", "Quiet", "Savage", "Paper", "Wired", "Frost",
-];
-
-const NOUN = [
-  "Rush", "Drift", "Circuit", "Pulse", "Lane", "Vault", "Signal", "Cascade",
-  "Reflex", "Gauntlet", "Fracture", "Ladder", "Streak", "Switch", "Tempo",
-  "Margin", "Relay", "Spiral", "Break", "Chase", "Tide", "Hazard",
 ];
 
 const ORIGINS = [
@@ -98,10 +87,6 @@ function pickBase(vec: AlgorithmVector, boosts: Record<string, number>): string 
   return pool[pool.length - 1];
 }
 
-function titleFor(seed: number): string {
-  return `Nic's ${ADJ[seed % ADJ.length]} ${NOUN[(seed >> 5) % NOUN.length]}`;
-}
-
 /**
  * Designs, saves, and registers one brand-new game. Returns its slug, or
  * null if every engine is somehow unavailable.
@@ -127,7 +112,7 @@ export function mintVariant(
   const spec: CustomGameSpec = {
     slug,
     base,
-    title: titleFor(seed),
+    title: titleFromSeed(seed),
     rule: baseMeta.rule,
     description: `A ${baseMeta.title} remix the feed made for you.`,
     history: `${ORIGINS[seed % ORIGINS.length]} Runs on the ${baseMeta.title} engine, re-tuned and recoloured — same hands, different nerve.`,
