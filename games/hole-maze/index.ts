@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "hole-maze",
@@ -227,14 +228,19 @@ function mount(ctx: GameContext): GameInstance {
     g.arc(goal.x, goal.y, goal.r, 0, Math.PI * 2);
     g.fill();
 
-    g.fillStyle = over ? pal.foe : pal.hero;
-    g.beginPath();
-    g.arc(ball.x, ball.y, BR, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = "rgba(255,255,255,.5)";
-    g.beginPath();
-    g.arc(ball.x - BR * 0.3, ball.y - BR * 0.3, BR * 0.32, 0, Math.PI * 2);
-    g.fill();
+    drawNicHead(g, {
+      x: ball.x,
+      y: ball.y,
+      r: BR,
+      skin: over ? pal.foe : pal.hero,
+      hair: shade(pal.deep, -0.4),
+      eye: t.ink,
+      pupil: shade(pal.deep, -0.65),
+      dark: shade(pal.deep, -0.65),
+      tooth: t.ink,
+      gape: over ? 0.9 : 0,
+      scowl: over ? 1 : 0,
+    });
 
     if (over) endCard(g, t, W, H, "IN THE HOLE");
   });

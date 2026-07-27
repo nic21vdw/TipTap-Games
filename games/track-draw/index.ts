@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "track-draw",
@@ -214,10 +215,19 @@ function mount(ctx: GameContext): GameInstance {
     if (track.length > 0) {
       const sx = riding ? sled.x : track[0].x;
       const sy = riding ? sled.y : track[0].y - 4;
-      g.fillStyle = over ? pal.foe : pal.glow;
-      g.beginPath();
-      g.arc(sx, sy, 9, 0, Math.PI * 2);
-      g.fill();
+      drawNicHead(g, {
+        x: sx,
+        y: sy,
+        r: 10,
+        skin: over ? pal.foe : pal.glow,
+        hair: shade(pal.deep, -0.4),
+        eye: t.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: t.ink,
+        gape: riding ? 0.5 : 0,
+        scowl: over ? 1 : 0,
+      });
     }
 
     if (over) endCard(g, t, W, H, resultMsg || "GAME OVER");
