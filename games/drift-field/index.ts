@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand } from "@/games/engine";
+import { makeLoop, rand, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   drawBackdrop,
@@ -415,9 +416,22 @@ function mount(ctx: GameContext): GameInstance {
       g.lineTo(-11, 11);
       g.closePath();
       g.fill();
-      g.strokeStyle = "#ffffff";
+      g.strokeStyle = hexA(pal.hero, 0.9);
       g.lineWidth = 2.2;
       g.stroke();
+      // the pilot inside the hull
+      drawNicHead(g, {
+        x: 1,
+        y: 0,
+        r: 7.5,
+        skin: pal.hero,
+        hair: shade(pal.deep, -0.4),
+        eye: th.ink,
+        pupil: shade(pal.deep, -0.65),
+        dark: shade(pal.deep, -0.65),
+        tooth: th.ink,
+        scowl: 0.6,
+      });
       g.restore();
     }
 
