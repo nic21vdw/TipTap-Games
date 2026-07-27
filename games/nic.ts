@@ -78,6 +78,103 @@ export interface NicHeadOpts {
   glowEyes?: string;
   /** 0..1 — how much of the head is swallowed by the dark */
   shadowed?: number;
+  /**
+   * Aviators, on unless a caller argues otherwise. The shades are the
+   * silhouette — at 12px in a snake body the jaw and the swoop are mush, and
+   * the two dark lenses are the only thing still reading as him.
+   */
+  shades?: boolean;
+}
+
+/**
+ * The aviators, drawn in the head's own coordinate space so the bridge always
+ * lands on the nose no matter what size the caller asked for. Colours come in
+ * from the head opts, so a theme switch recolours the lenses mid-run.
+ */
+function drawAviators(
+  g: CanvasRenderingContext2D,
+  r: number,
+  lens: string,
+  frame: string,
+  glow?: string
+) {
+  const lw = r * 0.34;
+  const lh = r * 0.3;
+  const eyes: [number, number][] = [
+    [-r * 0.37, r * 0.01],
+    [r * 0.35, -r * 0.01],
+  ];
+
+  g.lineCap = "round";
+  g.lineJoin = "round";
+
+  // temple arms back towards the ears, drawn under the lenses
+  g.strokeStyle = frame;
+  g.lineWidth = Math.max(1, r * 0.07);
+  g.beginPath();
+  g.moveTo(-r * 0.68, -r * 0.05);
+  g.lineTo(-r * 0.93, -r * 0.12);
+  g.moveTo(r * 0.66, -r * 0.07);
+  g.lineTo(r * 0.87, -r * 0.14);
+  g.stroke();
+
+  // double bridge — the bar that makes an aviator an aviator
+  g.beginPath();
+  g.moveTo(-r * 0.06, -r * 0.12);
+  g.lineTo(r * 0.04, -r * 0.13);
+  g.moveTo(-r * 0.07, r * 0.02);
+  g.lineTo(r * 0.05, r * 0.01);
+  g.stroke();
+
+  for (const [ex, ey] of eyes) {
+    const teardrop = () => {
+      g.beginPath();
+      // flat-ish top edge, belly swinging out and down to a soft point
+      g.moveTo(ex - lw, ey - lh * 0.72);
+      g.quadraticCurveTo(ex, ey - lh * 1.02, ex + lw, ey - lh * 0.68);
+      g.quadraticCurveTo(ex + lw * 1.04, ey + lh * 0.5, ex + lw * 0.1, ey + lh);
+      g.quadraticCurveTo(ex - lw * 0.86, ey + lh * 0.86, ex - lw, ey - lh * 0.72);
+      g.closePath();
+    };
+
+    teardrop();
+    g.fillStyle = lens;
+    g.fill();
+
+    // the glare: one hard diagonal streak, clipped to the lens
+    g.save();
+    teardrop();
+    g.clip();
+    g.fillStyle = shade(lens, 0.55);
+    g.globalAlpha = 0.55;
+    g.beginPath();
+    g.moveTo(ex - lw * 0.7, ey + lh);
+    g.lineTo(ex - lw * 0.1, ey - lh);
+    g.lineTo(ex + lw * 0.24, ey - lh);
+    g.lineTo(ex - lw * 0.36, ey + lh);
+    g.closePath();
+    g.fill();
+    g.restore();
+
+    // eyes still burn through the glass when a game asks for it
+    if (glow) {
+      g.save();
+      teardrop();
+      g.clip();
+      g.fillStyle = glow;
+      g.shadowColor = glow;
+      g.shadowBlur = r * 0.6;
+      g.beginPath();
+      g.arc(ex, ey, r * 0.09, 0, Math.PI * 2);
+      g.fill();
+      g.restore();
+    }
+
+    teardrop();
+    g.strokeStyle = frame;
+    g.lineWidth = Math.max(1, r * 0.075);
+    g.stroke();
+  }
 }
 
 /** Draws Nic, facing you, centred on (x, y). */
@@ -180,6 +277,11 @@ export function drawNicHead(g: CanvasRenderingContext2D, o: NicHeadOpts) {
   g.moveTo(r * 0.12, -r * (0.28 - scowl * 0.14));
   g.lineTo(r * 0.6, -r * (0.4 + scowl * 0.06));
   g.stroke();
+
+  // The shades go on last of the upper face, over the brows the way real
+  // aviators sit. Every caller gets them without asking: the eyes above are
+  // still drawn underneath, so turning `shades` off gives back the old face.
+  if (o.shades !== false) drawAviators(g, r, dark, hair, o.glowEyes);
 
   // stubble
   if (!photo) {

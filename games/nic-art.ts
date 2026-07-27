@@ -113,6 +113,35 @@ export function drawCan(
   g.restore();
 }
 
+/**
+ * How tall each can stands relative to its width. The energy can is the slim
+ * tall one and the cola can is the squat one — at collectible size that
+ * silhouette is doing more work than either mark, because a 16px sweep and a
+ * 16px chevron are both just a smudge.
+ */
+export const CAN_ASPECT: Record<CanKind, number> = { cola: 1.62, energy: 2.15 };
+
+/**
+ * A collectible can sized off one number. `size` is the width; the height
+ * follows from the kind, so a field of pickups keeps both drinks in
+ * proportion without every caller doing the arithmetic.
+ */
+export function drawDrink(
+  g: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+  skin: CanSkin,
+  kind: CanKind = "cola",
+  spin = 0
+) {
+  g.save();
+  g.translate(cx, cy);
+  g.rotate(spin);
+  drawCan(g, 0, 0, size, size * CAN_ASPECT[kind], skin, kind);
+  g.restore();
+}
+
 /** A can seen from above — snake segments, stack tops, grid tiles. */
 export function drawCanTop(
   g: CanvasRenderingContext2D,

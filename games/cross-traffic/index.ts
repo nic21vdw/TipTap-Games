@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
-import { makeLoop, rand, roundRect } from "@/games/engine";
+import { makeLoop, rand, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 import {
   createFx,
   createCombo,
@@ -431,26 +432,21 @@ function mount(ctx: GameContext): GameInstance {
       g.translate(px, pyNow - lift);
       // stretch on the way up, squash on the landing beat
       g.scale(1 - jump * 0.12, 1 + jump * 0.18);
-      g.beginPath();
-      g.arc(0, 0, pR, 0, Math.PI * 2);
-      g.fillStyle = over ? pal.foe : pal.hero;
-      g.fill();
-      g.strokeStyle = "rgba(0,0,0,.3)";
-      g.lineWidth = 2;
-      g.stroke();
-      g.fillStyle = "#f4802f";
-      g.beginPath();
-      g.moveTo(-3, 2);
-      g.lineTo(3, 2);
-      g.lineTo(0, 8);
-      g.closePath();
-      g.fill();
-      for (const sgn of [-1, 1]) {
-        g.beginPath();
-        g.arc(sgn * pR * 0.35, -pR * 0.25, 2.6, 0, Math.PI * 2);
-        g.fillStyle = "#12161c";
-        g.fill();
-      }
+      drawNicHead(g, {
+        x: 0,
+        y: 0,
+        r: pR,
+        skin: over ? pal.foe : pal.hero,
+        hair: shade(pal.deep, -0.4),
+        eye: th.ink,
+        pupil: shade(pal.deep, -0.6),
+        dark: shade(pal.deep, -0.6),
+        tooth: th.ink,
+        // he looks where he is about to step, and winces once it goes wrong
+        gaze: jump > 0.05 ? 0 : Math.sin(performance.now() / 700) * 0.6,
+        scowl: over ? 1 : 0,
+        gape: over ? 0.8 : 0,
+      });
       g.restore();
     } else if (drowned) {
       // bubbles where the chick went under
