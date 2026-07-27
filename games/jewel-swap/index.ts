@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "jewel-swap",
@@ -381,11 +382,19 @@ function mount(ctx: GameContext): GameInstance {
         g.rotate(Math.PI / 4);
         g.fillStyle = shade(col, -0.15);
         g.fillRect(-s, -s, s * 2, s * 2);
-        g.fillStyle = col;
-        g.fillRect(-s * 0.72, -s * 0.72, s * 1.44, s * 1.44);
-        // facet highlight
-        g.fillStyle = "rgba(255,255,255,.55)";
-        g.fillRect(-s * 0.55, -s * 0.55, s * 0.55, s * 0.55);
+        // the jewel keeps its cut, but it is his face set into it
+        g.rotate(-Math.PI / 4);
+        drawNicHead(g, {
+          x: 0,
+          y: 0,
+          r: s * 0.95,
+          skin: col,
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+        });
         g.restore();
 
         if (cel.power) {

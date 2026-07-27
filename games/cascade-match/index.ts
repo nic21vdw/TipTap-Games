@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { clamp, endCard, makeLoop, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "cascade-match",
@@ -290,14 +291,19 @@ function mount(ctx: GameContext): GameInstance {
         const cy = offY + r * cell + cell / 2 - dropOffset[i] * cell * dropEase;
         const rad = (cell / 2 - 4) * scale;
         if (rad <= 0) continue;
-        g.beginPath();
-        g.arc(cx, cy, rad, 0, Math.PI * 2);
-        g.fillStyle = COLORS[color];
-        g.fill();
-        g.beginPath();
-        g.arc(cx - rad * 0.3, cy - rad * 0.3, rad * 0.25, 0, Math.PI * 2);
-        g.fillStyle = "rgba(255,255,255,.35)";
-        g.fill();
+        // the board is a grid of him; matching three clears three of him
+        drawNicHead(g, {
+          x: cx,
+          y: cy,
+          r: rad,
+          skin: COLORS[color],
+          hair: shade(pal.deep, -0.4),
+          eye: t.ink,
+          pupil: shade(pal.deep, -0.65),
+          dark: shade(pal.deep, -0.65),
+          tooth: t.ink,
+          gape: isClearing ? 0.8 : 0,
+        });
       }
     }
 
