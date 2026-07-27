@@ -1,5 +1,6 @@
 import type { GameContext, GameInstance, GameModule } from "@/games/types";
 import { endCard, makeLoop, pick, roundRect, shade } from "@/games/engine";
+import { drawNicHead } from "@/games/nic";
 
 const meta = {
   slug: "block-clear",
@@ -288,6 +289,18 @@ function mount(ctx: GameContext): GameInstance {
             : "rgba(255,255,255,.02)";
         roundRect(g, cx + 1.5, cy + 1.5, cell - 3, cell - 3, 5);
         g.fill();
+        if (fill)
+          drawNicHead(g, {
+            x: cx + cell / 2,
+            y: cy + cell / 2,
+            r: cell * 0.3,
+            skin: fill,
+            hair: shade(pal.deep, -0.4),
+            eye: t.ink,
+            pupil: shade(pal.deep, -0.65),
+            dark: shade(pal.deep, -0.65),
+            tooth: t.ink,
+          });
       }
     }
 
