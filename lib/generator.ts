@@ -5,6 +5,7 @@
 // card's slug is swapped in place — so the finished game pops up right where
 // the player is already looking, no extra swipe, no blank wait.
 import { registerSpec } from "@/games/custom";
+import { apiUrl, serverRoutesReachable } from "@/lib/native";
 import {
   registerPending,
   setGenProgress,
@@ -60,7 +61,8 @@ export function startGeneration(prompt: string): GenHandle {
   const done = (async (): Promise<CustomGameSpec> => {
     let spec: CustomGameSpec;
     try {
-      const res = await fetch("/api/generate", {
+      if (!serverRoutesReachable) throw new Error("no server in this build");
+      const res = await fetch(apiUrl("/api/generate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
@@ -109,7 +111,7 @@ export function startGeneration(prompt: string): GenHandle {
 // title + accent while the real design lands. Mirrors the server's offline
 // designer so the finished game feels like a continuation, not a swap. ---
 
-interface Prov {
+export interface Prov {
   slug: string;
   title: string;
   accent: string;
@@ -157,7 +159,7 @@ function pickBase(prompt: string, h: number): string {
 
 // Ultimate fallback if even our own API is unreachable — a fully playable
 // offline game so a build never dead-ends on a broken card.
-function offlineSpec(prompt: string, prov: Prov): CustomGameSpec {
+export function offlineSpec(prompt: string, prov: Prov = provisional(prompt)): CustomGameSpec {
   const h = hash(prompt.toLowerCase().trim() || "surprise me");
   const base = pickBase(prompt, h);
   return {
