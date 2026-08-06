@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#131c2b"/>
+      <stop offset="1" stop-color="#0b0f16"/>
+    </linearGradient>
+    <linearGradient id="chip" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#31e0b0"/>
+      <stop offset="0.55" stop-color="#0095f6"/>
+      <stop offset="1" stop-color="#ffc95c"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="512" cy="61.44" r="450.56" fill="#0095f6" fill-opacity="0.13"/>
+  
+    <circle cx="512" cy="512" r="334.6432" fill="none" stroke="#31e0b0" stroke-opacity="0.34" stroke-width="21.504"/>
+    <circle cx="512" cy="512" r="470.8352" fill="none" stroke="#31e0b0" stroke-opacity="0.16" stroke-width="17.408"/>
+  <rect x="231.8336" y="317.44" width="560.3328" height="389.12" rx="120.6272" fill="url(#chip)"/>
+  
+    <rect x="237.6704" y="355.0208" width="245.1456" height="53.248" rx="26.624" fill="#0b0f16"/>
+    <rect x="333.6192" y="355.0208" width="53.248" height="313.9584" rx="26.624" fill="#0b0f16"/>
+  
+    <rect x="541.184" y="355.0208" width="245.1456" height="53.248" rx="26.624" fill="#0b0f16"/>
+    <rect x="637.1328" y="355.0208" width="53.248" height="313.9584" rx="26.624" fill="#0b0f16"/>
+</svg>

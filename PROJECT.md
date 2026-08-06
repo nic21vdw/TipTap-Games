@@ -80,6 +80,12 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 - `app/api/runs/*` — the only writers to `scores`, service-role and
   ticket-validated
 - `components/shell/DevicePreview.tsx` — desktop ⇄ iPhone preview shell
+- `lib/native.ts` — the one check for "is this the iOS bundle?"; pairs with
+  `nativeBuild` in `lib/supabase/config.ts`, which forces the native build
+  guest-only
+- `scripts/build-native.mjs` — parks the server-only routes, runs the static
+  export the iOS binary carries, restores them
+- `docs/APP-STORE-SUBMISSION.md` — the click-by-click submission runbook
 
 ## Demo script (2 min)
 

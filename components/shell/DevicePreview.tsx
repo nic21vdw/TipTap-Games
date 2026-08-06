@@ -1,7 +1,9 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { DesktopIcon, PhoneIcon } from "@/components/ui/icons";
+import { nativeBuild } from "@/lib/native";
 
 /**
  * The app ships as an iPhone app; the web build is the shop window for it.
@@ -75,6 +77,7 @@ const DESKTOP_MIN = 1000;
 const BEZEL = 12;
 
 export function DevicePreview({ children }: { children: ReactNode }) {
+  const previewable = usePathname() === "/";
   const [mounted, setMounted] = useState(false);
   const [wide, setWide] = useState(false);
   const [mode, setMode] = useState<Mode>("iphone");
@@ -126,7 +129,7 @@ export function DevicePreview({ children }: { children: ReactNode }) {
   // Server render and first client render are identical (plain app), so the
   // frame appears only after hydration — no mismatch, and no double mount of
   // the feed, which owns live rAF loops.
-  const framed = mounted && wide && mode === "iphone";
+  const framed = mounted && wide && mode === "iphone" && !nativeBuild && previewable;
 
   const app = (
     <>
@@ -140,7 +143,7 @@ export function DevicePreview({ children }: { children: ReactNode }) {
     return (
       <>
         {app}
-        {mounted && wide && (
+        {mounted && wide && !nativeBuild && previewable && (
           <div className="ttg-toolbar ttg-toolbar-float">
             <ModeSwitch mode={mode} onPick={pick} />
           </div>

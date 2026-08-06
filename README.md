@@ -108,6 +108,38 @@ routes are standard Next.js route handlers — but Cloudflare Pages would need
 `@opennextjs/cloudflare` and a `wrangler` config, which this repo doesn't
 carry yet.
 
+## The iOS app
+
+The same code ships to the App Store as a native iPhone app, wrapped with
+Capacitor. The web bundle is **inside the binary**, not loaded from a URL:
+every game, the tuner, the themes and the music engine work in airplane
+mode, and the only outbound call is the optional game generator, which
+falls back to designing on the device when there's no signal.
+
+```bash
+npm run build:native   # static export into out/ (TTG_NATIVE=1)
+npm run ios:sync       # that, then npx cap sync ios
+npm run ios:assets     # regenerate the app icon and launch screen
+npm run ios:open       # open Xcode (macOS only)
+```
+
+`npm run build` and the Vercel deploy are untouched by any of it.
+`scripts/build-native.mjs` parks `app/api`, `app/auth`, `app/art-check` and
+`middleware.ts` for the length of the static export — a static build has
+nowhere to run them — and restores them afterwards, including on Ctrl-C.
+
+The iOS build is **guest-only**: `NEXT_PUBLIC_NATIVE=1` forces
+`cloudConfigured` false, which switches off Google sign-in, Supabase and the
+server leaderboard in one place. No account, no third-party login service, no
+data collected — which is what keeps App Review guideline 4.8 out of the way
+and lets the privacy label read "no data collected".
+
+Releases are archived and uploaded by
+[`.github/workflows/ios-release.yml`](.github/workflows/ios-release.yml) on a
+`macos-14` runner. Everything a human still has to click — certificates,
+the app record, the privacy label, the listing copy — is written out in
+[`docs/APP-STORE-SUBMISSION.md`](docs/APP-STORE-SUBMISSION.md).
+
 ## Desktop vs iPhone preview
 
 Open the Next.js app on a laptop and a switch in the corner flips between
