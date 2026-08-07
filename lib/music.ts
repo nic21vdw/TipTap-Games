@@ -257,6 +257,21 @@ function ctx(): AudioContext | null {
   if (!Ctor) return null;
   ac = new Ctor();
 
+  // iOS routes WebAudio through the "ambient" session by default, which the
+  // hardware ring/silent switch mutes outright. Asking for "playback" is what
+  // makes the soundtrack audible with the switch flipped, the same as any
+  // native music app. Absent everywhere but Safari 16.4+, hence the guard.
+  const session = (
+    navigator as unknown as { audioSession?: { type: string } }
+  ).audioSession;
+  if (session) {
+    try {
+      session.type = "playback";
+    } catch {
+      // a browser that exposes the object but rejects the value
+    }
+  }
+
   // A limiter on the end of the chain: several voices can land on the same
   // sixteenth and the last thing a feed needs is a clipped downbeat.
   const limiter = ac.createDynamicsCompressor();
@@ -285,6 +300,21 @@ function ctx(): AudioContext | null {
       d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
     }
   }
+  // An iOS interruption (a call, Siri, Control Center) drops the context out
+  // of "running" without ever firing visibilitychange. The next gesture is the
+  // only thing allowed to bring it back, so arm one.
+  const c = ac;
+  c.addEventListener("statechange", () => {
+    if (c.state === "running" || !unlocked || document.hidden) return;
+    const rearm = () => {
+      window.removeEventListener("pointerdown", rearm);
+      window.removeEventListener("touchstart", rearm);
+      resumeMusic();
+    };
+    window.addEventListener("pointerdown", rearm, { once: true, passive: true });
+    window.addEventListener("touchstart", rearm, { once: true, passive: true });
+  });
+
   window.__ttgMusic = { ac, master, live: 0 };
   return ac;
 }
@@ -307,7 +337,7 @@ export function unlockAudio() {
     listeners.forEach((fn) => fn());
   };
   if (c.state === "running") settle();
-  else void c.resume().then(settle, settle);
+  else void Promise.resolve(c.resume?.()).then(settle, settle);
 }
 
 export function isUnlocked() {
@@ -344,7 +374,12 @@ export function suspendMusic() {
 }
 
 export function resumeMusic() {
-  if (ac && ac.state === "suspended" && unlocked) void ac.resume();
+  // Not `=== "suspended"`: a phone call or Siri leaves an iOS context in
+  // "interrupted", and a resume gated on "suspended" would never fire again
+  // for the rest of the session.
+  if (ac && ac.state !== "running" && unlocked) {
+    void Promise.resolve(ac.resume?.()).catch(() => {});
+  }
 }
 
 // ------------------------------------------------------------ sound design
@@ -942,12 +977,15 @@ export function playFor(meta: TrackSeedMeta): TrackSpec {
   current = tr;
   if (c.state === "running") startTrack(tr);
   else {
-    // queued behind the gesture that unlocks audio
-    void c.resume().then(() => {
+    // Queued behind the gesture that unlocks audio. iOS rejects a resume that
+    // did not come from a gesture, and an unhandled rejection here would fire
+    // on every first card load, so both outcomes are handled.
+    const settle = () => {
       unlocked = c.state === "running";
-      if (current === tr && !tr.dead) startTrack(tr);
+      if (unlocked && current === tr && !tr.dead) startTrack(tr);
       listeners.forEach((fn) => fn());
-    });
+    };
+    void Promise.resolve(c.resume?.()).then(settle, settle);
   }
   return spec;
 }

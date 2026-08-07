@@ -130,7 +130,6 @@ function mount(ctx: GameContext): GameInstance {
           } else {
             turn = turn === "player" ? "enemy" : "player";
             msgT = 0.6;
-            if (turn === "enemy") setTimeout(() => {}, 0);
           }
         } else if (proj.y > H + 50 || proj.x < -50 || proj.x > W + 50) {
           proj = null;
