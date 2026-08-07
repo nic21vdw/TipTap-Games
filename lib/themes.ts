@@ -190,4 +190,9 @@ export function applyThemeToDom(t: ThemeTokens) {
   r.setProperty("--grain", `${t.grain}`);
   document.documentElement.dataset.scanlines = t.scanlines ? "1" : "0";
   document.documentElement.dataset.pixelate = t.pixelate ? "1" : "0";
+  // iOS paints the area behind the status bar and the home indicator with
+  // theme-color. Left at the Coast default, Arcade Dark would land a white
+  // band across the top and bottom of a black feed.
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (meta) meta.content = t.bg;
 }

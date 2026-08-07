@@ -37,11 +37,31 @@ export function goToCard(root: HTMLElement | null | undefined, index: number) {
 export function useFinePointer() {
   const [fine, setFine] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia("(pointer: fine)");
-    const sync = () => setFine(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+    setFine(pointerQuery().matches);
+    return subscribeFinePointer(setFine);
   }, []);
   return fine;
+}
+
+// One query and one listener for the whole feed. Every card used to open its
+// own, and the feed keeps every card it has shown, so the count climbed with
+// the session.
+let mq: MediaQueryList | null = null;
+const finePointerSubs = new Set<(fine: boolean) => void>();
+
+function pointerQuery() {
+  if (!mq) {
+    mq = window.matchMedia("(pointer: fine)");
+    mq.addEventListener("change", () =>
+      finePointerSubs.forEach((fn) => fn(mq!.matches))
+    );
+  }
+  return mq;
+}
+
+function subscribeFinePointer(fn: (fine: boolean) => void) {
+  finePointerSubs.add(fn);
+  return () => {
+    finePointerSubs.delete(fn);
+  };
 }

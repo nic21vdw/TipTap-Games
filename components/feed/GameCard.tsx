@@ -85,8 +85,21 @@ export function GameCard({ card, index }: Props) {
 
   // Hand control back and land on the neighbouring card in one motion —
   // downwards for the next game, upwards for the one you just left.
+  // The canvas goes pointer-events:none the instant control is handed back, so
+  // a game caught mid-drag would never see the end of the gesture and would
+  // sit on a half-drawn aim line until it was remounted. Cancel it first.
   const leaveTo = (delta: number) => {
     haptic("light");
+    const canvas = sectionRef.current?.querySelector("canvas");
+    if (canvas) {
+      try {
+        canvas.dispatchEvent(
+          new PointerEvent("pointercancel", { bubbles: true, pointerId: 1 })
+        );
+      } catch {
+        // a browser without the PointerEvent constructor has nothing to cancel
+      }
+    }
     goToCard(sectionRef.current?.parentElement, index + delta);
   };
 
@@ -211,10 +224,28 @@ export function GameCard({ card, index }: Props) {
     openSheet(id);
   };
 
+  // A card is never dropped from the list once it has been shown, so by the
+  // hundredth swipe the feed holds a hundred sections. Off-screen ones are
+  // the poster and nothing else: no rail, no caption, no HUD, no listeners.
+  if (!mounted) {
+    return (
+      <section
+        ref={sectionRef}
+        data-index={index}
+        data-uid={card.uid}
+        className="relative h-[var(--app-h)] w-full snap-start snap-always overflow-hidden"
+        style={{ background: "var(--bg)" }}
+      >
+        <CardPoster meta={meta} />
+      </section>
+    );
+  }
+
   return (
     <section
       ref={sectionRef}
       data-index={index}
+      data-uid={card.uid}
       className="relative h-[var(--app-h)] w-full snap-start snap-always overflow-hidden"
       style={{ background: "var(--bg)" }}
       onPointerDownCapture={playing ? onPlayDown : undefined}

@@ -29,7 +29,23 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   overscroll-behavior: none;
+  overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
+  /* iOS honours this even though it ignores user-scalable=no: it kills the
+     double-tap-to-zoom delay and gesture without taking pinch-zoom away. */
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* the only places a selection or a callout is wanted */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 html[data-native="1"] {
