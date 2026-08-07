@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  * nowhere.
  */
 export async function POST(request: Request) {
-  const playerId = await currentUserId();
+  const playerId = await currentUserId(request);
   if (!playerId) {
     return NextResponse.json({ error: "not_signed_in" }, { status: 401 });
   }

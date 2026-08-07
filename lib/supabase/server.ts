@@ -41,8 +41,28 @@ export function serviceClient(): SupabaseClient | null {
   });
 }
 
-/** The signed-in player's id, or null. */
-export async function currentUserId(): Promise<string | null> {
+/**
+ * The signed-in player's id, or null.
+ *
+ * The web app proves who it is with a cookie. The iOS bundle cannot — it runs
+ * on capacitor://localhost, so its cookies for this origin are cross-site and
+ * never sent — and presents the same Supabase access token as a bearer header
+ * instead. The token is verified against Supabase either way; a forged one
+ * fails `getUser` and the caller is simply not signed in.
+ */
+export async function currentUserId(request?: Request): Promise<string | null> {
+  const header = request?.headers.get("authorization") ?? "";
+  const bearer = /^Bearer\s+(.+)$/i.exec(header)?.[1]?.trim();
+
+  if (bearer) {
+    if (!cloudConfigured) return null;
+    const anon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data } = await anon.auth.getUser(bearer);
+    return data.user?.id ?? null;
+  }
+
   const supabase = await routeClient();
   if (!supabase) return null;
   const { data } = await supabase.auth.getUser();

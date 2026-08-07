@@ -1,9 +1,11 @@
 "use client";
 
 import { create } from "zustand";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import * as cloud from "@/lib/cloud";
 import { browserClient } from "@/lib/supabase/client";
-import { cloudConfigured } from "@/lib/supabase/config";
+import { cloudConfigured, nativeBuild } from "@/lib/supabase/config";
+import { NATIVE_AUTH_REDIRECT } from "@/lib/native";
 import { getHandle, setHandle } from "@/lib/storage";
 
 export interface Player {
@@ -31,6 +33,26 @@ const PROMPT_DISMISSED = "ttg:signinDismissed";
 
 let started = false;
 
+/**
+ * The last step of an iOS sign-in. Google returns to the custom scheme, iOS
+ * wakes the app with that URL, and the one-time code in it is traded for the
+ * session — which onAuthStateChange then picks up exactly as it does on the
+ * web. The system browser is closed behind the player so they land back on
+ * the game they were playing.
+ */
+async function listenForDeepLink(supabase: SupabaseClient) {
+  const { App } = await import("@capacitor/app");
+  await App.addListener("appUrlOpen", ({ url }) => {
+    if (!url.startsWith(NATIVE_AUTH_REDIRECT)) return;
+    const code = new URL(url).searchParams.get("code");
+    void (async () => {
+      if (code) await supabase.auth.exchangeCodeForSession(code);
+      const { Browser } = await import("@capacitor/browser");
+      await Browser.close().catch(() => undefined);
+    })();
+  });
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   status: cloudConfigured ? "loading" : "off",
   player: null,
@@ -48,6 +70,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     cloud.onSyncState((sync) => set({ sync }));
+
+    if (nativeBuild) void listenForDeepLink(supabase);
 
     // Fires once on load with the restored session, and again on every
     // sign-in, sign-out and token refresh.
@@ -94,6 +118,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signInWithGoogle: async () => {
     const supabase = browserClient();
     if (!supabase) return;
+
+    if (nativeBuild) {
+      // No page to redirect: the bundle asks for the consent URL, opens it in
+      // the system browser, and gets the answer back as a deep link.
+      const { data } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: NATIVE_AUTH_REDIRECT, skipBrowserRedirect: true },
+      });
+      if (!data?.url) return;
+      const { Browser } = await import("@capacitor/browser");
+      await Browser.open({ url: data.url });
+      return;
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

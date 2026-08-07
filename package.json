@@ -18,6 +18,8 @@
     "ios:open": "npx cap open ios"
   },
   "dependencies": {
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/browser": "^7.0.5",
     "@capacitor/core": "^7.6.8",
     "@capacitor/haptics": "^7.0.5",
     "@capacitor/ios": "^7.6.8",

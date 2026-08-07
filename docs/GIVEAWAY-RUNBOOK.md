@@ -40,15 +40,42 @@ nothing shared and nothing to draw a winner from.
 
    Rerun it after every deploy that adds or retunes a game.
 
-### The one thing that is not ready
+### Three more steps for the App Store build
 
-The iOS bundle is forced guest-only: `cloudConfigured` in
-`lib/supabase/config.ts` is false whenever `NEXT_PUBLIC_NATIVE=1`, so a player
-on the App Store build has no account, and their scores never leave the phone.
-A giveaway announced in the app but scored only on the web is worse than no
-giveaway. Enabling it needs Google OAuth to survive the Capacitor webview —
-a custom URL scheme, `@capacitor/app` to catch the redirect, and the
-`apiUrl()` wrapper applied to the `/api/runs/*` calls in `lib/cloud.ts`.
+The iOS bundle plays by different rules than the web app: it has no server of
+its own, and it runs on `capacitor://localhost`, so a cookie for the Vercel
+origin would be cross-site and dropped. It keeps its session in local storage
+and proves who it is to `/api/runs/*` with a bearer token instead. Three
+things have to line up or it silently falls back to guest play.
+
+1. **Supabase → Authentication → URL Configuration → Redirect URLs**, add:
+
+   ```
+   com.nicvandewetering.tiptapgames://auth-callback
+   ```
+
+   This is the deep link Google returns to. It is already registered in
+   `ios/App/App/Info.plist` and named in `lib/native.ts`; Supabase refuses to
+   redirect anywhere it has not been told about.
+
+2. **Build the bundle with the keys present.** `cloudConfigured` is compiled
+   into the static export, so the Supabase env vars have to be set in the
+   shell that runs the build — not just on Vercel:
+
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_ANON_KEY=... npm run ios:sync
+   ```
+
+   Build it without them and you ship a guest-only app that looks fine and
+   records nothing. Check before submitting: the exported bundle should
+   contain your project URL — `grep -ro "supabase.co" out/ | head`.
+
+3. **`npx cap sync ios` on a Mac.** This change adds `@capacitor/app` and
+   `@capacitor/browser`, and their pods only install there.
+
+Until an App Store build has been through all three, keep the giveaway to the
+web URL — a contest announced in the app but scored only on the web is worse
+than no contest.
 
 ## Open the season
 

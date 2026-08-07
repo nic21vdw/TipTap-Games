@@ -17,7 +17,7 @@ const GRACE_SECONDS = 2;
  * two racing submits can only ever produce one score.
  */
 export async function POST(request: Request) {
-  const playerId = await currentUserId();
+  const playerId = await currentUserId(request);
   if (!playerId) {
     return NextResponse.json({ error: "not_signed_in" }, { status: 401 });
   }

@@ -25,4 +25,13 @@ export function apiUrl(path: string): string {
   return `${API_ORIGIN}${path}`;
 }
 
+/**
+ * Where Google sends an iOS player back to. A custom scheme, not a URL: the
+ * bundle has no origin of its own to return to, so iOS hands the redirect to
+ * the app itself. It must match the CFBundleURLTypes entry in
+ * ios/App/App/Info.plist and the allow-list under Supabase → Authentication →
+ * URL Configuration, or the round trip dies at the last step.
+ */
+export const NATIVE_AUTH_REDIRECT = "com.nicvandewetering.tiptapgames://auth-callback";
+
 export const serverRoutesReachable = !nativeBuild || API_ORIGIN.length > 0;
