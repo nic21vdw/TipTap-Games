@@ -413,7 +413,7 @@ export function GameCard({ card, index }: Props) {
               <>
                 <EqBars />
                 <span className="min-w-0 truncate">
-                  {track.name} · {track.styleLabel} · {track.bpm} BPM
+                  {track.name} · {track.volumeLabel}
                 </span>
               </>
             ) : (
