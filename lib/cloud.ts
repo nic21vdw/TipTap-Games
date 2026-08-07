@@ -426,3 +426,142 @@ export async function fetchStanding(slug: string): Promise<CloudStanding | null>
   if (error || !row) return null;
   return { best: row.best, rank: Number(row.rank), total: Number(row.total) };
 }
+
+// ---------------------------------------------------------------------------
+// seasons — the month-long contest the giveaway is drawn from
+// ---------------------------------------------------------------------------
+
+export interface Season {
+  slug: string;
+  title: string;
+  prize: string | null;
+  startsAt: number;
+  endsAt: number;
+}
+
+export interface SeasonRankRow {
+  handle: string;
+  avatarUrl: string | null;
+  points: number;
+  gamesPlayed: number;
+  rank: number;
+  you: boolean;
+}
+
+export interface SeasonStanding {
+  points: number;
+  /** 0 means no ranked run this season yet — not last place. */
+  rank: number;
+  gamesPlayed: number;
+  total: number;
+}
+
+/** The live season, or null when there is no contest running. */
+export async function fetchSeason(): Promise<Season | null> {
+  const supabase = browserClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("current_season", {
+    p_season: null,
+  });
+  const row = (
+    data as Array<{
+      slug: string;
+      title: string;
+      prize: string | null;
+      starts_at: string;
+      ends_at: string;
+    }> | null
+  )?.[0];
+  if (error || !row) return null;
+  return {
+    slug: row.slug,
+    title: row.title,
+    prize: row.prize,
+    startsAt: Date.parse(row.starts_at),
+    endsAt: Date.parse(row.ends_at),
+  };
+}
+
+/** One game's board, this season only. */
+export async function fetchSeasonLeaderboard(
+  slug: string,
+  limit = 10
+): Promise<CloudBoardRow[] | null> {
+  const supabase = browserClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("season_leaderboard", {
+    p_slug: slug,
+    p_season: null,
+    p_limit: limit,
+  });
+  if (error || !data) return null;
+  return (
+    data as Array<{
+      player_id: string;
+      handle: string;
+      avatar_url: string | null;
+      score: number;
+      rank: number;
+    }>
+  ).map((r) => ({
+    handle: r.handle,
+    avatarUrl: r.avatar_url,
+    score: r.score,
+    rank: Number(r.rank),
+    you: r.player_id === state.playerId,
+  }));
+}
+
+/** The contest board: points across every game, not one game's scores. */
+export async function fetchSeasonOverall(
+  limit = 25
+): Promise<SeasonRankRow[] | null> {
+  const supabase = browserClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("season_overall", {
+    p_season: null,
+    p_limit: limit,
+  });
+  if (error || !data) return null;
+  return (
+    data as Array<{
+      player_id: string;
+      handle: string;
+      avatar_url: string | null;
+      points: number;
+      games_played: number;
+      rank: number;
+    }>
+  ).map((r) => ({
+    handle: r.handle,
+    avatarUrl: r.avatar_url,
+    points: Number(r.points),
+    gamesPlayed: Number(r.games_played),
+    rank: Number(r.rank),
+    you: r.player_id === state.playerId,
+  }));
+}
+
+/** Where the signed-in player sits in the contest. */
+export async function fetchSeasonStanding(): Promise<SeasonStanding | null> {
+  const supabase = browserClient();
+  if (!supabase || !state.playerId) return null;
+  const { data, error } = await supabase.rpc("my_season_standing", {
+    p_season: null,
+  });
+  const row = (
+    data as Array<{
+      points: number;
+      rank: number;
+      games_played: number;
+      total: number;
+    }> | null
+  )?.[0];
+  if (error || !row) return null;
+  return {
+    points: Number(row.points),
+    rank: Number(row.rank),
+    gamesPlayed: Number(row.games_played),
+    total: Number(row.total),
+  };
+}
