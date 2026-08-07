@@ -58,7 +58,7 @@ These were the most likely places to find a blocker, and they are clean.
 
 # Blockers
 
-## B1. The feed's swipe-to-advance steals the gesture out of 26 games
+## B1. The feed's swipe-to-advance steals the gesture out of 26 games — FIXED
 
 **Where:** `components/feed/GameCard.tsx:112-134` (the capture-phase pointer
 handlers) and `components/feed/GameCard.tsx:650-662` (`detectSwipe`), with
@@ -114,26 +114,60 @@ quarter of the catalog that plays correctly on the reviewer's laptop and is
 unplayable on the reviewer's phone, which is also the exact failure mode
 most likely to draw an App Store rejection under 2.1 (app completeness).
 
-**Fix:** this is a product-level interaction decision, not a one-line patch,
-so it is written up rather than shipped. The mechanism I would use:
+**Fix (shipped):** the feed now decides who owns a vertical drag from a
+runtime signal taken off the game itself, not from a hand-kept list.
 
-1. In `GameHost`, wrap the canvas's `addEventListener` for the duration of
-   `mount()` and record whether the game registered `pointermove`. That is a
-   runtime signal, so it needs no per-game annotation and cannot drift out of
-   date as games are added — the 17 tap-only games keep swipe-anywhere for
-   free.
-2. For a game that did register `pointermove`, do not arm the full-surface
-   swipe. Arm it only for gestures that begin inside a reserved strip. The
-   grabber pill already rendered at `GameCard.tsx:280-293` is the natural
-   handle, and is already `pointer-events: none`, so it costs no canvas area
-   to make it live.
-3. Keep the current full-surface behaviour for everything else.
+1. `GameHost` swaps the canvas's own `addEventListener` for a recording
+   wrapper for exactly the duration of the module's `mount()` call, notes
+   whether the game registered `pointermove`, `touchmove` or `mousemove`, and
+   puts the original method back in a `finally` (`GameHost.tsx:31-52`,
+   `GameHost.tsx:154`). The flag goes out to the card through `onDragControl`
+   and onto the canvas as `data-drag-control` for testability. Every
+   `pointermove` in `games/**` is registered synchronously at the top level of
+   `mount`, and a player-generated game runs a shipped engine's `mount`
+   through `games/custom.ts`, so both are classified with no annotation and no
+   upkeep. A sweep of all 105 catalog modules through this exact wrapper
+   returns 43 drag-controlled and 62 tap-only, which matches the static count
+   of `pointermove` registrations file for file, and covers all 26 games
+   listed above.
+2. A game that registered a move handler no longer arms the full-surface
+   swipe at all (`GameCard.tsx:112-131`). For those the feed answers only to a
+   gesture that starts on the handle.
+3. The grabber pill is that handle. It was `pointer-events: none` decoration;
+   for a drag-controlled game it is now a live 120x44 target — over Apple's
+   44x44pt floor — with `touch-action: none`, a scrim behind it and a fatter
+   bar, so it reads as a handle rather than an ornament
+   (`GameCard.tsx:284-320`). For a tap-only game it stays inert decoration and
+   the whole card keeps catching the swipe, so the 62 tap games lose no
+   surface.
+4. The touch hint now tells you where the handle is: "swipe from the handle
+   above to move on" for a drag game, the old "swipe up or down to move on"
+   for a tap game. The fine-pointer copy is unchanged.
+5. Keyboard (↑ ↓) and wheel navigation are untouched — they live in
+   `Feed.tsx` and never went through the card's pointer handlers.
 
-One piece of this **is** shipped in this branch: `leaveTo()`
-(`components/feed/GameCard.tsx:91-105`) now dispatches a `pointercancel` to
-the canvas before handing control back, so a game caught mid-drag can unwind
-instead of being frozen on a half-drawn aim line until it is remounted. Games
-that do not yet listen for `pointercancel` should be taught to.
+`leaveTo()` (`components/feed/GameCard.tsx:91-105`) still dispatches a
+`pointercancel` to the canvas before handing control back, so a game caught
+mid-drag on the handle path can unwind. Games that do not yet listen for
+`pointercancel` should still be taught to.
+
+**How it was verified:** dev server on 127.0.0.1:3002, driven in Chrome with
+synthetic `pointerdown`/`pointermove`/`pointerup` streams at
+`pointerType: "touch"` plus matching touch events, against the 402x874 phone
+layout.
+
+| Check | Result |
+|---|---|
+| `wing-slingshot` pull-back (140px up, mid-canvas) | full stream reaches the canvas, no `pointercancel`, card stays on index 0, canvas stays `pointer-events: auto` throughout |
+| same gesture on the pre-fix build | canvas receives `pointercancel` mid-drag and the feed advances — the bug, reproduced |
+| `duel-fling` slingshot | delivered, no advance |
+| `patience-deck` card drag to the foundation row | delivered, no advance |
+| `side-blaster` lane drag | delivered, no advance |
+| handle swipe on all four | advances one card |
+| `one-gap` (tap-only) swipe from mid-canvas | advances one card, as before |
+| ↑ ↓ over six consecutive drag-controlled cards | advances every time |
+| wheel down then up while playing `wing-slingshot` | 0 → 1 → 0 |
+| all 105 modules through the classifier | 43 drag, 62 tap; all 26 games listed above classified drag |
 
 ## B2. WebAudio is muted by the iPhone ring/silent switch — FIXED
 
@@ -409,6 +443,7 @@ short-circuits on an already-stopped loop. Noted so it is not re-flagged.
 | B3 | Recover from an `"interrupted"` AudioContext, and re-arm a resume on the next gesture | `lib/music.ts` |
 | B4 | Off-screen cards render the poster only; one shared `MediaQueryList` for the whole feed | `components/feed/GameCard.tsx`, `components/feed/nav.ts` |
 | B1 | Dispatch `pointercancel` to the canvas before the feed takes the gesture away | `components/feed/GameCard.tsx` |
+| B1 | Classify drag-controlled games from a runtime signal and reserve the swipe for a live 44pt handle on those cards | `components/feed/GameHost.tsx`, `components/feed/GameCard.tsx` |
 | — | `data-uid` on the card section, so the search sheet's "jump to this game" scroll target actually resolves | `components/feed/GameCard.tsx` |
 | S1 | `touch-action: manipulation`; drop the viewport scale locks iOS ignores | `app/globals.css`, `app/layout.tsx` |
 | S2 | Disable selection and the long-press callout outside form fields | `app/globals.css` |
@@ -424,8 +459,6 @@ resolve and the feed never scrolled to the chosen game.
 
 # What was left, and why
 
-- **B1**, the gesture conflict, is a 26-game interaction redesign. Shipping
-  half of it would trade one broken feel for another.
 - **B4's** unbounded `cards` array is governed by an explicit `PROJECT.md`
   hard rule; capping it is the charter owner's call.
 - **S6**, the frame budget, needs a profiler on six specific game modules.

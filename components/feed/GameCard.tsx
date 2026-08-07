@@ -70,6 +70,8 @@ export function GameCard({ card, index }: Props) {
   const exitPlay = useUiStore((s) => s.exitPlay);
   const playing = playingUid === card.uid;
   const swipeRef = useRef<Swipe | null>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
+  const [dragControl, setDragControl] = useState(false);
 
   // Scroll a card into view and you're playing immediately — no demo, no tap.
   // The reflex has to fire the moment the game lands on screen.
@@ -105,12 +107,18 @@ export function GameCard({ card, index }: Props) {
 
   // While playing, the game owns the surface — so the card watches the same
   // pointer stream in the capture phase and claims anything that reads as a
-  // vertical flick. No game control is an upward drag, so the two never
-  // compete: taps, holds and sideways drags all fall through untouched.
+  // vertical flick. A game with drag controls competes for exactly that
+  // gesture, so on those cards the feed only answers to the handle.
   // Touch and pen only: on desktop the wheel is the one way through the feed,
   // so a mouse drag stays with the game it started on.
+  const onHandleDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
+  };
   const onPlayDown = (e: React.PointerEvent) => {
     if (e.pointerType === "mouse") return;
+    if (dragControl && !handleRef.current?.contains(e.target as Node)) return;
     swipeRef.current = {
       id: e.pointerId,
       x: e.clientX,
@@ -260,6 +268,7 @@ export function GameCard({ card, index }: Props) {
           interactive={playing}
           onScore={setScore}
           onRunEnd={handleRunEnd}
+          onDragControl={setDragControl}
         />
       ) : (
         <CardPoster meta={meta} />
@@ -275,21 +284,45 @@ export function GameCard({ card, index }: Props) {
         />
       )}
 
-      {/* Playing: a hint only. The gesture itself is caught on the whole card,
-          so there is no strip to find and nothing here to swallow a tap. */}
+      {/* Playing: for a tap-only game the whole card catches the swipe and this
+          is a hint and nothing more. For a game with drag controls it is the
+          only place the feed listens, so it becomes a real 44pt handle that
+          reads as one. */}
       {playing && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex flex-col items-center gap-1 pb-[calc(var(--safe-bottom)+12px)]">
+        <div
+          className="absolute inset-x-0 bottom-0 z-40 flex flex-col items-center gap-1 pb-[calc(var(--safe-bottom)+12px)] pt-2"
+          style={{ pointerEvents: "none" }}
+        >
           <div
-            className="h-1 w-10 rounded-full"
-            style={{ background: "rgba(255,255,255,.7)" }}
-          />
+            ref={handleRef}
+            data-swipe-handle={dragControl ? "live" : "hint"}
+            onPointerDown={dragControl ? onHandleDown : undefined}
+            className="flex h-11 w-[120px] items-center justify-center rounded-full"
+            style={{
+              pointerEvents: dragControl ? "auto" : "none",
+              touchAction: "none",
+              background: dragControl ? "rgba(12,18,28,.6)" : "transparent",
+            }}
+          >
+            <div
+              className="rounded-full"
+              style={{
+                height: dragControl ? 5 : 4,
+                width: dragControl ? 52 : 40,
+                background: "rgba(255,255,255,.85)",
+                boxShadow: "0 1px 6px rgba(0,0,0,.45)",
+              }}
+            />
+          </div>
           <span
             className="text-[10px] font-bold uppercase tracking-wider"
-            style={{ color: "rgba(255,255,255,.8)" }}
+            style={{ color: "rgba(255,255,255,.82)" }}
           >
             {fine
               ? "scroll or ↑ ↓ to move · esc to stop"
-              : "swipe up or down to move on"}
+              : dragControl
+                ? "swipe from the handle above to move on"
+                : "swipe up or down to move on"}
           </span>
         </div>
       )}
@@ -642,9 +675,7 @@ interface Swipe {
 }
 
 // Deliberately cheap to satisfy: a flick of ~a finger's width is enough, and a
-// slow drag still counts once it's clearly gone somewhere. The verticality
-// check is what keeps it off the games — a sideways drag bails out for good the
-// moment it commits, so aiming and steering never trip an exit.
+// slow drag still counts once it's clearly gone somewhere.
 const FLICK_PX = 40; // quick flick
 const FLICK_MS = 550;
 const DRAG_PX = 90; // unhurried drag
