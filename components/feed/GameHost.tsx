@@ -25,6 +25,32 @@ interface Props {
   interactive: boolean;
   onScore: (n: number) => void;
   onRunEnd: (r: RunResult) => void;
+  /** true when the game registered a move listener during mount() */
+  onDragControl?: (drag: boolean) => void;
+}
+
+const MOVE_EVENTS = new Set(["pointermove", "touchmove", "mousemove"]);
+
+function mountWatchingMoves(
+  canvas: HTMLCanvasElement,
+  run: () => GameInstance
+): { inst: GameInstance; dragControl: boolean } {
+  const native = canvas.addEventListener;
+  let dragControl = false;
+  canvas.addEventListener = function (
+    this: HTMLCanvasElement,
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+  ) {
+    if (MOVE_EVENTS.has(type)) dragControl = true;
+    return native.call(this, type, listener, options);
+  } as typeof canvas.addEventListener;
+  try {
+    return { inst: run(), dragControl };
+  } finally {
+    delete (canvas as Partial<HTMLCanvasElement>).addEventListener;
+  }
 }
 
 // Owns the full game lifecycle: mounts the module, sizes the canvas,
@@ -37,6 +63,7 @@ export function GameHost({
   interactive,
   onScore,
   onRunEnd,
+  onDragControl,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -49,6 +76,8 @@ export function GameHost({
   onScoreRef.current = onScore;
   const onRunEndRef = useRef(onRunEnd);
   onRunEndRef.current = onRunEnd;
+  const onDragControlRef = useRef(onDragControl);
+  onDragControlRef.current = onDragControl;
 
   // Games are laid out against the size they mount at, so the host owns that
   // measurement. A card can mount at 0x0 (an offscreen tab, a preview pane
@@ -117,49 +146,54 @@ export function GameHost({
     let dwellMs = 0;
     let demoRestart: ReturnType<typeof setTimeout> | null = null;
 
-    const inst = getModule(slug).mount({
-      canvas,
-      g,
-      width: W,
-      height: H,
-      dpr: window.devicePixelRatio || 1,
-      getTheme: currentTheme,
-      pal: getMeta(slug).palette,
-      // a self-playing demo must never buzz the phone
-      haptic: (kind) => {
-        if (interactiveRef.current) haptic(kind);
-      },
-      onScore: (n) => {
-        lastScore = n;
-        onScoreRef.current(n);
-      },
-      onRunEnd: (finalScore, reason) => {
-        // Attract-mode runs are a shop window, not a score: never persist them.
-        // They also have to keep going — a demo that loses and sits on its end
-        // card reads as a broken game, so hold the card long enough to see and
-        // then deal a fresh round. autoplay(false) is every module's reset.
-        if (!interactiveRef.current) {
-          if (demoRestart) clearTimeout(demoRestart);
-          demoRestart = setTimeout(() => {
-            if (interactiveRef.current) return;
-            instRef.current?.autoplay?.(false);
-            instRef.current?.autoplay?.(true);
-          }, 1400);
-          return;
-        }
-        runEnds += 1;
-        bumpSignals(slug, { runs: 1, replays: runEnds > 1 ? 1 : 0 });
-        // Local first, so the sheet is instant and correct with no backend.
-        onRunEndRef.current({
-          score: finalScore,
-          reason,
-          ...submitRun(slug, finalScore),
-        });
-        // Then, if signed in, redeem the open ticket for a ranked score.
-        void recordRun(slug, finalScore);
-      },
-    });
+    const { inst, dragControl } = mountWatchingMoves(canvas, () =>
+      getModule(slug).mount({
+        canvas,
+        g,
+        width: W,
+        height: H,
+        dpr: window.devicePixelRatio || 1,
+        getTheme: currentTheme,
+        pal: getMeta(slug).palette,
+        // a self-playing demo must never buzz the phone
+        haptic: (kind) => {
+          if (interactiveRef.current) haptic(kind);
+        },
+        onScore: (n) => {
+          lastScore = n;
+          onScoreRef.current(n);
+        },
+        onRunEnd: (finalScore, reason) => {
+          // Attract-mode runs are a shop window, not a score: never persist
+          // them. They also have to keep going — a demo that loses and sits on
+          // its end card reads as a broken game, so hold the card long enough
+          // to see and then deal a fresh round. autoplay(false) is every
+          // module's reset.
+          if (!interactiveRef.current) {
+            if (demoRestart) clearTimeout(demoRestart);
+            demoRestart = setTimeout(() => {
+              if (interactiveRef.current) return;
+              instRef.current?.autoplay?.(false);
+              instRef.current?.autoplay?.(true);
+            }, 1400);
+            return;
+          }
+          runEnds += 1;
+          bumpSignals(slug, { runs: 1, replays: runEnds > 1 ? 1 : 0 });
+          // Local first, so the sheet is instant and correct with no backend.
+          onRunEndRef.current({
+            score: finalScore,
+            reason,
+            ...submitRun(slug, finalScore),
+          });
+          // Then, if signed in, redeem the open ticket for a ranked score.
+          void recordRun(slug, finalScore);
+        },
+      })
+    );
     instRef.current = inst;
+    canvas.dataset.dragControl = dragControl ? "1" : "0";
+    onDragControlRef.current?.(dragControl);
     inst.autoplay?.(!interactiveRef.current);
 
     // next/prev cards mount paused so arrival is instant but silent
