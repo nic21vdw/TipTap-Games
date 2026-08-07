@@ -16,7 +16,7 @@ const MAX_PLAUSIBLE_SECONDS = 3600;
  * Guarded by profiles.guest_imported_at, so it can only ever happen once.
  */
 export async function POST(request: Request) {
-  const playerId = await currentUserId();
+  const playerId = await currentUserId(request);
   if (!playerId) {
     return NextResponse.json({ error: "not_signed_in" }, { status: 401 });
   }

@@ -9,8 +9,9 @@
 // or erroring, every function degrades to a no-op and the game plays exactly
 // as it does today.
 
-import { browserClient } from "@/lib/supabase/client";
+import { accessToken, browserClient } from "@/lib/supabase/client";
 import { cloudConfigured } from "@/lib/supabase/config";
+import { apiUrl } from "@/lib/native";
 import { adoptMemories, allMemories, onMemoriesChange, type Memory } from "@/lib/memories";
 import {
   adoptJson,
@@ -307,11 +308,32 @@ export function detach() {
 async function importGuestSaves() {
   const bests = allBests();
   if (Object.keys(bests).length === 0) return;
-  await fetch("/api/runs/import", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ bests }),
-  }).catch(() => undefined);
+  await postJson("/api/runs/import", { bests });
+}
+
+// ---------------------------------------------------------------------------
+// the writing routes
+// ---------------------------------------------------------------------------
+
+/**
+ * POSTs to /api/runs/*, wherever those live for this build. On the web that is
+ * the same origin and the session cookie speaks for the caller; in the iOS
+ * bundle it is the deployed origin, and the access token has to be carried by
+ * hand because the cookie will not cross.
+ */
+async function postJson(path: string, body: unknown): Promise<Response | null> {
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  const token = await accessToken();
+  if (token) headers.authorization = `Bearer ${token}`;
+  try {
+    return await fetch(apiUrl(path), {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -334,12 +356,8 @@ let pending: PendingRun | null = null;
 export async function openRun(slug: string) {
   if (!state.playerId) return;
   try {
-    const res = await fetch("/api/runs/open", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ slug }),
-    });
-    if (!res.ok) return;
+    const res = await postJson("/api/runs/open", { slug });
+    if (!res?.ok) return;
     const data = (await res.json()) as PendingRun;
     pending = { ...data, slug };
   } catch {
@@ -358,15 +376,12 @@ export async function recordRun(slug: string, score: number) {
     void openRun(slug);
     return;
   }
-  try {
-    await fetch("/api/runs/submit", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ runId: ticket.runId, nonce: ticket.nonce, score }),
-    });
-  } catch {
-    // dropped; the local best still stands
-  }
+  // dropped submissions are survivable: the local best still stands
+  await postJson("/api/runs/submit", {
+    runId: ticket.runId,
+    nonce: ticket.nonce,
+    score,
+  });
   void openRun(slug);
 }
 

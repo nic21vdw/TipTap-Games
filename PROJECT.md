@@ -16,6 +16,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | 5 | Persisted scores | ✅ localStorage always; Postgres when Supabase env vars exist |
 | 6 | Per-game leaderboard + own rank | ✅ live board when signed in, seeded fallback otherwise |
 | 6b | Month-long contest + giveaway draw | ✅ code shipped, ⬜ no Supabase project to store it in yet — see `docs/GIVEAWAY-RUNBOOK.md` |
+| 6c | App Store players reach the same board | ✅ bearer auth + deep-link OAuth, verified by build and by preflight; ⬜ unverified on a device |
 | 7 | Endless feed, no bottom | ✅ |
 | 8 | Algorithm tuner changes the queue within 1 swipe | ✅ verified live |
 | 9 | 3+ live-swappable themes | ✅ 6, no remount mid-run |
@@ -89,9 +90,12 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 - `app/api/runs/*` — the only writers to `scores`, service-role and
   ticket-validated
 - `components/shell/DevicePreview.tsx` — desktop ⇄ iPhone preview shell
-- `lib/native.ts` — the one check for "is this the iOS bundle?"; pairs with
-  `nativeBuild` in `lib/supabase/config.ts`, which forces the native build
-  guest-only
+- `lib/native.ts` — the one check for "is this the iOS bundle?"; holds the
+  origin its API calls go to and the deep link Google returns to. The iOS
+  bundle carries a session in local storage and authenticates to
+  `/api/runs/*` with a bearer token, because its cookies for that origin are
+  cross-site and never sent; `middleware.ts` grants CORS to the Capacitor
+  origins and nothing else
 - `scripts/build-native.mjs` — parks the server-only routes, runs the static
   export the iOS binary carries, restores them
 - `docs/APP-STORE-SUBMISSION.md` — the click-by-click submission runbook
@@ -111,9 +115,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 Expiring "story" games · like/comment-modifies-the-game/share ·
 profile XP per run · vibe-coded games via a `+` button ·
 RPS / defuse-bomb / minesweeper / racing mechanics · OAuth + guest merge
-once Supabase env vars exist · cloud saves in the iOS bundle (OAuth through the
-Capacitor webview — the last thing standing between App Store players and the
-giveaway board) · friends-only leaderboards on top of the
+once Supabase env vars exist · friends-only leaderboards on top of the
 `profiles` table · Cloudflare Pages deploy (needs `@opennextjs/cloudflare`
 + wrangler) · music that reacts to the run (filter opens with your combo,
 track drops out on a fail).
