@@ -112,7 +112,7 @@ carry yet.
 
 The same code ships to the App Store as a native iPhone app, wrapped with
 Capacitor. The web bundle is **inside the binary**, not loaded from a URL:
-every game, the tuner, the themes and the music engine work in airplane
+every game, the tuner, the themes and the soundtrack work in airplane
 mode, and the only outbound call is the optional game generator, which
 falls back to designing on the device when there's no signal.
 

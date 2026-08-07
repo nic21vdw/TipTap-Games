@@ -20,7 +20,7 @@ roughly 15–20 minutes of macOS time per release build.
 
 The iOS app is a Capacitor shell around a **static export of the Next.js app
 that is bundled inside the binary**. Every one of the 105+ games, the
-algorithm tuner, the themes, the generative soundtrack and all local scoring
+algorithm tuner, the themes, the soundtrack and all local scoring
 ship in the `.ipa` and run with the phone in airplane mode. The app makes
 exactly one optional network call — `POST /api/generate`, when you type a wish
 into the generator — and falls back to the on-device designer when that call
@@ -287,7 +287,7 @@ MAKE YOUR OWN
 Describe a game in a sentence — "something frantic with falling stuff" — and one gets built and dropped into your feed while you watch. It has a name, a colour, a difficulty curve, and a soundtrack of its own.
 
 A SOUNDTRACK THAT DOESN'T REPEAT
-Every game has its own song, generated live on your phone from oscillators and noise. House, trap, future bass, synthwave and drum & bass. Nothing is streamed and no audio file exists — the music is written on the spot, and it always drops on the first bar.
+Every game has its own song, pulled from a 67-track original catalogue that ships inside the app. Nothing is streamed, nothing is licensed from anyone — and every track drops on the first bar, because the intro was cut out before it got here.
 
 SIX LOOKS, SWAPPED MID-GAME
 Coast, Arcade Dark, 8-Bit with real scanlines, Skeuomorph '08, Neon Felt, and a purple basement. Switch while a game is running and it recolours without missing a frame.
@@ -338,7 +338,7 @@ build is shaped the way it is:
   `capacitor.config.ts` has no `server.url`. There is no remote-content
   wrapper for Apple to find.
 - **The app works in airplane mode.** Every game, the tuner, the themes, the
-  music engine and all scoring are local. Turn the wifi off and nothing about
+  soundtrack and all scoring are local. Turn the wifi off and nothing about
   the app changes.
 - **It uses the device.** Native Taptic Engine haptics on hits and fails
   (`@capacitor/haptics`), native status bar control that follows the active
