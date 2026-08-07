@@ -40,6 +40,7 @@ interface Orb {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   const groundY = H * 0.78;
@@ -327,7 +328,7 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "left";
     g.fillStyle = theme.inkDim;
     g.font = `700 14px ${theme.fontBody}`;
-    g.fillText(`SCORE ${Math.floor(score)}`, 16, 26);
+    g.fillText(`SCORE ${Math.floor(score)}`, 16, 26 + safeTop);
 
     if (over) endCard(g, theme, W, H, "WIPED OUT");
   });

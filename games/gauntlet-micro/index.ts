@@ -37,6 +37,7 @@ const LABELS: Record<Challenge, string> = {
 };
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   let round = 0;
@@ -232,7 +233,7 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = theme.inkDim;
     g.font = `700 14px ${theme.fontBody}`;
     g.textAlign = "left";
-    g.fillText(`ROUND ${round + 1}`, 16, 28);
+    g.fillText(`ROUND ${round + 1}`, 16, 28 + safeTop);
 
     if (phase === "flash" && !over) {
       const shakeX = challenge === "still" ? 0 : 0;

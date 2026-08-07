@@ -32,6 +32,7 @@ interface Obstacle {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const wallW = W * 0.12;
   const leftX = wallW;
@@ -174,7 +175,7 @@ function mount(ctx: GameContext): GameInstance {
 
     g.fillStyle = t.ink;
     g.font = `700 14px ${t.fontBody}`;
-    g.fillText(`${score}`, 14, 26);
+    g.fillText(`${score}`, 14, 26 + safeTop);
 
     if (over) endCard(g, t, W, H, "FELL");
   });

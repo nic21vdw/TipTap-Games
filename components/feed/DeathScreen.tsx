@@ -45,7 +45,7 @@ export function DeathScreen({ result, meta, best, onPlayAgain, onLeave, onSignIn
 
   return (
     <div
-      className="anim-death-scrim absolute inset-0 z-50 flex items-center justify-center px-6"
+      className="no-scrollbar anim-death-scrim absolute inset-0 z-50 flex items-start justify-center overflow-y-auto px-6 py-[calc(var(--safe-top)+12px)] pb-[calc(var(--safe-bottom)+12px)]"
       style={{
         background: "rgba(6,10,16,.62)",
         backdropFilter: "blur(14px) saturate(1.1)",
@@ -75,7 +75,7 @@ export function DeathScreen({ result, meta, best, onPlayAgain, onLeave, onSignIn
       )}
 
       <div
-        className="anim-death-card relative w-full max-w-[430px] px-7 pb-8 pt-9 text-center"
+        className="anim-death-card relative my-auto w-full max-w-[430px] px-7 pb-8 pt-9 text-center"
         style={{
           background: "rgba(14,20,30,.9)",
           borderRadius: "28px",

@@ -33,6 +33,7 @@ interface Spike {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const balloonY = H * 0.32;
   const r = 16;
@@ -187,7 +188,7 @@ function mount(ctx: GameContext): GameInstance {
 
     g.fillStyle = "rgba(255,255,255,.6)";
     g.font = "600 13px system-ui";
-    g.fillText(`wind ${wind > 0 ? "→" : wind < 0 ? "←" : "-"}`, 14, 24);
+    g.fillText(`wind ${wind > 0 ? "→" : wind < 0 ? "←" : "-"}`, 14, 24 + safeTop);
 
     if (over) endCard(g, theme, W, H, "POPPED");
   });

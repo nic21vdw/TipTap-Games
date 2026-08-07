@@ -38,6 +38,7 @@ function nextVal(v: number): number {
 type Dir = "up" | "down" | "left" | "right";
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   let grid: number[] = new Array(SIZE * SIZE).fill(0);
@@ -204,7 +205,7 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "left";
     g.fillStyle = t.inkDim;
     g.font = `700 14px ${t.fontBody}`;
-    g.fillText(`SCORE ${score}`, 16, 28);
+    g.fillText(`SCORE ${score}`, 16, 28 + safeTop);
 
     const boardSize = Math.min(W, H * 0.92);
     const cell = boardSize / SIZE;

@@ -58,6 +58,9 @@ export interface GameContext {
   width: number;
   height: number;
   dpr: number;
+  /** safe-area insets in logical px; keep readable HUD inside them */
+  safeTop: number;
+  safeBottom: number;
   /** live theme tokens — call every frame, never cache across frames */
   getTheme: () => ThemeTokens;
   /** this game's own colours, already resolved */

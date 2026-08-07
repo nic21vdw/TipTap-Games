@@ -72,8 +72,12 @@ const DEVICES: Device[] = [
 
 const MODE_KEY = "ttg:preview:mode";
 const DEVICE_KEY = "ttg:preview:device";
-/** below this the browser already *is* a phone — never frame it */
-const DESKTOP_MIN = 1000;
+/**
+ * A phone frame only makes sense on a real desktop browser. Width alone would
+ * catch an iPad — which ships the same universal build and would then show a
+ * fake phone on a stage instead of the app — so a fine pointer is required too.
+ */
+const DESKTOP_QUERY = "(min-width: 1000px) and (pointer: fine)";
 const BEZEL = 12;
 
 export function DevicePreview({ children }: { children: ReactNode }) {
@@ -97,7 +101,7 @@ export function DevicePreview({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const mq = window.matchMedia(`(min-width: ${DESKTOP_MIN}px)`);
+    const mq = window.matchMedia(DESKTOP_QUERY);
     const sync = () => setWide(mq.matches);
     sync();
     mq.addEventListener("change", sync);

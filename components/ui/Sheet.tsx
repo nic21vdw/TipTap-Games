@@ -53,7 +53,7 @@ export function Sheet({ open, onClose, title, children }: Props) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="pressable flex h-9 w-9 items-center justify-center text-xl leading-none"
+            className="pressable flex h-11 w-11 items-center justify-center text-xl leading-none"
             style={{
               background: "var(--bg)",
               borderRadius: "var(--radius)",

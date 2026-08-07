@@ -43,6 +43,7 @@ interface Platform {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   let ball = { x: W / 2, y: H - 80, vx: 0, vy: BOUNCE_VY * 0.5 };
@@ -246,7 +247,7 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "center";
     g.fillStyle = t.ink;
     g.font = `700 15px ${t.fontBody}`;
-    g.fillText(`${score}`, W / 2, 30);
+    g.fillText(`${score}`, W / 2, 30 + safeTop);
     g.textAlign = "left";
 
     if (over) endCard(g, t, W, H, "FELL");
