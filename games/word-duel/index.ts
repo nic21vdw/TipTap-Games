@@ -57,6 +57,7 @@ function buildBagFor(word: string, size: number): string[] {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   let tiles: Tile[] = [];
@@ -244,7 +245,7 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "left";
     g.fillStyle = t.ink;
     g.font = `800 16px ${t.fontDisplay}`;
-    g.fillText(`${score} pts`, 14, 26);
+    g.fillText(`${score} pts`, 14, 26 + safeTop);
     const barW = W - 28;
     g.fillStyle = "rgba(255,255,255,.15)";
     g.fillRect(14, 40, barW, 5);

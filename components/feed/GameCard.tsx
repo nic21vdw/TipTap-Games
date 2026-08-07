@@ -247,7 +247,7 @@ export function GameCard({ card, index }: Props) {
       {/* Playing: a hint only. The gesture itself is caught on the whole card,
           so there is no strip to find and nothing here to swallow a tap. */}
       {playing && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex flex-col items-center gap-1 pb-3">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex flex-col items-center gap-1 pb-[calc(var(--safe-bottom)+12px)]">
           <div
             className="h-1 w-10 rounded-full"
             style={{ background: "rgba(255,255,255,.7)" }}
@@ -304,7 +304,7 @@ export function GameCard({ card, index }: Props) {
       {/* score HUD */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center pt-[calc(var(--safe-top)+14px)]">
         <div
-          className="text-4xl font-extrabold tabular-nums"
+          className="w-[46%] truncate text-center text-4xl font-extrabold tabular-nums"
           style={{
             fontFamily: "var(--font-display)",
             color: "#fff",
@@ -318,7 +318,10 @@ export function GameCard({ card, index }: Props) {
             {meta.scoreUnit}
           </span>
         </div>
-        <div className="text-xs font-semibold" style={{ color: "rgba(255,255,255,.78)" }}>
+        <div
+          className="w-[46%] truncate text-center text-xs font-semibold"
+          style={{ color: "rgba(255,255,255,.78)" }}
+        >
           {playing ? `best ${Math.max(best, score)}` : "paused"}
         </div>
       </div>
@@ -333,7 +336,7 @@ export function GameCard({ card, index }: Props) {
         {active && (
           <button
             onClick={toggleMusic}
-            className="pressable mb-2 flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold"
+            className="pressable mb-2 flex min-h-11 max-w-full items-center gap-1.5 px-3 py-1 text-[11px] font-bold"
             style={{
               background: "rgba(12,18,28,.6)",
               color: "#fff",
@@ -345,7 +348,7 @@ export function GameCard({ card, index }: Props) {
             {soundLive && track ? (
               <>
                 <EqBars />
-                <span className="max-w-[58vw] truncate">
+                <span className="min-w-0 truncate">
                   {track.name} · {track.styleLabel} · {track.bpm} BPM
                 </span>
               </>
@@ -406,7 +409,7 @@ export function GameCard({ card, index }: Props) {
           small button so it cannot reserve or intercept a strip of canvas. */}
       {!playing && (
         <div
-          className="absolute bottom-28 right-2.5 z-30 flex flex-col items-center gap-5"
+          className="no-scrollbar absolute bottom-[calc(var(--safe-bottom)+112px)] right-2.5 z-30 flex max-h-[calc(var(--app-h)-var(--safe-top)-var(--safe-bottom)-160px)] flex-col items-center gap-4 overflow-y-auto"
           style={{ touchAction: "pan-y", color: "#fff", filter: "drop-shadow(0 2px 8px rgba(0,0,0,.5))" }}
         >
         <RailButton
@@ -432,7 +435,7 @@ export function GameCard({ card, index }: Props) {
         <button
           onClick={() => openSheet("account")}
           aria-label={signedIn ? "Your account" : "Save your progress"}
-          className="pressable text-[10px] font-semibold"
+          className="pressable flex min-h-11 items-center justify-center px-2 text-[10px] font-semibold"
           style={{ color: "rgba(255,255,255,.8)" }}
         >
           @{playerHandle ?? localHandle}
@@ -505,7 +508,7 @@ export function GameCard({ card, index }: Props) {
               <button
                 onClick={() => openFromControls("account")}
                 aria-label={signedIn ? "Your account" : "Save your progress"}
-                className="pressable col-span-3 -mt-1 text-[10px] font-semibold"
+                className="pressable col-span-3 -mt-1 flex min-h-11 items-center justify-center text-[10px] font-semibold"
                 style={{ color: "rgba(255,255,255,.76)" }}
               >
                 @{playerHandle ?? localHandle}
@@ -521,7 +524,7 @@ export function GameCard({ card, index }: Props) {
               onClick={() => setControlsOpen((open) => !open)}
               aria-label={controlsOpen ? "Close game controls" : "Open game controls"}
               aria-expanded={controlsOpen}
-              className="pressable flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white shadow-lg backdrop-blur-md"
+              className="pressable flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-white shadow-lg backdrop-blur-md"
               style={{
                 background: controlsOpen
                   ? "rgba(12,18,28,.92)"

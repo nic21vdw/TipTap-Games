@@ -34,6 +34,7 @@ interface Bumper {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const flipperY = H * 0.86;
   const flipperLen = W * 0.24;
@@ -207,7 +208,7 @@ function mount(ctx: GameContext): GameInstance {
     g.fillStyle = theme.ink;
     g.font = "700 13px system-ui";
     g.textAlign = "left";
-    g.fillText(`Balls: ${ballsLeft}`, 12, 24);
+    g.fillText(`Balls: ${ballsLeft}`, 12, 24 + safeTop);
 
     if (over) endCard(g, theme, W, H, "TILT");
   });

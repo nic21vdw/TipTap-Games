@@ -32,6 +32,7 @@ const MOUNTS: Mount[] = ["front", "top", "rear"];
 const PART_KINDS: PartType[] = ["wheel", "box", "fan"];
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   const groundY = (x: number) =>
@@ -308,7 +309,7 @@ function mount(ctx: GameContext): GameInstance {
 
       g.fillStyle = t.ink;
       g.font = `700 16px ${t.fontBody}`;
-      g.fillText(`${score}m`, 16, 28);
+      g.fillText(`${score}m`, 16, 28 + safeTop);
 
       if (over) endCard(g, t, W, H, "RIG STOPPED");
     }

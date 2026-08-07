@@ -36,6 +36,7 @@ interface Thing {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   const playerX = W * 0.26;
@@ -256,7 +257,7 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "left";
     g.fillStyle = theme.ink;
     g.font = `800 20px ${theme.fontDisplay}`;
-    g.fillText(`horde ${horde}`, 16, 28);
+    g.fillText(`horde ${horde}`, 16, 28 + safeTop);
 
     g.restore();
 

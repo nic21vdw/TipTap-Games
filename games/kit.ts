@@ -29,6 +29,9 @@ export interface Api {
   readonly theme: () => ThemeTokens;
   /** variant dials — 1/1 for catalog games, turned for generated ones */
   readonly tune: GameTuning;
+  /** device safe-area insets in logical px; keep anything readable inside them */
+  readonly safeTop: number;
+  readonly safeBottom: number;
   /** seconds of simulated time this run */
   t: number;
   score: number;
@@ -82,6 +85,8 @@ export function defineGame<S>(
       pal: ctx.pal,
       theme: ctx.getTheme,
       tune: ctx.tune ?? NO_TUNE,
+      safeTop: ctx.safeTop,
+      safeBottom: ctx.safeBottom,
       t: 0,
       score: 0,
       started: false,

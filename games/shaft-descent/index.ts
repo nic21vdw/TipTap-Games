@@ -39,6 +39,7 @@ interface Shot {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   let px = W / 2;
@@ -257,7 +258,7 @@ function mount(ctx: GameContext): GameInstance {
 
     g.fillStyle = t.ink;
     g.font = `700 14px ${t.fontBody}`;
-    g.fillText(`${score}m`, 14, 26);
+    g.fillText(`${score}m`, 14, 26 + safeTop);
 
     if (over) endCard(g, t, W, H, "GAME OVER");
   });

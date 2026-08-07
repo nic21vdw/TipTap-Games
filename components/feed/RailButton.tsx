@@ -14,7 +14,7 @@ export function RailButton({
   return (
     <button
       onClick={onClick}
-      className="pressable flex flex-col items-center gap-1"
+      className="pressable flex min-h-11 min-w-11 flex-col items-center justify-center gap-1"
       aria-label={label}
       style={{ color: tint ?? "inherit" }}
     >

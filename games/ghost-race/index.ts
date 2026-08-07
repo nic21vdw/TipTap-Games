@@ -32,6 +32,7 @@ interface Pt {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const cx = W / 2;
   const cy = H / 2;
@@ -196,7 +197,7 @@ function mount(ctx: GameContext): GameInstance {
 
     g.fillStyle = t.ink;
     g.font = `700 14px ${t.fontBody}`;
-    g.fillText(`lap ${lap}`, 14, 26);
+    g.fillText(`lap ${lap}`, 14, 26 + safeTop);
 
     if (over) endCard(g, t, W, H, "GHOSTED");
   });
