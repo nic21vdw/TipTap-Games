@@ -98,10 +98,11 @@ the screen (its last button measured 379 against a 372 pt limit).
 anchored to `calc(var(--safe-bottom) + 112px)`, capped at the height left inside
 the safe area, and scrolls rather than overflowing.
 
-Note for the App Store target: the layout now survives landscape, but this app
-is designed portrait. The iOS wrapper should still declare
-`UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait` only. That
-lives in the native project, not in this repo.
+The App Store target is already locked to portrait —
+`ios/App/App/Info.plist` declares `UISupportedInterfaceOrientations` as
+`UIInterfaceOrientationPortrait` alone — so on device this never happens. The
+fixes above are defence in depth, and they matter for the web build, which any
+visitor can rotate.
 
 ### F6 — iPad rendered the desktop preview shell
 
@@ -112,6 +113,11 @@ underneath it, rather than the app.
 **Fixed.** The frame now requires `(min-width: 1000px) and (pointer: fine)`, so
 a touch tablet gets the app full bleed. Verified at 1024 × 1366: card and canvas
 both 1024 × 1366, no clipping, no small tap targets.
+
+The App Store submission itself is iPhone-only — `TARGETED_DEVICE_FAMILY = 1`
+in `ios/App/App.xcodeproj/project.pbxproj` — so an iPad only ever sees this
+through the web build or iPhone compatibility mode. Either way it now gets the
+app rather than a picture of a phone.
 
 ## Checks that already passed
 
