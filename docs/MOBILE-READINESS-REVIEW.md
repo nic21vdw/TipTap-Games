@@ -343,6 +343,9 @@ periodic allocation or a full-board rebuild and should be the first one
 opened. `PROJECT.md` also requires `mount` to return instantly — `peg-drop`
 at 70 ms does not.
 
+**Update:** `black-keys` was re-measured in the live feed and shows no stall
+at all — see **X2**. It came off this list; `cascade-match` stays on it.
+
 ## S7. Haptics are a no-op on every iPhone
 
 **Where:** `lib/haptics.ts:9-16`.
@@ -435,6 +438,105 @@ short-circuits on an already-stopped loop. Noted so it is not re-flagged.
 
 ---
 
+# Investigated and not reproducible
+
+## X1. "Navigating a playing card moves `activeIndex` but never `scrollTop`" — NOT A BUG
+
+**Reported as:** while a card is playing, ArrowDown (or a swipe, or the wheel)
+advances the feed's active index, but `scrollTop` never moves — the viewport
+keeps showing the card you just left while the newly-activated card plays
+off-screen. Reported hypothesis: `goToCard`'s `scrollTo`
+(`components/feed/nav.ts`) fires two frames late, by which time the new active
+card has re-entered play and restored `overflow: hidden` on the feed root, so
+the scroll is a no-op.
+
+**Both halves of that hypothesis are wrong, and the symptom is an artifact of
+the measuring browser, not of the app.**
+
+1. `overflow: hidden` does not block programmatic scrolling. Measured directly
+   on the live feed root while a game held the surface: `scrollTo({top: 874})`
+   and `scrollTop = 1748` both landed exactly, with
+   `getComputedStyle(root).overflowY === "hidden"`. A CSS `overflow: hidden`
+   box is still a scroll container; only `overflow: clip` is not.
+
+2. What actually stalls is the *smooth-scroll animation*, and it stalls only
+   when the tab is not producing frames. `behavior: "smooth"` is driven by the
+   compositor. A Chrome tab that is backgrounded or occluded by another window
+   stops producing frames, so the animation is queued and never advances —
+   while `exitPlay()` / `setActive()` and the React commit they trigger still
+   run, because those only need JS to run, not the page to paint. The result
+   is exactly the reported symptom: index moves, scroll does not.
+
+**Evidence.** A 76-step matrix (full-bleed 402x874 and framed 1440x1000, x
+ArrowUp/ArrowDown, wheel, and CDP synthetic touch swipes, x a tap-only game
+and a drag-controlled game started from the swipe handle, 4 navigations down
+and 4 back up each) was run twice against unmodified `main`, once in a headless
+Chrome and once in a headed one, recording after every step: `scrollTop`, the
+active card's `offsetTop`, and a live count of `requestAnimationFrame`
+callbacks over the following 300 ms.
+
+| | result |
+|---|---|
+| every step where frames were being produced (`frames > 0`, `visibilityState: "visible"`) | `scrollTop === offsetTop` exactly, 0 misses out of 80+ |
+| every step where the tab was occluded (`frames === 0`, `visibilityState: "hidden"`) | `scrollTop` frozen, `activeIndex` correct — the reported bug, every time |
+
+The correlation is total: there is no observed step with frames flowing that
+missed, and no observed step without frames that landed.
+
+Confirmed a third way, in a real (non-headless) Chrome tab that had been
+occluded by another window: ArrowDown left `activeIndex` at 2 and `scrollTop`
+at 0. Forcing the tab to render — nothing else — walked `scrollTop` from 0 to
+1264 and then to 1748 (`offsetTop` of card 2). The animation was queued, not
+cancelled.
+
+**And it self-heals.** Navigating while hidden and then returning to the tab:
+
+```
+whileHidden  scrollTop=0    active=1  want=874   vis=hidden
+back +300ms  scrollTop=805  active=1  want=874   vis=visible
+back +800ms  scrollTop=874  active=1  want=874   vis=visible
+```
+
+The pending scroll resumes on the first painted frame and lands exactly. There
+is no state a returning user can reach where the feed is stranded.
+
+**Why the earlier report saw it in the framed preview.** It is not a property
+of the framed preview: it reproduces identically in the full-bleed phone
+layout, and does not reproduce in *either* layout when the tab is rendering.
+This machine's Chrome sits behind the terminal, so an automated session is
+almost always driving an occluded tab. The standard workaround used there —
+overriding `document.hidden` and polyfilling `requestAnimationFrame` onto
+`setTimeout` — restores JS timers but not frame production, so it makes the
+React half of the navigation work while leaving the scroll animation frozen.
+That combination manufactures this exact symptom.
+
+**Anyone re-testing feed scrolling must count real frames.** A step that
+reports `frames === 0` is measuring the browser, not the app.
+
+**Shipped:** no behavioural change. `components/feed/nav.ts` carried a comment
+block asserting the disproved mechanism ("the scroll waits for the frame that
+re-enables scrolling"); it is removed, and the two chained
+`requestAnimationFrame` calls are named `afterNextRender`.
+
+## X2. `black-keys`' repeating ~583 ms stall (from S6) does not reproduce
+
+Re-measured over 500 consecutive frames of a live run in the feed, at
+402 x 874:
+
+| Game | p50 | p99 | worst | frames > 33 ms |
+|---|---|---|---|---|
+| black-keys | 3.3 ms | 3.7 ms | 27 ms | 0 / 500 |
+| cascade-match | 16.6 ms | 46.7 ms | 63 ms | 21 / 500 |
+| pop-chain | 13.3 ms | 20 ms | 44 ms | 1 / 500 |
+
+`black-keys` shows no stall of any size — the original figure came from the
+headless harness that pumps rAF manually, and looks like an artifact of that
+harness rather than of the game. **S6's `black-keys` line should be closed.**
+`cascade-match` is confirmed as the one board genuinely over budget and stays
+open; `pop-chain` is borderline and only spikes once.
+
+---
+
 # What was fixed in this branch
 
 | # | Fix | Files |
@@ -451,6 +553,7 @@ short-circuits on an already-stopped loop. Noted so it is not re-flagged.
 | S4 | `theme-color` follows the live theme | `lib/themes.ts` |
 | S5 | Handle the `resume()` rejection; tolerate a non-promise legacy `resume` | `lib/music.ts` |
 | N3 | Remove the dead timer | `games/duel-fling/index.ts` |
+| X1 | Drop the comment block asserting a disproved scroll mechanism; name the deferral `afterNextRender` | `components/feed/nav.ts` |
 
 `data-uid` was a real latent bug found while editing: `Feed.tsx:202` looks up
 the scroll target with `[data-uid="…"]`, and no element in the tree carried the
