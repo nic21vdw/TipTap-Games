@@ -67,6 +67,7 @@ export function GameHost({
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const insetRef = useRef<HTMLSpanElement>(null);
   const instRef = useRef<GameInstance | null>(null);
   const activeRef = useRef(active);
   activeRef.current = active;
@@ -140,6 +141,10 @@ export function GameHost({
     };
     const g = sizeBacking();
 
+    const probe = insetRef.current ? getComputedStyle(insetRef.current) : null;
+    const safeTop = probe ? parseFloat(probe.paddingTop) || 0 : 0;
+    const safeBottom = probe ? parseFloat(probe.paddingBottom) || 0 : 0;
+
     let lastScore = 0;
     let runEnds = 0;
     let activeSince: number | null = null;
@@ -153,6 +158,8 @@ export function GameHost({
         width: W,
         height: H,
         dpr: window.devicePixelRatio || 1,
+        safeTop,
+        safeBottom,
         getTheme: currentTheme,
         pal: getMeta(slug).palette,
         // a self-playing demo must never buzz the phone
@@ -279,6 +286,15 @@ export function GameHost({
 
   return (
     <div ref={hostRef} className="h-full w-full" style={{ background: "var(--bg)" }}>
+      <span
+        ref={insetRef}
+        aria-hidden
+        className="pointer-events-none absolute h-0 w-0 overflow-hidden"
+        style={{
+          paddingTop: "var(--safe-top)",
+          paddingBottom: "var(--safe-bottom)",
+        }}
+      />
       {box && (
         <canvas
           // A size change is a fresh mount: the key drops the old canvas so no

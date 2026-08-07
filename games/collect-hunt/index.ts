@@ -61,6 +61,7 @@ function rollRarity(): Rarity {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const fridge = skins(pal);
 
@@ -303,7 +304,7 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "left";
     g.fillStyle = t.ink;
     g.font = `800 16px ${t.fontDisplay}`;
-    g.fillText(`${score} pts`, 14, 26);
+    g.fillText(`${score} pts`, 14, 26 + safeTop);
     g.fillStyle = t.inkDim;
     g.font = `600 12px ${t.fontBody}`;
     g.fillText(

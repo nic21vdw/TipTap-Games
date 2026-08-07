@@ -39,6 +39,7 @@ const VP_Y_RATIO = 0.14;
 const PLAYER_Y_RATIO = 0.86;
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const vp = { x: W / 2, y: H * VP_Y_RATIO };
   const bottomY = H * PLAYER_Y_RATIO;
@@ -284,7 +285,7 @@ function mount(ctx: GameContext): GameInstance {
 
     g.fillStyle = t.ink;
     g.font = `700 15px ${t.fontDisplay}`;
-    g.fillText(`${score}s`, 14, 24);
+    g.fillText(`${score}s`, 14, 24 + safeTop);
 
     if (over) endCard(g, t, W, H, "RUIN CLAIMED YOU");
   });

@@ -39,6 +39,7 @@ interface Cell {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const gemColors = [pal.hero, pal.foe, pal.prize, pal.glow, shade(pal.hero, 0.4)];
 
@@ -411,10 +412,10 @@ function mount(ctx: GameContext): GameInstance {
     // timer bar
     const barW = W * 0.7;
     g.fillStyle = t.surface;
-    roundRect(g, W / 2 - barW / 2, H * 0.03, barW, 8, 4);
+    roundRect(g, W / 2 - barW / 2, safeTop + 10, barW, 8, 4);
     g.fill();
     g.fillStyle = timeLeft < 10 ? pal.foe : pal.prize;
-    roundRect(g, W / 2 - barW / 2, H * 0.03, barW * (timeLeft / RUN_SECONDS), 8, 4);
+    roundRect(g, W / 2 - barW / 2, safeTop + 10, barW * (timeLeft / RUN_SECONDS), 8, 4);
     g.fill();
 
     if (over) endCard(g, t, W, H, "TIME'S UP");

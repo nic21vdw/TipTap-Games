@@ -52,6 +52,7 @@ interface Projectile {
 const GRAVITY = 1500;
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
 
   const anchor = { x: W * 0.22, y: H * 0.6 };
@@ -317,7 +318,7 @@ function mount(ctx: GameContext): GameInstance {
     // HUD: level + miss dots
     g.fillStyle = t.ink;
     g.font = `700 15px ${t.fontDisplay}`;
-    g.fillText(`YARD ${level}`, 14, 24);
+    g.fillText(`YARD ${level}`, 14, 24 + safeTop);
     for (let i = 0; i < 3; i++) {
       g.beginPath();
       g.arc(W - 20 - i * 16, 18, 5, 0, Math.PI * 2);

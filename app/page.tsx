@@ -43,7 +43,7 @@ function GamesButton() {
     <button
       onClick={() => openSheet("games")}
       aria-label="Browse all games"
-      className={`pressable theme-smooth fixed right-3 top-[calc(var(--safe-top)+58px)] z-30 flex h-10 w-10 items-center justify-center transition duration-200 ${
+      className={`pressable theme-smooth fixed right-3 top-[calc(var(--safe-top)+58px)] z-30 flex h-11 w-11 items-center justify-center transition duration-200 ${
         playing ? "pointer-events-none scale-90 opacity-0" : "scale-100 opacity-100"
       }`}
       style={{
@@ -67,14 +67,14 @@ function TopRightButtons() {
   };
   return (
     <div
-      className={`fixed right-3 top-[calc(var(--safe-top)+10px)] z-30 flex items-center gap-2 transition duration-200 ${
+      className={`fixed right-3 top-[calc(var(--safe-top)+7px)] z-30 flex items-center gap-1.5 transition duration-200 ${
         playing ? "pointer-events-none scale-90 opacity-0" : "scale-100 opacity-100"
       }`}
     >
       <button
         onClick={() => openSheet("settings")}
         aria-label="Settings"
-        className="pressable theme-smooth flex h-10 w-10 items-center justify-center"
+        className="pressable theme-smooth flex h-11 w-11 items-center justify-center"
         style={chrome}
       >
         <GearIcon size={20} />
@@ -82,7 +82,7 @@ function TopRightButtons() {
       <button
         onClick={() => openSheet("search")}
         aria-label="Search and generate games"
-        className="pressable theme-smooth flex h-10 w-10 items-center justify-center"
+        className="pressable theme-smooth flex h-11 w-11 items-center justify-center"
         style={chrome}
       >
         <SearchIcon size={20} />
@@ -96,12 +96,12 @@ function AlgorithmPill() {
   const openSheet = useUiStore((s) => s.openSheet);
   const playing = useUiStore((s) => s.playingUid !== null);
   const active = memories.filter((m) => m.enabled).length;
-  const name =
-    active === 0 ? "Tune your feed" : `${active} rule${active === 1 ? "" : "s"}`;
+  const name = active === 0 ? "Tune" : `${active} rule${active === 1 ? "" : "s"}`;
   return (
     <button
       onClick={() => openSheet("algo")}
-      className={`pressable theme-smooth fixed left-3 top-[calc(var(--safe-top)+10px)] z-30 flex h-10 items-center gap-1.5 px-3 text-xs font-bold transition duration-200 ${
+      aria-label="Tune your feed"
+      className={`pressable theme-smooth fixed left-3 top-[calc(var(--safe-top)+7px)] z-30 flex h-11 max-w-[30%] items-center gap-1.5 truncate px-3 text-xs font-bold transition duration-200 ${
         playing ? "pointer-events-none scale-90 opacity-0" : "scale-100 opacity-100"
       }`}
       style={{

@@ -32,6 +32,7 @@ const ROWS = 7;
 const START_TIME = 12;
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const COLORS = [pal.hero, pal.foe, pal.prize, pal.glow, "#9d4edd"];
 
@@ -222,7 +223,7 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "left";
     g.fillStyle = t.inkDim;
     g.font = `700 14px ${t.fontBody}`;
-    g.fillText(`SCORE ${score}`, 16, 26);
+    g.fillText(`SCORE ${score}`, 16, 26 + safeTop);
 
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {

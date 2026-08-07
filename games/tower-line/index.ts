@@ -80,6 +80,7 @@ function distToSeg(px: number, py: number, ax: number, ay: number, bx: number, b
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const TW = W / COLS;
   const TH = H / ROWS;
@@ -391,10 +392,10 @@ function mount(ctx: GameContext): GameInstance {
     g.textAlign = "left";
     g.fillStyle = theme.ink;
     g.font = `700 13px ${theme.fontBody}`;
-    g.fillText(`Wave ${wave}`, 10, 18);
-    g.fillText(`Lives ${lives}`, 10, 36);
+    g.fillText(`Wave ${wave}`, 10, 18 + safeTop);
+    g.fillText(`Lives ${lives}`, 10, 36 + safeTop);
     g.textAlign = "right";
-    g.fillText(`Res ${Math.floor(resource)}`, W - 10, 18);
+    g.fillText(`Res ${Math.floor(resource)}`, W - 10, 18 + safeTop);
     g.textAlign = "left";
 
     if (over) endCard(g, theme, W, H, "OVERRUN");

@@ -34,6 +34,7 @@ interface Leg {
 }
 
 function mount(ctx: GameContext): GameInstance {
+  const safeTop = ctx.safeTop;
   const { g, width: W, height: H, pal } = ctx;
   const groundY = H * 0.78;
   const zoneL = { x: 0, w: W / 2 };
@@ -225,7 +226,7 @@ function mount(ctx: GameContext): GameInstance {
     // distance marker
     g.fillStyle = t.ink;
     g.font = `700 14px ${t.fontBody}`;
-    g.fillText(`${score}m`, 14, 26);
+    g.fillText(`${score}m`, 14, 26 + safeTop);
 
     if (over) endCard(g, t, W, H, "FACEPLANT");
   });
