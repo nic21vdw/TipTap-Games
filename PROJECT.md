@@ -15,6 +15,7 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 | 4 | Guest play first, login only at a win moment | ✅ guest + Google OAuth, prompted only on a best/top-ten |
 | 5 | Persisted scores | ✅ localStorage always; Postgres when Supabase env vars exist |
 | 6 | Per-game leaderboard + own rank | ✅ live board when signed in, seeded fallback otherwise |
+| 6b | Month-long contest + giveaway draw | ✅ code shipped, ⬜ no Supabase project to store it in yet — see `docs/GIVEAWAY-RUNBOOK.md` |
 | 7 | Endless feed, no bottom | ✅ |
 | 8 | Algorithm tuner changes the queue within 1 swipe | ✅ verified live |
 | 9 | 3+ live-swappable themes | ✅ 6, no remount mid-run |
@@ -76,7 +77,11 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 - `lib/music.ts` — Tip Tap Radio: the generative soundtrack engine
 - `store/useMusicStore.ts` — mute / volume / now-playing state
 - `components/sheets/AlgorithmSheet.tsx` — the demo centrepiece
-- `supabase/schema.sql` — tables, RLS policies, leaderboard functions
+- `supabase/schema.sql` — tables, RLS policies, leaderboard functions, and the
+  season functions the giveaway is drawn from; `tests/season.test.mjs` runs it
+  on a real Postgres (`npm test`)
+- `docs/GIVEAWAY-RUNBOOK.md` — switching the backend on, opening a month,
+  drawing the winner
 - `app/api/runs/*` — the only writers to `scores`, service-role and
   ticket-validated
 - `components/shell/DevicePreview.tsx` — desktop ⇄ iPhone preview shell
@@ -102,7 +107,9 @@ algorithm** via a tuner sheet with a live "Next up" strip.
 Expiring "story" games · like/comment-modifies-the-game/share ·
 profile XP per run · vibe-coded games via a `+` button ·
 RPS / defuse-bomb / minesweeper / racing mechanics · OAuth + guest merge
-once Supabase env vars exist · friends-only leaderboards on top of the
+once Supabase env vars exist · cloud saves in the iOS bundle (OAuth through the
+Capacitor webview — the last thing standing between App Store players and the
+giveaway board) · friends-only leaderboards on top of the
 `profiles` table · Cloudflare Pages deploy (needs `@opennextjs/cloudflare`
 + wrangler) · music that reacts to the run (filter opens with your combo,
 track drops out on a fail).

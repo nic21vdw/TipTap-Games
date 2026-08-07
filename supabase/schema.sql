@@ -212,6 +212,57 @@ create policy "a player updates their own prefs"
   on public.player_prefs for update using (auth.uid() = player_id) with check (auth.uid() = player_id);
 
 -- ---------------------------------------------------------------------------
+-- seasons — a named window of time the giveaway is drawn from
+-- ---------------------------------------------------------------------------
+--
+-- A season owns no scores of its own. It is a start and an end, and every
+-- season read below is the same query the all-time boards run with a
+-- created_at filter bolted on. That means a season can be created, moved or
+-- deleted after the fact without touching a single row in `scores`, and a
+-- month that has already been played can be turned into a contest
+-- retroactively.
+
+create table if not exists public.seasons (
+  slug text primary key,
+  title text not null,
+  prize text,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  check (ends_at > starts_at)
+);
+
+create index if not exists seasons_window_idx on public.seasons (starts_at, ends_at);
+
+alter table public.seasons enable row level security;
+
+-- The rules of the contest are public; only /api/admin/season writes them.
+drop policy if exists "seasons are readable by everyone" on public.seasons;
+create policy "seasons are readable by everyone"
+  on public.seasons for select using (true);
+
+-- Season boards read scores by time, so the all-time (game_slug, score) index
+-- is the wrong shape for them.
+create index if not exists scores_season_idx
+  on public.scores (game_slug, created_at, score desc) where verified;
+
+-- The season a name refers to: the named one, or whichever is live right now,
+-- or — if two overlap — the one that ends soonest.
+create or replace function public.season(p_season text default null)
+returns public.seasons
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select s.* from public.seasons s
+  where (p_season is not null and s.slug = p_season)
+     or (p_season is null and now() >= s.starts_at and now() < s.ends_at)
+  order by s.ends_at asc
+  limit 1;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- reads — leaderboards and personal bests
 -- ---------------------------------------------------------------------------
 
@@ -263,3 +314,173 @@ $$;
 
 grant execute on function public.leaderboard(text, int) to anon, authenticated;
 grant execute on function public.my_standing(text) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- reads — the season boards the giveaway is drawn from
+-- ---------------------------------------------------------------------------
+
+-- The live season's rules, for the card at the top of the leaderboard sheet.
+create or replace function public.current_season(p_season text default null)
+returns table (
+  slug text,
+  title text,
+  prize text,
+  starts_at timestamptz,
+  ends_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select s.slug, s.title, s.prize, s.starts_at, s.ends_at
+  from public.season(p_season) s
+  where s.slug is not null;
+$$;
+
+-- One game's board for one season. Same shape as leaderboard(), so the client
+-- renders either through one code path. No season, no rows — the caller falls
+-- back to the all-time board rather than showing an empty list.
+create or replace function public.season_leaderboard(
+  p_slug text,
+  p_season text default null,
+  p_limit int default 10
+)
+returns table (player_id uuid, handle text, avatar_url text, score integer, rank bigint)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with w as (select s.starts_at, s.ends_at from public.season(p_season) s where s.slug is not null),
+  bests as (
+    select sc.player_id, max(sc.score) as score
+    from public.scores sc, w
+    where sc.verified
+      and sc.game_slug = p_slug
+      and sc.created_at >= w.starts_at
+      and sc.created_at < w.ends_at
+    group by sc.player_id
+  )
+  select b.player_id,
+         p.handle,
+         p.avatar_url,
+         b.score,
+         rank() over (order by b.score desc) as rank
+  from bests b
+  join public.profiles p on p.id = b.player_id
+  order by b.score desc
+  limit greatest(1, least(coalesce(p_limit, 10), 100));
+$$;
+
+-- The contest itself: one number per player across the whole catalog.
+--
+-- Every game is its own little tournament — your best run in the window is
+-- ranked against everyone else's, and the top 25 take 25 points down to 1.
+-- Your season total is the sum over every game you placed in, so the board
+-- rewards breadth (place on ten games) and depth (win one outright) alike,
+-- and a player who never touches a game is simply not in its tournament.
+-- Ties break towards more games played, then towards whoever got there first.
+create or replace function public.season_points(p_season text default null)
+returns table (
+  player_id uuid,
+  points bigint,
+  games_played bigint,
+  best_rank bigint,
+  settled_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with w as (select s.starts_at, s.ends_at from public.season(p_season) s where s.slug is not null),
+  bests as (
+    select distinct on (sc.player_id, sc.game_slug)
+           sc.player_id, sc.game_slug, sc.score, sc.created_at
+    from public.scores sc, w
+    where sc.verified
+      and sc.created_at >= w.starts_at
+      and sc.created_at < w.ends_at
+    order by sc.player_id, sc.game_slug, sc.score desc, sc.created_at asc
+  ),
+  ranked as (
+    select b.*,
+           rank() over (partition by b.game_slug order by b.score desc) as game_rank
+    from bests b
+  )
+  select r.player_id,
+         sum(greatest(0, 26 - r.game_rank))::bigint as points,
+         count(*) filter (where r.game_rank <= 25)::bigint as games_played,
+         min(r.game_rank) as best_rank,
+         max(r.created_at) as settled_at
+  from ranked r
+  group by r.player_id;
+$$;
+
+-- The giveaway board. Draw the winner off row 1, or run a random draw over
+-- everyone above a points cutoff — both are one read away.
+create or replace function public.season_overall(
+  p_season text default null,
+  p_limit int default 50
+)
+returns table (
+  player_id uuid,
+  handle text,
+  avatar_url text,
+  points bigint,
+  games_played bigint,
+  best_rank bigint,
+  rank bigint
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select sp.player_id,
+         p.handle,
+         p.avatar_url,
+         sp.points,
+         sp.games_played,
+         sp.best_rank,
+         rank() over (order by sp.points desc, sp.games_played desc, sp.settled_at asc) as rank
+  from public.season_points(p_season) sp
+  join public.profiles p on p.id = sp.player_id
+  where sp.points > 0
+  order by sp.points desc, sp.games_played desc, sp.settled_at asc
+  limit greatest(1, least(coalesce(p_limit, 50), 500));
+$$;
+
+-- Where the caller sits in the contest, whether or not they are on the visible
+-- page of it. total is everyone with at least one point this season; rank 0
+-- means "not on the board yet", which is not the same as last place.
+create or replace function public.my_season_standing(p_season text default null)
+returns table (points bigint, rank bigint, games_played bigint, total bigint)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with board as (select * from public.season_points(p_season) where points > 0),
+  me as (select * from board where player_id = auth.uid())
+  select
+    coalesce((select m.points from me m), 0) as points,
+    case when exists (select 1 from me) then (
+      select count(*) + 1
+      from board b, me m
+      where b.points > m.points
+         or (b.points = m.points and b.games_played > m.games_played)
+         or (b.points = m.points and b.games_played = m.games_played
+             and b.settled_at < m.settled_at)
+    ) else 0 end as rank,
+    coalesce((select m.games_played from me m), 0) as games_played,
+    (select count(*) from board) as total;
+$$;
+
+grant execute on function public.season(text) to anon, authenticated;
+grant execute on function public.current_season(text) to anon, authenticated;
+grant execute on function public.season_leaderboard(text, text, int) to anon, authenticated;
+grant execute on function public.season_points(text) to anon, authenticated;
+grant execute on function public.season_overall(text, int) to anon, authenticated;
+grant execute on function public.my_season_standing(text) to authenticated;

@@ -11,6 +11,7 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 3002",
     "typecheck": "tsc --noEmit",
+    "test": "node tests/season.test.mjs",
     "build:native": "node scripts/build-native.mjs",
     "ios:assets": "node scripts/make-ios-assets.mjs",
     "ios:sync": "npm run build:native && npx cap sync ios",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^7.6.8",
+    "@electric-sql/pglite": "^0.5.4",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
