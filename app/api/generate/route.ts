@@ -62,6 +62,17 @@ async function deepseekSpec(
   );
 }
 
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "POST, OPTIONS",
+  "access-control-allow-headers": "content-type",
+  "access-control-max-age": "86400",
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS });
+}
+
 export async function POST(req: Request) {
   let prompt = "";
   try {
@@ -74,20 +85,26 @@ export async function POST(req: Request) {
   if (key) {
     try {
       const spec = await deepseekSpec(prompt, key);
-      return NextResponse.json({ spec, engine: "deepseek" });
+      return NextResponse.json({ spec, engine: "deepseek" }, { headers: CORS });
     } catch (e) {
       // DeepSeek is the intended designer; when it fails we still ship a
       // playable game, but we say why so the failure isn't invisible.
-      return NextResponse.json({
-        spec: localSpec(prompt),
-        engine: "local",
-        engineError: e instanceof Error ? e.message : "deepseek unavailable",
-      });
+      return NextResponse.json(
+        {
+          spec: localSpec(prompt),
+          engine: "local",
+          engineError: e instanceof Error ? e.message : "deepseek unavailable",
+        },
+        { headers: CORS }
+      );
     }
   }
-  return NextResponse.json({
-    spec: localSpec(prompt),
-    engine: "local",
-    engineError: "DEEPSEEK_API_KEY not set on the server",
-  });
+  return NextResponse.json(
+    {
+      spec: localSpec(prompt),
+      engine: "local",
+      engineError: "DEEPSEEK_API_KEY not set on the server",
+    },
+    { headers: CORS }
+  );
 }

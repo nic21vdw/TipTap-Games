@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { CloudIcon, GoogleMark, UserIcon } from "@/components/ui/icons";
+import { nativeBuild } from "@/lib/native";
 import { getHandle } from "@/lib/storage";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useUiStore } from "@/store/useUiStore";
@@ -75,10 +76,10 @@ export function AccountSheet() {
             </span>
             <p className="text-sm leading-snug" style={{ color: "var(--ink)" }}>
               You&apos;re playing as{" "}
-              <span className="font-bold">@{guestHandle}</span>. Everything is
-              saved on this device only — clear your browser and it&apos;s gone.
-              Sign in and your bests, likes and the algorithm you tuned follow
-              you to any phone.
+              <span className="font-bold">@{guestHandle}</span>.{" "}
+              {nativeBuild
+                ? "Your bests, likes and the algorithm you tuned are saved on this phone, and stay on this phone."
+                : "Everything is saved on this device only — clear your browser and it's gone. Sign in and your bests, likes and the algorithm you tuned follow you to any phone."}
             </p>
           </div>
 
@@ -91,9 +92,9 @@ export function AccountSheet() {
                 borderRadius: "var(--radius)",
               }}
             >
-              Accounts aren&apos;t switched on in this build. Set
-              NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to
-              enable Google sign-in.
+              {nativeBuild
+                ? "This version plays entirely on your phone. Nothing is sent anywhere, nothing to sign in to — your bests, likes and tuned algorithm live on this device."
+                : "Accounts aren't switched on in this build. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to enable Google sign-in."}
             </p>
           ) : (
             <button
@@ -117,10 +118,12 @@ export function AccountSheet() {
             </button>
           )}
 
-          <p className="text-center text-xs" style={{ color: "var(--ink-dim)" }}>
-            Nothing is lost when you sign in — the bests you already set are
-            carried onto the account.
-          </p>
+          {!nativeBuild && (
+            <p className="text-center text-xs" style={{ color: "var(--ink-dim)" }}>
+              Nothing is lost when you sign in — the bests you already set are
+              carried onto the account.
+            </p>
+          )}
         </div>
       )}
     </Sheet>

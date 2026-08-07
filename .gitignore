@@ -1,9 +1,14 @@
 node_modules/
 .next/
 out/
+.native-parked/
 .env*
 !.env.example
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
 .vercel
+build/
+*.p12
+*.mobileprovision
+*.p8

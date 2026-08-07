@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { SearchIcon, SparkleIcon } from "@/components/ui/icons";
 import { registerSpec } from "@/games/custom";
+import { offlineSpec } from "@/lib/generator";
+import { apiUrl, serverRoutesReachable } from "@/lib/native";
 import { searchGames } from "@/lib/searchGames";
 import {
   loadCustomSpecs,
@@ -46,13 +48,20 @@ export function SearchSheet() {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-      if (!res.ok) throw new Error(`generate failed: ${res.status}`);
-      const { spec } = (await res.json()) as { spec: CustomGameSpec };
+      let spec: CustomGameSpec;
+      try {
+        if (!serverRoutesReachable) throw new Error("no server in this build");
+        const res = await fetch(apiUrl("/api/generate"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt }),
+        });
+        if (!res.ok) throw new Error(`generate failed: ${res.status}`);
+        spec = ((await res.json()) as { spec: CustomGameSpec }).spec;
+      } catch {
+        spec = offlineSpec(prompt);
+      }
+      if (!registerSpec(spec)) spec = offlineSpec(prompt);
       if (!registerSpec(spec)) throw new Error("could not build that one");
       saveCustomSpec(spec);
       setMine(loadCustomSpecs());
