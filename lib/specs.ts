@@ -2,7 +2,7 @@
 // crosses the wire (or lands in localStorage), so every field is validated
 // here — once — and nothing downstream has to trust the model, an older
 // build, or whatever is already saved in the browser.
-import { MODULES } from "@/games/registry";
+import { MODULES, shippedBase } from "@/games/registry";
 import { hslToHex, normalizeHex } from "@/lib/color";
 
 export interface CustomGameSpec {
@@ -94,28 +94,36 @@ export function hash(str: string): number {
  * same engine, so meet them halfway before falling back to the keywords.
  */
 function coerceBase(value: unknown): string | null {
-  if (isGeneratorBase(value)) return value;
   if (typeof value !== "string") return null;
   const key = value.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
-  const hit = GENERATOR_BASES.find((b) => b.slug === key);
-  return hit && MODULES[hit.slug] ? hit.slug : null;
+  const hit = GENERATOR_BASES.find((b) => b.slug === value || b.slug === key);
+  return hit ? shippedBase(hit.slug) : null;
 }
+
+/**
+ * Bases this build contains. The App Store bundle drops the casino engine, so
+ * a wish for "something with betting" has to land on one that is really there.
+ */
+const AVAILABLE = GENERATOR_BASES.filter((b) => shippedBase(b.slug));
 
 /** Keyword match from the player's own words — the offline designer's brain. */
 export function baseForPrompt(prompt: string): string {
   const p = prompt.toLowerCase();
   const has = (words: string[]) => words.some((w) => p.includes(w));
-  if (has(["casino", "bet", "gambl", "risk", "bank", "chip"])) return "cash-out";
-  if (has(["dodge", "car", "fall", "avoid", "drive", "traffic"])) return "drop-dodge";
-  if (has(["memory", "remember", "simon", "recall", "sequence"])) return "flash-recall";
-  if (has(["run", "lane", "jump", "endless", "chase", "escape"])) return "one-lane";
-  if (has(["tap", "fast", "speed", "frantic", "whack", "click"])) return "tap-rush";
-  if (has(["timing", "rhythm", "beat", "bar", "time it"])) return "reflex-gate";
-  if (has(["match", "puzzle", "tile", "block", "grid"])) return "pop-chain";
-  if (has(["hold", "charge", "fill", "release"])) return "hold-line";
-  if (has(["word", "read", "letter", "spell"])) return "word-trap";
+  const pick = (slug: string) => shippedBase(slug);
+  const guess =
+    (has(["casino", "bet", "gambl", "risk", "bank", "chip"]) && pick("cash-out")) ||
+    (has(["dodge", "car", "fall", "avoid", "drive", "traffic"]) && pick("drop-dodge")) ||
+    (has(["memory", "remember", "simon", "recall", "sequence"]) && pick("flash-recall")) ||
+    (has(["run", "lane", "jump", "endless", "chase", "escape"]) && pick("one-lane")) ||
+    (has(["tap", "fast", "speed", "frantic", "whack", "click"]) && pick("tap-rush")) ||
+    (has(["timing", "rhythm", "beat", "bar", "time it"]) && pick("reflex-gate")) ||
+    (has(["match", "puzzle", "tile", "block", "grid"]) && pick("pop-chain")) ||
+    (has(["hold", "charge", "fill", "release"]) && pick("hold-line")) ||
+    (has(["word", "read", "letter", "spell"]) && pick("word-trap"));
+  if (guess) return guess;
   const h = hash(p || "surprise me");
-  return GENERATOR_BASES[h % GENERATOR_BASES.length].slug;
+  return AVAILABLE[h % AVAILABLE.length].slug;
 }
 
 const clamp01 = (v: unknown, fallback: number): number => {

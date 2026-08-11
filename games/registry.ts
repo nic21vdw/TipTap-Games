@@ -1,4 +1,5 @@
 import type { FullGameMeta, GameModule } from "@/games/types";
+import { nativeBuild } from "@/lib/native";
 import arcGlide from "@/games/arc-glide";
 import asteroidDrift from "@/games/asteroid-drift";
 import ballStream from "@/games/ball-stream";
@@ -238,11 +239,25 @@ export function enrich(mod: GameModule): FullGameMeta {
   };
 }
 
+/**
+ * The App Store build ships without the casino card. A bank-it-before-it-busts
+ * multiplier is a gambling-shaped mechanic even with free virtual chips, and
+ * declaring it honestly on the age-rating form pushes the whole app to 17+.
+ * Dropping it here is the one place that decision lives: the web keeps it, the
+ * binary never contains it, and `shipped` is what every other module reads.
+ */
+const shipped = nativeBuild ? ALL.filter((m) => !m.meta.tags.includes("casino")) : ALL;
+
 export const MODULES: Record<string, GameModule> = Object.fromEntries(
-  ALL.map((m) => [m.meta.slug, m])
+  shipped.map((m) => [m.meta.slug, m])
 );
 
-export const CATALOG: FullGameMeta[] = ALL.map(enrich);
+export const CATALOG: FullGameMeta[] = shipped.map(enrich);
+
+/** A base engine slug this build actually contains, or null. */
+export function shippedBase(slug: string): string | null {
+  return MODULES[slug] ? slug : null;
+}
 
 export function getModule(slug: string): GameModule {
   const m = MODULES[slug];

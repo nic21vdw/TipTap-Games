@@ -8,7 +8,7 @@
 
 import type { AlgorithmVector } from "@/lib/algorithm";
 import { scoreGame } from "@/lib/algorithm";
-import { CATALOG, MODULES, getMeta } from "@/games/registry";
+import { CATALOG, MODULES, getMeta, shippedBase } from "@/games/registry";
 import { registerSpec } from "@/games/custom";
 import { titleFromSeed } from "@/lib/specs";
 import { saveCustomSpec, type CustomGameSpec } from "@/lib/storage";
@@ -30,7 +30,7 @@ const BASES = [
   "cross-traffic",
   "drift-field",
   "black-keys",
-];
+].filter(shippedBase);
 
 const ORIGINS = [
   "Minted by your feed the moment you'd played everything else.",
