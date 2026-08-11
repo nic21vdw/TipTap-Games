@@ -41,7 +41,10 @@ algorithm** via a tuner sheet with a live "Next up" strip.
   masked into the same skull and lit by whatever lamp that game is running.
   No file, no problem: the vector head is the fallback.
 - Casino = arcade-casino: virtual chips, free reset, no purchase
-  affordance anywhere.
+  affordance anywhere. The App Store build ships without it entirely —
+  `games/registry.ts` drops every `casino`-tagged game when the build is
+  native, which is what keeps the age rating at 4+ honestly. Anything that
+  resolves a game by slug goes through `shippedBase`.
 - Scrolling goes both ways. A card is never dropped from the list once
   it's been shown, so scrolling back lands on the game you just left, not a
   fresh draw — and that has to hold while a game owns the surface too. On a

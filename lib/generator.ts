@@ -11,7 +11,7 @@ import {
   setGenProgress,
   clearGen,
 } from "@/games/pending";
-import { unregisterModule } from "@/games/registry";
+import { shippedBase, unregisterModule } from "@/games/registry";
 import { saveCustomSpec, type CustomGameSpec } from "@/lib/storage";
 import { useFeedStore } from "@/store/useFeedStore";
 
@@ -129,7 +129,7 @@ function provisional(prompt: string): Prov {
 const BASES = [
   "tap-rush", "reflex-gate", "drop-dodge", "flash-recall", "cash-out",
   "one-lane", "hold-line", "word-trap", "pop-chain",
-];
+].filter(shippedBase);
 const BASE_RULE: Record<string, string> = {
   "tap-rush": "Hit the targets before they vanish",
   "reflex-gate": "Tap when the bar hits green",
@@ -145,15 +145,18 @@ const BASE_RULE: Record<string, string> = {
 function pickBase(prompt: string, h: number): string {
   const p = prompt.toLowerCase();
   const kw = (w: string[]) => w.some((x) => p.includes(x));
-  if (kw(["casino", "bet", "gambl", "risk", "bank", "multiplier", "cash"])) return "cash-out";
-  if (kw(["dodge", "car", "fall", "avoid", "drive", "traffic", "obstacle"])) return "drop-dodge";
-  if (kw(["memory", "remember", "simon", "recall", "sequence", "pattern"])) return "flash-recall";
-  if (kw(["run", "lane", "jump", "endless", "runner", "flip"])) return "one-lane";
-  if (kw(["tap", "fast", "speed", "frantic", "whack", "click", "target"])) return "tap-rush";
-  if (kw(["timing", "rhythm", "beat", "bar", "time it"])) return "reflex-gate";
-  if (kw(["match", "puzzle", "tile", "block", "group", "clear"])) return "pop-chain";
-  if (kw(["hold", "charge", "fill", "release", "meter", "gauge"])) return "hold-line";
-  if (kw(["read", "word", "colour", "color", "stroop", "trick"])) return "word-trap";
+  const pick = (slug: string) => shippedBase(slug);
+  const guess =
+    (kw(["casino", "bet", "gambl", "risk", "bank", "multiplier", "cash"]) && pick("cash-out")) ||
+    (kw(["dodge", "car", "fall", "avoid", "drive", "traffic", "obstacle"]) && pick("drop-dodge")) ||
+    (kw(["memory", "remember", "simon", "recall", "sequence", "pattern"]) && pick("flash-recall")) ||
+    (kw(["run", "lane", "jump", "endless", "runner", "flip"]) && pick("one-lane")) ||
+    (kw(["tap", "fast", "speed", "frantic", "whack", "click", "target"]) && pick("tap-rush")) ||
+    (kw(["timing", "rhythm", "beat", "bar", "time it"]) && pick("reflex-gate")) ||
+    (kw(["match", "puzzle", "tile", "block", "group", "clear"]) && pick("pop-chain")) ||
+    (kw(["hold", "charge", "fill", "release", "meter", "gauge"]) && pick("hold-line")) ||
+    (kw(["read", "word", "colour", "color", "stroop", "trick"]) && pick("word-trap"));
+  if (guess) return guess;
   return BASES[h % BASES.length];
 }
 

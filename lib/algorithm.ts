@@ -1,4 +1,5 @@
 import type { FullGameMeta, GameTag } from "@/games/types";
+import { nativeBuild } from "@/lib/native";
 import { allSignals } from "@/lib/storage";
 
 export interface AlgorithmVector {
@@ -41,7 +42,7 @@ export const PRESETS: Preset[] = [
   { id: "highroller", name: "High Roller", query: "casino only, all luck, big risk" },
   { id: "kids", name: "Kid Mode", query: "kid friendly, no gambling, easy and cute" },
   { id: "sweat", name: "Sweat Mode", query: "brutally hard skill games, no luck at all" },
-];
+].filter((p) => !(nativeBuild && p.id === "highroller"));
 
 const W_INTENSITY = 0.85;
 const W_SPEED = 0.7;

@@ -232,20 +232,19 @@ to 1290 × 2796. Take five: a game mid-play, the algorithm tuner with the
 |---|---|---|
 | Cartoon or Fantasy Violence | **Infrequent/Mild** | zombie defense, arena games |
 | Horror/Fear Themes | **Infrequent/Mild** | Five Nights at Nic's Basement |
-| Simulated Gambling | **see below** | the *Cash Out* game |
+| Simulated Gambling | **None** | the casino card is not in the iOS build |
 | Everything else | **None** | no realistic violence, drugs, sex, profanity, contests, unrestricted web access |
 
-> ⚠️ **Read this before answering the gambling question.** *Cash Out* is a
+> **Why *None* is the honest answer.** *Cash Out* is a
 > bank-it-before-it-busts multiplier game played with virtual chips that reset
-> for free and cannot be bought. That is still a gambling-shaped mechanic, and
-> answering **Infrequent/Mild Simulated Gambling** honestly will push the
-> app's rating up to the 16+/17+ tier, which badly hurts a casual game's
-> discovery. Answering *None* to make the rating look better is exactly the
-> kind of thing that gets an app pulled later. If the higher rating is
-> unacceptable, the clean fix is to cut `games/cash-out` from
-> `games/registry.ts` for 1.0 and ship it in a later version under the higher
-> rating — a one-line change, not an engineering problem. **Decide this before
-> you submit; do not lie on the form.**
+> for free and cannot be bought — a gambling-shaped mechanic even so, and
+> declaring it would push the app to the 16+/17+ tier and cost a casual game
+> its discovery. So it is not in the App Store build at all: `games/registry.ts`
+> drops every `casino`-tagged game when `NEXT_PUBLIC_NATIVE=1`, and the
+> generator, the variant miner and the *High Roller* preset all follow that one
+> filter, so nothing in the binary can hand a player a casino game. The web
+> build keeps it. If a later version wants it on the phone, the rating moves
+> up with it.
 
 Also set:
 
