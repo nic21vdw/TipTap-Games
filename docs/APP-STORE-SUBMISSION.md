@@ -24,9 +24,12 @@ algorithm tuner, the themes, the soundtrack and all local scoring
 ship in the `.ipa` and run with the phone in airplane mode. The app makes
 exactly one optional network call — `POST /api/generate`, when you type a wish
 into the generator — and falls back to the on-device designer when that call
-fails. The iOS build ships **guest-only**: no sign-in, no Supabase, no
-analytics, no third-party SDK of any kind. See
-[Rejection risks](#rejection-risks-and-how-each-one-is-handled) for why.
+fails. As CI builds it today the iOS app ships **guest-only**: no sign-in, no
+Supabase, no analytics, no third-party SDK of any kind. Since PR #49 that holds
+because the workflow omits the Supabase environment variables, not because the
+code forbids it — read
+[Sign in with Apple](#511--48-sign-in-with-apple) before you change that. See
+[Rejection risks](#rejection-risks-and-how-each-one-is-handled) for the rest.
 
 ---
 
@@ -75,14 +78,30 @@ Then:
 ```bash
 cd ~/appstore-keys/ios
 openssl x509 -inform DER -in distribution.cer -out distribution.pem
-openssl pkcs12 -export -legacy \
+openssl pkcs12 -export -legacy -macalg sha1 \
   -inkey ios_distribution.key -in distribution.pem \
+  -certfile AppleWWDRCAG3.pem \
   -out ios_distribution.p12 -name "Apple Distribution"
 ```
 
 Choose a password at the prompt and keep it — that is
-`IOS_DIST_CERT_PASSWORD`. If `-legacy` is rejected by your OpenSSL build, drop
-the flag and try again.
+`IOS_DIST_CERT_PASSWORD`.
+
+> **`-macalg sha1` is not optional.** OpenSSL 3 writes a SHA-256 integrity MAC
+> by default, and macOS `security import` cannot verify it. CI fails with
+> `MAC verification failed during PKCS12 import (wrong password?)` even though
+> the password is correct — `openssl pkcs12` opens the very same file happily,
+> which makes it look like anything except what it is. This cost several CI
+> runs to find. If you see that error, the MAC is the cause, not the password.
+
+Generate the password with `openssl rand -hex 24`, not `-base64`. On Git Bash
+for Windows `openssl rand` terminates its output with `\r\n`, and stripping only
+`\n` leaves a carriage return inside the password; hex output also avoids `+`,
+`/` and `=`, which are awkward to pass through shells.
+
+`AppleWWDRCAG3.pem` is Apple's intermediate, converted from
+<https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer>. Chaining it into
+the `.p12` means the runner does not have to already trust it.
 
 > Keep `~/appstore-keys/ios/` out of any git repo. It is your identity.
 
@@ -142,16 +161,29 @@ Optionally add a repository **variable** (not a secret) named
 `NEXT_PUBLIC_API_ORIGIN` if the generator endpoint ever moves off
 `https://tip-tap-games-roan.vercel.app`.
 
-To produce the base64 blobs on Windows, in PowerShell:
+The reliable way to load them is from a file on stdin, in Git Bash:
 
-```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\appstore-keys\ios\ios_distribution.p12")) | Set-Clipboard
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\Downloads\Tip_Tap_Games_App_Store.mobileprovision")) | Set-Clipboard
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\Downloads\AuthKey_XXXXXXXXXX.p8")) | Set-Clipboard
+```bash
+cd ~/appstore-keys/ios
+R=nic21vdw/TipTap-Games
+
+base64 -w0 ios_distribution.p12               | gh secret set IOS_DIST_CERT_P12_BASE64 --repo $R
+base64 -w0 Tip_Tap_Games_App_Store.mobileprovision | gh secret set IOS_PROVISIONING_PROFILE_BASE64 --repo $R
+base64 -w0 ~/Downloads/AuthKey_XXXXXXXXXX.p8  | gh secret set ASC_KEY_P8_BASE64 --repo $R
+printf '%s' "$(cat p12-password.txt)"         | gh secret set IOS_DIST_CERT_PASSWORD --repo $R
+openssl rand -hex 24 | tr -d '\r\n'           | gh secret set IOS_KEYCHAIN_PASSWORD --repo $R
+printf '%s' 'PQ9WNUPKUK'                      | gh secret set APPLE_TEAM_ID --repo $R
 ```
 
-Each command copies one blob to the clipboard — paste it into GitHub before
-running the next one.
+> **Never write `gh secret set NAME --body -`.** `gh` has no stdin convention
+> for `--body`; it stores the literal one-character string `-`. Every secret set
+> that way is silently wrong, `gh secret list` still shows a row for it, and the
+> failure surfaces much later as a corrupt artifact on the runner — a `.p12`
+> that base64-decodes to zero bytes, and a certificate password of `-`. Omit
+> `--body` entirely so `gh` reads stdin.
+
+Checking `gh secret list` proves only that a secret **exists**, never that it
+holds the right bytes. The only real verification is a build.
 
 ### Step 7 — Run the build (2 min of clicking, ~15 min of waiting)
 
@@ -173,7 +205,10 @@ App Store Connect → your app → **App Privacy** → *Get Started*.
    **No, we do not collect data from this app.**
 2. Confirm and **Publish**.
 
-That answer is truthful and is exactly why the app was built guest-only: no
+That answer is truthful **for a build made without the Supabase environment
+variables**, which is what CI produces — see
+[Sign in with Apple](#511--48-sign-in-with-apple). It is exactly why the app was
+built guest-only: no
 sign-in, no analytics, no ad SDK, no crash reporter, no device identifier. The
 one network call sends only the text you typed and carries no identifier.
 
@@ -374,22 +409,49 @@ second screenshot the tuner with the *Next up* strip reordering.
 
 ### 5.1.1 / 4.8 Sign in with Apple
 
-**Resolved by removing the trigger.** Guideline 4.8 only bites when an app
-offers a *third-party or social login service*. The iOS build offers none:
-`lib/supabase/config.ts` forces `cloudConfigured` to `false` whenever
-`NEXT_PUBLIC_NATIVE=1`, which switches off Google sign-in, the Supabase
-client, cloud saves and the server leaderboard in one place. The account sheet
-on iOS explains that play is local and offers no sign-in button. Guest play is
-not merely optional — it is the only mode, so 5.1.1(v) ("apps may not require
-users to enter personal information to function") is satisfied trivially.
+> ⚠️ **This section changed with PR #49 and is now conditional. Read it before
+> you submit.**
 
-**If you ever want cloud saves in the app**, Sign in with Apple becomes
-mandatory the moment Google sign-in appears next to it. The path is:
+Guideline 4.8 only bites when an app offers a *third-party or social login
+service*. It used to be structurally impossible for this build to offer one:
+`cloudConfigured` was forced to `false` whenever `NEXT_PUBLIC_NATIVE=1`.
+
+**That is no longer how it works.** PR #49 taught the iOS build to reach the
+web leaderboard, and `lib/supabase/config.ts` now reads:
+
+```ts
+export const cloudConfigured =
+  Boolean(SUPABASE_URL && SUPABASE_ANON_KEY) && (!nativeBuild || apiOrigin.length > 0);
+```
+
+The switch is no longer the platform — it is **whether `NEXT_PUBLIC_SUPABASE_URL`
+and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present at build time**. PR #49 also
+added working Google sign-in on iOS, via the system browser and a deep link back
+into the app.
+
+`.github/workflows/ios-release.yml` does not inject either Supabase variable, so
+the `.ipa` CI produces today is still guest-only and the "no data collected"
+privacy label in Step 8 is still truthful. **Both of those facts now depend on a
+build-time absence rather than on code that cannot be switched on.**
+
+**Adding those two variables to the repository turns a compliant build into a
+rejectable one**, in two ways at once:
+
+- Google sign-in appears, so **Sign in with Apple becomes mandatory** under 4.8.
+  The app does not have it.
+- Accounts and a server leaderboard exist, so the privacy nutrition label must
+  declare identifiers and user content. Answering "no data collected" would then
+  be false.
+
+Before adding them, ship Sign in with Apple first:
 `@capacitor-community/apple-sign-in` for the native credential, then
 `supabase.auth.signInWithIdToken({ provider: 'apple', token, nonce })` — no
 redirect and no deep link needed. It also needs a Services ID, a Sign in with
 Apple key, and the capability added to the App ID. That is a 1.1 feature; do
 not bolt it on before the first submission.
+
+For 1.0, the safest thing is to leave the Supabase variables out of CI and
+submit guest-only, exactly as this document otherwise describes.
 
 ### 3.1.1 In-app purchase / 2.3.1 hidden features
 
@@ -419,6 +481,7 @@ microphone, location, contacts, photos, tracking or notifications.
 | `components/shell/NativeShell.tsx` | splash hide, theme-driven status bar, kills long-press callouts |
 | `ios/App/App/Info.plist` | portrait only, `ITSAppUsesNonExemptEncryption` false, zero permission strings |
 | `.github/workflows/ios-release.yml` | archive + export + upload on `macos-14` |
+| `ios/App/App.xcodeproj/project.pbxproj` | manual signing for the app target only — see below |
 | `app/privacy/page.tsx`, `app/support/page.tsx` | the two URLs App Store Connect demands |
 
 ### Commands
@@ -430,6 +493,19 @@ npm run ios:assets     # regenerate icon + launch screen
 npm run ios:sync       # build:native + npx cap sync ios
 npm run ios:open       # open Xcode (macOS only)
 ```
+
+### Why signing is in the project, not on the command line
+
+Signing settings passed to `xcodebuild` on the command line apply to **every
+target in the workspace**, including the six Capacitor pods. Those build as
+frameworks, cannot take a provisioning profile, and fail the archive with
+`CapacitorHaptics does not support provisioning profiles` and five more like it.
+
+So `CODE_SIGN_STYLE`, `CODE_SIGN_IDENTITY` and `PROVISIONING_PROFILE_SPECIFIER`
+live in the app target's own Release configuration, where they reach only that
+target, and the archive command sets just the build number and the keychain to
+sign against. The profile is named — `Tip Tap Games App Store` — rather than
+referenced by UUID, so regenerating it does not break the build.
 
 ### Why the split is where it is
 
@@ -447,15 +523,31 @@ leaderboard routes authenticate by cookie, which a `capacitor://localhost`
 origin cannot send — another reason the iOS build is guest-only rather than
 half-connected.
 
-### What has *not* been verified
+### What is verified, and what is not
 
-**No `.ipa` was compiled.** This work was done on Windows, which has neither
-Xcode nor CocoaPods, so `xcodebuild` never ran. What is verified is:
-`npm install`, `npm run typecheck`, `npm run build`, `npm run build:native`
-and `npx cap sync ios` all pass, and the native project generates cleanly with
-all three plugins detected. The first real compile happens on the `macos-14`
-runner in Step 7 — expect to iterate on that workflow once or twice, most
-likely on the CocoaPods or code-signing step.
+**An `.ipa` compiles and signs.** Run 31449515404 on `macos-14` went green end
+to end and produced a 53 MB `App.ipa` whose `Payload/App.app` is code-signed,
+whose `embedded.mobileprovision` is `Tip Tap Games App Store` for
+`PQ9WNUPKUK.com.nicvandewetering.tiptapgames`, and which carries the exported
+web bundle inside the binary — the concrete evidence behind the 4.2 argument
+above.
+
+Getting there took six runs. CocoaPods, which this section originally predicted
+would be the sticking point, passed on the very first attempt and every attempt
+since. The real failures were the SHA-256 MAC, the `--body -` secrets, and
+signing settings leaking from the `xcodebuild` command line onto the Pods
+targets. All three are fixed and documented.
+
+**Still not verified:**
+
+- **Nothing has been uploaded to App Store Connect.** Every run so far used
+  `upload=false`, because the App Store Connect API key does not exist yet. The
+  `altool` validate and upload steps have never executed.
+- **Nothing has run on a device or in a simulator.** That the binary builds and
+  signs says nothing about whether it launches, renders, or plays.
+- **App Store Connect API access is pending.** The account is enrolled as an
+  Individual, and Apple's own wording on the request form is that organizations
+  are granted access before individuals.
 
 ---
 
