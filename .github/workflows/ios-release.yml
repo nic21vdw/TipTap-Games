@@ -82,6 +82,17 @@ jobs:
           set -euo pipefail
           KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
           echo "$CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+
+          echo "--- diagnostics ---"
+          ls -l "$RUNNER_TEMP/dist.p12"
+          file "$RUNNER_TEMP/dist.p12"
+          echo "password length: ${#CERT_PASSWORD}"
+          printf 'password bytes: '; printf '%s' "$CERT_PASSWORD" | xxd -p | head -c 120; echo
+          echo "openssl can read it:"
+          openssl pkcs12 -in "$RUNNER_TEMP/dist.p12" -passin env:CERT_PASSWORD -nokeys -noout \
+            && echo "  openssl OK" || echo "  openssl FAILED"
+          echo "-------------------"
+
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
           security set-keychain-settings -lut 21600 "$KEYCHAIN"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
