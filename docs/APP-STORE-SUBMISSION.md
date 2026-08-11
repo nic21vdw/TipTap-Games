@@ -116,9 +116,13 @@ the `.p12` means the runner does not have to already trust it.
 6. Provisioning Profile Name: `Tip Tap Games App Store` → Generate.
 7. **Download** the `.mobileprovision` file.
 
-### Step 4 — Create the App Store Connect API key (3 min, free)
+### Step 4 — Give CI a way to upload (3 min, free)
 
-This is what lets CI upload without your password or a 2FA prompt.
+Either of these works, and the workflow picks whichever one you loaded. Do the
+second if the first is not available to you yet.
+
+**4a — App Store Connect API key.** The better option: no password, no 2FA
+prompt, and it never expires on you.
 
 1. Go to <https://appstoreconnect.apple.com/access/integrations/api>.
 2. **Team Keys** tab → **+**.
@@ -127,6 +131,22 @@ This is what lets CI upload without your password or a 2FA prompt.
    once.**
 5. Note the **Key ID** (10 characters, shown in the row) and the **Issuer ID**
    (a UUID at the top of the page).
+
+> If the page shows a *Request Access* button instead of **+**, API access has
+> not been granted to this account yet. Apple grants organizations before
+> individuals and gives no ETA. Request it anyway — then use 4b and do not wait.
+
+**4b — An app-specific password.** Same upload, authenticated as you.
+
+1. Go to <https://account.apple.com/account/manage> → *Sign-In and Security* →
+   **App-Specific Passwords** → **+**.
+2. Label it `App Store upload` and copy the `xxxx-xxxx-xxxx-xxxx` string Apple
+   shows once.
+3. That string is `APPLE_APP_SPECIFIC_PASSWORD`, and your Apple ID
+   (`nic21vdw@gmail.com`) is `APPLE_ID`.
+
+It authenticates only `altool`; it cannot sign in to a website or read your
+mail, and revoking it from that same page kills it instantly.
 
 ### Step 5 — Create the app record in App Store Connect (10 min, free)
 
@@ -219,12 +239,20 @@ one network call sends only the text you typed and carries no identifier.
 
 Paste from [Listing copy](#2-listing-copy-ready-to-paste) below.
 
-**Screenshots are required and are not in this repo.** You need at least one
-6.9-inch screenshot (1320 × 2868 or 1290 × 2796 px). Easiest route: open
-<https://tip-tap-games-roan.vercel.app/?view=iphone>, pick *iPhone 17 Pro Max*,
-and screenshot the framed screen — then crop to just the screen area and scale
-to 1290 × 2796. Take five: a game mid-play, the algorithm tuner with the
-*Next up* strip, the leaderboard, the themes sheet, the game generator.
+**Screenshots are shot, and live outside the repo** —
+`C:\Users\nic21\Documents\tiptap-store-screenshots\`, six PNGs at exactly
+1290 × 2796 (the 6.9-inch size App Store Connect asks for): a game mid-play,
+the algorithm tuner with the *Next up* strip, the leaderboard, the themes
+sheet, the full games list, and a spare game. Upload the first five in that
+order — the tuner sits second on purpose, because it is the differentiator
+(see [4.3 Spam](#43-spam--lots-of-similar-mini-games)).
+
+They were captured off the **native bundle**, not the website, so they show
+exactly what a phone shows: `npm run build:native`, serve `out/` on a local
+port, and drive it in a headless Chromium at a 430 × 932 viewport with
+`deviceScaleFactor: 3` — that lands on 1290 × 2796 with no cropping or
+rescaling. Reshoot the same way after any UI change; a resized desktop capture
+will be soft and Apple will show it full-bleed.
 
 **Age rating** — App Store Connect → *Age Rating* → Edit. Answer honestly:
 
@@ -552,15 +580,20 @@ targets. All three are fixed and documented.
 
 ## 5. Order of operations, condensed
 
-1. Register the App ID — 5 min
-2. Mint the Apple Distribution cert — 10 min
-3. Make the App Store provisioning profile — 3 min
-4. Make the App Store Connect API key — 3 min
-5. Create the app record — 10 min
-6. Load the eight GitHub secrets — 5 min
-7. Run the workflow, wait for TestFlight — ~20 min
-8. Answer the privacy label: *no data collected* — 5 min
-9. Screenshots, listing copy, age rating — 30 min
-10. Submit — 2 min, then 24–72 h
+| # | Step | Time | State |
+|---|---|---|---|
+| 1 | Register the App ID | 5 min | ✅ done |
+| 2 | Mint the Apple Distribution cert | 10 min | ✅ done — `~/appstore-keys/ios/` |
+| 3 | Make the App Store provisioning profile | 3 min | ✅ done |
+| 4 | Make the App Store Connect API key | 3 min | ⬜ **next — needs your Apple login** |
+| 5 | Create the app record | 10 min | ⬜ needs your Apple login |
+| 6 | Load the GitHub secrets | 5 min | ◐ five of eight loaded; the four `ASC_*` wait on step 4 |
+| 7 | Run the workflow, wait for TestFlight | ~20 min | ◐ archive + signing verified, upload blocked on step 4 |
+| 8 | Answer the privacy label: *no data collected* | 5 min | ⬜ |
+| 9 | Screenshots, listing copy, age rating | 30 min | ◐ screenshots shot, copy written, rating decided |
+| 10 | Submit | 2 min, then 24–72 h | ⬜ |
+
+Everything an agent can do from Windows is done. Steps 4 and 5 are the gate:
+both live behind an Apple ID sign-in with two-factor, so they are yours.
 
 Roughly 1.5 hours of your time. $0 beyond the membership you already have.
