@@ -171,17 +171,34 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
           set -euo pipefail
-          mkdir -p "$HOME/.appstoreconnect/private_keys"
-          echo "$ASC_KEY_P8_BASE64" | base64 --decode \
-            > "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
           IPA=$(ls "$EXPORT_PATH"/*.ipa | head -n1)
-          xcrun altool --validate-app -f "$IPA" -t ios \
-            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
-          xcrun altool --upload-app -f "$IPA" -t ios \
-            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
-          rm -f "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+
+          # Two ways in. An App Store Connect API key is the better one, but
+          # individual accounts wait on Apple to grant API access, so an
+          # app-specific password from appleid.apple.com works just as well and
+          # needs nothing but the account itself.
+          if [ -n "${ASC_KEY_ID:-}" ] && [ -n "${ASC_KEY_P8_BASE64:-}" ]; then
+            echo "Authenticating with the App Store Connect API key."
+            mkdir -p "$HOME/.appstoreconnect/private_keys"
+            echo "$ASC_KEY_P8_BASE64" | base64 --decode \
+              > "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+            trap 'rm -f "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"' EXIT
+            AUTH=(--apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID")
+          elif [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
+            echo "Authenticating with an app-specific password."
+            AUTH=(-u "$APPLE_ID" -p "@env:APPLE_APP_SPECIFIC_PASSWORD")
+          else
+            echo "::error::No upload credentials. Set ASC_KEY_ID + ASC_ISSUER_ID +" \
+                 "ASC_KEY_P8_BASE64, or APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD."
+            exit 1
+          fi
+
+          xcrun altool --validate-app -f "$IPA" -t ios "${AUTH[@]}"
+          xcrun altool --upload-app -f "$IPA" -t ios "${AUTH[@]}"
 
       - name: Keep the .ipa as a workflow artifact
         if: always()
